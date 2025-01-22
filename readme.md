@@ -58,11 +58,12 @@
 이 프로젝트에 대한 질문이나 제안 사항이 있다면 아래의 방법으로 연락해주세요:
 
 - **이메일**: [epwyqqu309@tukorea.ac.kr](mailto:epwyqqu309@tukorea.ac.kr)
-- **프로젝트 웹사이트**: [바로가기](https://아직없는링크크.com)
+- **프로젝트 웹사이트**: [바로가기](https://아직없는링크.com)
 
 
 ---
 
 ### 팀원 및 기여자
 특정 기여자에게 문의가 필요한 경우, 해당 기여자의 GitHub 프로필을 참고해주세요:
-- [@sanha0108](https://github.com/username) - 프로젝트 파트너너
+- [@suminseong](https://github.com/suminseong) - AI 백엔드 파트너
+- [@sanha0108](https://github.com/sanha0108) - 프론트엔드 파트너
