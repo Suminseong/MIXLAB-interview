@@ -4,7 +4,7 @@
 
 ---
 
-![인트로 이미지](https://via.placeholder.com/1280x720.png?text=Project+Intro+Image)  
+![인트로 이미지](https://i.ibb.co/Jmjr2fD/Frame-83.png)  
 *위 이미지는 프로젝트를 대표할 16:9 비율의 인트로 이미지입니다.*
 
 ---
