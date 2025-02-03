@@ -2,3 +2,67 @@
     margin: 0;
     padding: 0;
 }
+
+.nav-active {
+
+}
+
+/*--------------상태 지정---------------*/
+
+body {
+    width: 100vw;
+    height: 100vh;
+    background-color: #f8f9fb;
+}
+
+.base-container {
+    gap: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+.aside-left {
+    flex-grow: 2;
+    /* background-color: #fff; */
+    margin: 29px 0px;
+    margin-left: 20px;
+    border-radius: 50px;
+}
+
+.main-container {
+    flex-grow: 10;
+    margin: 29px 0px;
+    background-color: #fff;
+    border-radius: 50px;
+}
+
+.sub-container {
+    flex-grow: 3.3;
+    margin: 29px 0px;
+    margin-right: 20px;
+    background-color: #fff;
+    border-radius: 50px;
+}
+
+/*--------------aside-left-----------------*/
+
+#aside-bar {
+    margin-top: 29px;
+    margin-left: 42px;
+    display: flex;
+    flex-direction: column;
+    gap: 111px;
+}
+
+#nav-bar div {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+}
+
+#nav-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
