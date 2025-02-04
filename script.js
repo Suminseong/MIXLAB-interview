@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     increaseBtn.addEventListener("click", () => {
-        if (questionNum < 16) { 
+        if (questionNum < 16) {
             questionNum++;
             questionNumSpan.textContent = questionNum;
         }
@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // OpenAI API 요청 페이로드
         const payload = {
             model: "gpt-4o-mini",
-            messages: [ { role: "system", content: [ { text: `${interviewTitle}를 주제로 한 인터뷰는 ${interviewFor}을 목적으로 해야합니다. 이 인터뷰에서 해야하는는 질문을 ${questionNum}개 생성합니다. 인터뷰 질문은 인터뷰 순서에 맞게 구성되어야 하며, 개수는 user의 프롬프트에 기반합니다. 목적을 그대로 해석하지 말고, 목적으로부터 파생되는 심층적인 인사이트에 집중한 질문 생성을 기대합니다. 다음과 같은 이름을 부여한 인덱스로 내용을 채워 배열 타입으로 출력합니다. 이 양식 이외의 내용은 출력금지.\n질문1\n질문2\n...\n이때, 숫자, 질문 인덱스 표시는 하지 않고, 텍스트만 큰 따옴표로 묶어서 넣고, 콤마를 삽입합니다. 개수를 정확히 준수합니다.`, type: "text" } ] } ],
+            messages: [{ role: "system", content: [{ text: `${interviewTitle}를 주제로 한 인터뷰는 ${interviewFor}을 목적으로 해야합니다. 이 인터뷰에서 해야하는는 질문을 ${questionNum}개 생성합니다. 인터뷰 질문은 인터뷰 순서에 맞게 구성되어야 하며, 개수는 user의 프롬프트에 기반합니다. 목적을 그대로 해석하지 말고, 목적으로부터 파생되는 심층적인 인사이트에 집중한 질문 생성을 기대합니다. 다음과 같은 이름을 부여한 인덱스로 내용을 채워 json 배열 타입으로 출력합니다. 이 양식 이외의 내용은 출력금지. json 형태로 출력하며, \n질문1\n질문2\n...\n이때, 숫자, 질문 인덱스 표시는 하지 않고, 텍스트만 큰 따옴표로 묶어서 넣고, 콤마를 삽입합니다. 그 밖의 내용은 절대 출력 금지. 개수를 정확히 준수합니다.`, type: "text" }] }],
             response_format: { type: "text" },
             temperature: 0.75,
             max_completion_tokens: 2048,
