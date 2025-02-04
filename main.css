@@ -6,10 +6,6 @@
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
 }
 
-.nav-active {
-
-}
-
 /*--------------상태 지정---------------*/
 
 body {
@@ -45,7 +41,6 @@ body {
     flex-grow: 3;
     margin: 29px 0px;
     margin-right: 20px;
-    background-color: #fff;
     border-radius: 50px;
 }
 
@@ -54,7 +49,7 @@ body {
 .logo-text {
     font-size: 20pt;
     font-weight: 600;
-    color: 888C92;
+    color: #888C92;
 }
 
 #aside-bar {
@@ -73,6 +68,7 @@ body {
 
 #nav-bar div :hover {
     cursor: pointer;
+    filter: brightness(80%);
 }
 
 #nav-bar {
@@ -94,4 +90,107 @@ body {
 
 .nav-active {
     color: #5B5E63;
+}
+
+.nav-active .nav-img svg path {
+    fill: #5B5E63 !important;
+}
+
+.nav-active .nav-img svg ellipse {
+    fill: #5B5E63 !important;
+}
+
+.nav-active .nav-text{
+    font-weight: 650;
+}
+
+/*sub-container 부분*/
+
+.sub-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    max-width: 350px;
+}
+
+.container-children {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.side-box {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    gap: 16px;
+}
+
+/*sub-lower 부분*/
+
+.sub-lower {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    bottom: 0;
+}
+
+.counter-section {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.counter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.counter button {
+    width: 28px;
+    height: 28px;
+    background: #F1F3F5;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: bold;
+    color: #5B5E63;
+    cursor: pointer;
+    transition: 0.2s ease, transform 0.1s ease;
+}
+
+.counter button:hover {
+    background: #E0E3E7;
+}
+
+.counter button:active {
+    transform: scale(0.9);
+}
+
+#generate-btn {
+    width: 100%;
+    padding: 14px 0;
+    background: #5B5E63;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s ease, transform 0.1s ease;
+}
+
+#generate-btn:hover {
+    background: #6D7178;
+}
+
+#generate-btn:active {
+    transform: scale(0.96);
 }

@@ -13,32 +13,70 @@
         <div class="aside-left">
             <div id="aside-bar">
                 <div id="logo">
-                    <p class="logo-text">moi</p>
+                    <p class="logo-text">UwU</p>
                 </div>
                 <div id="nav-bar">
                     <div class="btn-preset nav-active">
-                        <div class="nav-img"><img src="./img/preset.png" alt="preset"></div>
+                        <div class="nav-img"><img src="./img/preset.svg" alt="preset"></div>
                         <p class="nav-text">Preset</p>
                     </div>
                     <div class="btn-persona">
-                        <div class="nav-img"><img src="./img/persona.png" alt="persona"></div>
+                        <div class="nav-img"><img src="./img/persona.svg" alt="persona"></div>
                         <p class="nav-text">Persona</p>
                     </div>
                     <div class="btn-interview">
-                        <div class="nav-img"><img src="./img/interview.png" alt="interview"></div>
+                        <div class="nav-img"><img src="./img/interview.svg" alt="interview"></div>
                         <p class="nav-text">Interview</p>
                     </div>
                     <div class="btn-analysis">
-                        <div class="nav-img"><img src="./img/analysis.png" alt="analysis"></div>
+                        <div class="nav-img"><img src="./img/analysis.svg" alt="analysis"></div>
                         <p class="nav-text">Analysis</p>
+                    </div>
+                    <div class="btn-revision">
+                        <div class="nav-img"><img src="./img/revision.svg" alt="revision"></div>
+                        <p class="nav-text">Revision</p>
                     </div>
                 </div>
             </div>
         </div>
         <div class="main-container"></div><!--중앙 큰 영역-->
-        <div class="sub-container"></div><!--우측 날개 부분-->
+        <div class="sub-container">
+            <div class="sub-upper">
+                <div class="container-children sub-preset sub-activate">
+                    <div class="side-box">
+                        <label for="interviewTitle">인터뷰 주제</label>
+                        <input type="text" id="interviewTitle" placeholder="인터뷰 주제를 입력해주세요.">
+                    </div>
+                    <div class="side-box">
+                        <label for="interviewFor">인터뷰 목적</label>
+                        <input type="text" id="interviewFor" placeholder="ex) 서비스 피드백, 사용자 요구사항 조사 등등">
+                    </div>
+                    <div class="side-box">
+                        <label for="interviewTime">인터뷰 시간</label>
+                        <input type="text" id="interviewTime" placeholder="분">
+                    </div>
+                </div>
+                <div class="container-children sub-persona"></div>
+                <div class="container-children sub-interview"></div>
+                <div class="container-children sub-analysis"></div>
+                <div class="container-children sub-revision"></div>
+            </div>
+            <div class="sub-lower">
+                <div class="counter-section">
+                    <span>질문 생성 개수</span>
+                    <div class="counter">
+                        <button id="decrease-btn">−</button>
+                        <span id="count">8</span>
+                        <button id="increase-btn">+</button>
+                    </div>
+                </div>
+                <button id="generate-btn">인터뷰 질문지 생성</button>
+            </div>
+            </div>
+        </div>
     </div>
 </body>
 <script src="script.js"></script>
+<script src="activeStyle.js"></script>
 
 </html>
