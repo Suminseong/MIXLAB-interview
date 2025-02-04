@@ -9,7 +9,8 @@
 </head>
 
 <body>
-    <div id="apiKeyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);">
+    <div id="apiKeyModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);">
         <div style="background: white; padding: 20px; margin: 20% auto; width: 300px; text-align: center;">
             <h3>API Key 입력</h3>
             <input type="text" id="apiKeyInput" placeholder="OpenAI API Key 입력" style="width: 100%; padding: 8px;">
@@ -67,10 +68,19 @@
                         <input type="text" id="interviewTime" placeholder="분">
                     </div>
                 </div>
-                <div class="container-children sub-persona"></div>
-                <div class="container-children sub-interview"></div>
-                <div class="container-children sub-analysis"></div>
-                <div class="container-children sub-revision"></div>
+                <div class="container-children sub-persona sub-inactive">
+                    <div class="side-box">
+                        <label for="interviewTitle">인터뷰 주제</label>
+                        <input type="text" id="interviewTitle" placeholder="인터뷰 주제를 입력해주세요.">
+                    </div>
+                    <div class="side-box">
+                        <label for="interviewFor">퍼소나 자동생성</label>
+                        <input type="text" id="interviewFor" placeholder="ex) 서비스 피드백, 사용자 요구사항 조사 등등">
+                    </div>
+                </div>
+                <div class="container-children sub-interview sub-inactive"></div>
+                <div class="container-children sub-analysis sub-inactive"></div>
+                <div class="container-children sub-revision sub-inactive"></div>
             </div>
             <div class="sub-lower">
                 <div class="counter-section">
@@ -83,8 +93,8 @@
                 </div>
                 <button id="generate-btn">인터뷰 질문지 생성</button>
             </div>
-            </div>
         </div>
+    </div>
     </div>
 </body>
 <script src="script.js"></script>
