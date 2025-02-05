@@ -71,27 +71,61 @@
                 <div class="container-children sub-persona sub-inactive">
                     <div class="side-box">
                         <label for="interviewTitle">인터뷰 주제</label>
-                        <input type="text" id="interviewTitle" placeholder="인터뷰 주제를 입력해주세요.">
+                        <p id="personaTitle"></p>
                     </div>
                     <div class="side-box">
-                        <label for="interviewFor">퍼소나 자동생성</label>
-                        <input type="text" id="interviewFor" placeholder="ex) 서비스 피드백, 사용자 요구사항 조사 등등">
+                        <div class="label-box">
+                            <label for="interviewFor">퍼소나 간편 생성</label>
+                            <div class="toggle-container">
+                                <input type="checkbox" id="toggle" class="toggle-input">
+                                <label for="toggle" class="toggle-label"></label>
+                            </div>                            
+                        </div>
+                    </div>
+                    <div class="side-box" id="persona-side">
+                        <div class="persona-prompt-box">
+                            <label for="promptForPersona1">퍼소나1</label>
+                            <input type="text" id="promptForPersona1" placeholder="원하는 설정을 상세히 적어주세요">
+                        </div>
+                        <div class="persona-prompt-box">
+                            <label for="promptForPersona2">퍼소나2</label>
+                            <input type="text" id="promptForPersona2" placeholder="원하는 설정을 상세히 적어주세요">
+                        </div>
+                        <div class="persona-prompt-box">
+                            <label for="promptForPersona3">퍼소나3</label>
+                            <input type="text" id="promptForPersona3" placeholder="원하는 설정을 상세히 적어주세요">
+                        </div>
                     </div>
                 </div>
                 <div class="container-children sub-interview sub-inactive"></div>
                 <div class="container-children sub-analysis sub-inactive"></div>
                 <div class="container-children sub-revision sub-inactive"></div>
             </div>
-            <div class="sub-lower">
-                <div class="counter-section">
-                    <span>질문 생성 개수</span>
-                    <div class="counter">
-                        <button id="decrease-btn">−</button>
-                        <span id="count">8</span>
-                        <button id="increase-btn">+</button>
+            <div class="side-box" id="gen-question">
+                <div class="container-children">
+                    <div class="counter-section">
+                        <span>질문 생성 개수</span>
+                        <div class="counter">
+                            <button id="decrease-btn">−</button>
+                            <span id="count">8</span>
+                            <button id="increase-btn">+</button>
+                        </div>
                     </div>
+                    <button id="generate-btn">인터뷰 질문지 생성</button>
                 </div>
-                <button id="generate-btn">인터뷰 질문지 생성</button>
+            </div>
+            <div class="side-box" id="gen-persona">
+                <div class="container-children">
+                    <div class="counter-section">
+                        <span>퍼소나 생성 개수</span>
+                        <div class="counter">
+                            <button id="persona-decrease-btn">−</button>
+                            <span id="persona-count">3</span>
+                            <button id="persona-increase-btn">+</button>
+                        </div>
+                    </div>
+                    <button id="persona-generate-btn">퍼소나 생성</button>
+                </div>
             </div>
         </div>
     </div>

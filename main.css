@@ -6,6 +6,47 @@
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
 }
 
+.toggle-container {
+    display: inline-block;
+    position: relative;
+}
+
+.toggle-input {
+    display: none;
+}
+
+.toggle-label {
+    display: block;
+    width: 50px;
+    height: 25px;
+    background: #ccc;
+    border-radius: 25px;
+    position: relative;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.toggle-label::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    top: 50%;
+    left: 4px;
+    transform: translateY(-50%);
+    transition: left 0.3s;
+}
+
+.toggle-input:checked + .toggle-label {
+    background: #5872FF;
+}
+
+.toggle-input:checked + .toggle-label::after {
+    left: 26px;
+}
+
 /*--------------상태 지정---------------*/
 
 body {
@@ -116,6 +157,7 @@ body {
 .container-children {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     gap: 20px;
 }
 
@@ -142,7 +184,6 @@ body {
 }
 
 .counter-section {
-    width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -195,6 +236,53 @@ body {
     transform: scale(0.96);
 }
 
+#persona-generate-btn {
+    width: 100%;
+    padding: 14px 0;
+    background: #5B5E63;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s ease, transform 0.1s ease;
+}
+
+#persona-generate-btn:hover {
+    background: #6D7178;
+}
+
+#persona-generate-btn:active {
+    transform: scale(0.96);
+}
+
 .sub-inactive {
-    display: none;
+    opacity: 0;
+    transform: translateY(-100px);
+    transition: 0.3s ease;
+}
+
+.sub-activate {
+    opacity: 1;
+    transform: translateY(0px);
+    transition: 0.3s ease;
+}
+
+.label-box {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/*----------퍼소나--------*/
+
+#persona-side {
+    gap: 32px;
+}
+
+.persona-prompt-box {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
