@@ -1,12 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
     const navItems = Array.from(document.querySelectorAll("#nav-bar > div"));
     const subItems = document.querySelectorAll(".sub-upper .container-children");
+    
     const personaBox = document.querySelector("#persona-side");
     const toggleInput = document.getElementById("toggle");
     const presetInput = document.getElementById("interviewTitle");
     const personaText = document.getElementById("personaTitle");
-
-    // 추가할 요소
     const genQuestionBox = document.getElementById("gen-question");
     const genPersonaBox = document.getElementById("gen-persona");
 
@@ -52,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function toggleGenerationBoxes(index) {
         if (index === 0) { // sub-preset 활성화 (질문 생성 버튼 보이기)
-            
+
             genQuestionBox.style.opacity = "0";
             genQuestionBox.style.transform = "translateY(10px)";
             setTimeout(() => {
@@ -61,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 genQuestionBox.style.transform = "translateY(0)";
                 genQuestionBox.style.transition = "opacity 0.3s ease, transform 0.3s ease";
             }, 320);
-    
+
             // 퍼소나 생성 버튼 부드럽게 숨기기
             genPersonaBox.style.opacity = "0";
             genPersonaBox.style.transform = "translateY(-10px)";
@@ -69,9 +68,9 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => {
                 genPersonaBox.style.display = "none";
             }, 320);
-    
+
         } else if (index === 1) { // sub-persona 활성화 (퍼소나 생성 버튼 보이기)
-            
+
             genPersonaBox.style.opacity = "0";
             genPersonaBox.style.transform = "translateY(10px)";
             setTimeout(() => {
@@ -80,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 genPersonaBox.style.transform = "translateY(0)";
                 genPersonaBox.style.transition = "opacity 0.3s ease, transform 0.3s ease";
             }, 320);
-    
+
             // 질문 생성 버튼 부드럽게 숨기기
             genQuestionBox.style.opacity = "0";
             genQuestionBox.style.transform = "translateY(-10px)";
@@ -88,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => {
                 genQuestionBox.style.display = "none";
             }, 320);
-    
+
         } else { // 다른 탭에서는 둘 다 숨김
             genQuestionBox.style.opacity = "0";
             genQuestionBox.style.transform = "translateY(-10px)";
@@ -96,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => {
                 genQuestionBox.style.display = "none";
             }, 300);
-    
+
             genPersonaBox.style.opacity = "0";
             genPersonaBox.style.transform = "translateY(-10px)";
             genPersonaBox.style.transition = "opacity 0.2s ease, transform 0.2s ease";
@@ -105,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 300);
         }
     }
-    
+
 
     function initializePage() {
         // 기본적으로 'Preset'이 활성화되어 있다고 가정
@@ -118,6 +117,38 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    function switchMainPage(activeIndex) {
+        // #result 안의 모든 페이지(.page)를 선택
+        const pages = document.querySelectorAll("#result .page");
+      
+        pages.forEach((page, index) => {
+          if (index === activeIndex) {
+            // 활성화할 페이지: display를 block(또는 flex)으로 설정하고, opacity 0에서 1로 전환 (fade in)
+            page.style.display = "block"; // 필요에 따라 "flex"로 변경 가능
+            // 초기 opacity와 transition 설정
+            page.style.opacity = 0;
+            page.style.transition = "opacity 0.3s ease";
+            
+            // 강제로 reflow를 발생시켜 transition이 적용되도록 함 (선택사항)
+            void page.offsetWidth;
+            
+            // 짧은 딜레이 후 opacity를 1로 변경하여 fade in 효과 적용
+            setTimeout(() => {
+              page.style.opacity = 1;
+            }, 50);
+          } else {
+            // 비활성화할 페이지: fade out 효과 후 display를 none으로 설정
+            page.style.transition = "opacity 0.3s ease";
+            page.style.opacity = 0;
+            
+            // transition이 끝난 후 display를 none으로 변경 (여기서는 300ms 후)
+            setTimeout(() => {
+              page.style.display = "none";
+            }, 300);
+          }
+        });
+      }
 
     navItems.forEach((item, index) => {
         item.addEventListener("click", function () {
@@ -144,6 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 showSideBoxes(subItems[index]);
                 toggleGenerationBoxes(index);
             }
+            switchMainPage(index);
         });
 
         const img = item.querySelector(".nav-img img");
@@ -207,6 +239,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     toggleInput.addEventListener("change", togglePersonaBox);
 
-    // 🌟 페이지 로드 시 초기 상태 설정
+    // 페이지 로드 시 초기 상태 설정
     initializePage();
 });

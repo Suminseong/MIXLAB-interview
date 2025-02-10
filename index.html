@@ -49,7 +49,40 @@
             </div>
         </div>
         <div class="main-container">
-            <div id="result"></div>
+            <div id="result">
+                <div id="question-page" class="page">
+                    <h2>인터뷰 질문</h2>
+                    <div class="question-box" id="question-container"></div>
+                </div>
+            
+                <div id="persona-page" class="page" style="display: none;">
+                    <h2>퍼소나 생성</h2>
+                    <div class="persona-box" id="persona-container"></div>
+                </div>
+
+                <div id="interview-page" class="page" style="display: none;">
+                    <h2>인터뷰 진행</h2>
+                    <div class="interview-box" id="interview-container">
+                        <div id="chatbox" style="border: 1px solid #ccc; padding: 10px; width: 100%; height: 300px; overflow-y: scroll; margin-bottom: 10px;">
+                            <!-- 대화 내용이 여기에 기록됨 -->
+                        </div>
+                        <input type="text" id="userInput" placeholder="질문을 입력하거나 마이크 버튼을 누르세요." style="width: 80%; padding: 8px;">
+                        <button id="sendButton">전송</button>
+                        <button id="micButton">🎤</button>
+                    </div>
+                </div>
+                
+
+                <div id="analyze-page" class="page" style="display: none;">
+                    <h2>인터뷰 분석</h2>
+                    <div class="analyze-box" id="analyze-container"></div>
+                </div>
+
+                <div id="revision-page" class="page" style="display: none;">
+                    <h2>인터뷰 수정</h2>
+                    <div class="revision-box" id="revision-container"></div>
+                </div>
+            </div>
 
         </div><!--중앙 큰 영역-->
         <div class="sub-container">
@@ -97,11 +130,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="container-children sub-interview sub-inactive"></div>
+                <div class="container-children sub-interview sub-inactive"></div> <!--인터뷰 사이드 영역-->
                 <div class="container-children sub-analysis sub-inactive"></div>
                 <div class="container-children sub-revision sub-inactive"></div>
             </div>
-            <div class="side-box" id="gen-question">
+            <div class="side-box" id="gen-question"> <!--사이드 하단 영역, 질문, 퍼소나, 리비전 제외하고 사용X-->
                 <div class="container-children">
                     <div class="counter-section">
                         <span>질문 생성 개수</span>
