@@ -89,4 +89,4 @@ def websocket(ws):
 
 if __name__ == '__main__':
     logger.debug("flask server start!")
-    app.run(host='0.0.0.0', port=5501, debug=True, threaded=True)
+    app.run(host='0.0.0.0', port=5500, debug=True, threaded=True)

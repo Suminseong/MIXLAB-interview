@@ -198,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const promptText = personaPrompts[i] || ""
             const payload = {
                 model: "gpt-4o-2024-08-06",
-                messages: [{ role: "system", content: [{ text: `인터뷰에서 사용할 ${i + 1}번째 퍼소나를 생성해주세요. 인터뷰 주제는 '${interviewTitle}'입니다. '${promptText ? `이 퍼소나는 반드시 ${promptText}를 기반으로 만들어야 하며, 지정된 내용의 누락이 없어야 합니다.` : ""}' 퍼소나는 현실적인 직업, 연령, 성격, 관심사를 가지고 있어야 하며, 인터뷰에서 논의될 주제와 관련성이 있어야 합니다. \n이 양식으로 출력합니다:\n{\n"name": "퍼소나 성명",\n "gender": "퍼소나 성별", \n"age": "연령",\n"occupation": "직업",\n"personality": "성격",\n"interests": "관심사",\n"hobby": "취미",\n"speech": "언어습관",}\n그 밖의 내용은 출력하지 마세요. JSON 형식만 반환하세요. 이름은 성별에 맞추고, 반드시 한국식 3글자 이름으로 작성합니다. 직업은 '소속 부서 직급'순으로 기입하며, 예를 들어, '삼성증권 영업부 대리', '경원상사 재경부 부장' 입니다. 또는 프리랜서, 무직, 학생같은 형태도 상관 없습니다. \n 만약 지금 만드는 퍼소나가 3번째라면, 성격은 '매우 비관적', '공격적이고 꼬장꼬장함', '성질이 더럽고 짜증이 많음', '매우 소심하고 내성적' 등 과 같이 사회성이 매우 떨어지는 형태로 작성합니다. 3번째가 아닌 퍼소나는 평범하고 사회성 있는 성격으로 작성 합니다. \n 언어습관은 퍼소나의 말하기 방식을 정하는 것이며, 존댓말/반말, 내성적/외향적, 의기소침/자신감, 공격적/방어적, 단답형/장문형, 논리적/단편형에서, 각 선택지 한개씩 전부 반드시 골라야 함. 3의 배수 퍼소나라면 그에 맞춰 이야기 하기 까다로운 사용자를 만듭니다. \n 출력방식 json 타입을 꼭 지키도록 하며, {}괄호 전후로 아무것도 입력금지.`, type: "text" }] }],
+                messages: [{ role: "system", content: [{ text: `인터뷰에서 사용할 ${i + 1}번째 퍼소나를 생성해주세요. 인터뷰 주제는 '${interviewTitle}'입니다. '${promptText ? `이 퍼소나는 반드시 ${promptText}를 기반으로 만들어야 하며, 지정된 내용의 누락이 없어야 합니다.` : ""}' 퍼소나는 현실적인 직업, 연령, 성격, 관심사를 가지고 있어야 하며, 인터뷰에서 논의될 주제와 관련성이 있어야 합니다. \n이 양식으로 출력합니다:\n{\n"name": "퍼소나 성명",\n "gender": "퍼소나 성별", \n"age": "연령",\n"occupation": "직업",\n"personality": "성격",\n"interests": "관심사",\n"hobby": "취미",\n"speech": "언어습관",}\n그 밖의 내용은 출력하지 마세요. JSON 형식만 반환하세요. 이름은 성별에 맞추고, 반드시 한국식 3글자 이름으로 작성합니다. 직업은 '소속 부서 직급'순으로 기입하며, 예를 들어, '삼성증권 영업부 대리', '경원상사 재경부 부장' 입니다. 또는 프리랜서, 무직, 학생같은 형태도 상관 없습니다. \n 만약 지금 만드는 퍼소나가 3번째라면, 성격은 '매우 비관적', '공격적이고 꼬장꼬장함', '성질이 더럽고 짜증이 많음', '매우 소심하고 내성적' 등 과 같이 사회성이 매우 떨어지는 형태로 작성합니다. 3번째가 아닌 퍼소나는 평범하고 사회성 있는 성격으로 작성 합니다. \n 언어습관은 퍼소나의 말하기 방식을 정하는 것이며, 딱딱함/여유로움움, 내성적/외향적, 의기소침/자신감, 공격적/방어적, 단답형/장문형, 논리적/단편형에서, 각 선택지 한개씩 전부 반드시 골라야 함. 3의 배수 퍼소나라면 그에 맞춰 이야기 하기 까다로운 사용자를 만듭니다. \n 출력방식 json 타입을 꼭 지키도록 하며, {}괄호 전후로 아무것도 입력금지.`, type: "text" }] }],
                 response_format: { type: "text" },
                 temperature: 0.95,
                 max_completion_tokens: 980,
@@ -287,91 +287,126 @@ document.addEventListener("DOMContentLoaded", () => {
 
     //아래는 음성처리부분/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    const chatbox = document.getElementById("chatbox");
-    const userInput = document.getElementById("userInput");
-    const sendButton = document.getElementById("sendButton");
-    const micButton = document.getElementById("micButton");
-    const personaDataInput = document.getElementById("personaData");
+    const apiUrl = "https://api.openai.com/v1/chat/completions";
+    const modelId = "ft:gpt-4o-2024-08-06:chamkkae:chamkkae-v3a:AmwkrRHc";
+
+    const chatbox = document.getElementById('chatbox');
+    const userInput = document.getElementById('userInput');
+    const sendButton = document.getElementById('sendButton');
+    const micButton = document.getElementById('micButton'); // 음성 입력 버튼 추가
+
+    const audioElement = new Audio(); // 오디오 재생을 위한 HTMLAudioElement
+
+    // function extractCurlyBracesContent(text) {
+    //     const match = text.match(/\{.*?\}/);
+    //     return match ? match[0] : null;  // 괄호 포함된 부분 반환, 없으면 null
+    // }
+    // const exampleText = "퍼소나 json 답변의 변수명을 여기로 넣으씨오";
+    // const extracted = extractCurlyBracesContent(exampleText);
+    
+    // console.log(extracted); // "{내용:내용}"
+
+    let messages = [
+        {
+            role: "system",
+            content:
+                `위 정보를 바탕으로, 사용자가 제출한 자료에 맞는 가상의 인물로 연기해주세요. ` +
+                `대화는 반드시 대화체로, 불필요한 표, 단락, 기호, 이모지 없이 진행해 주세요.`
+        }
+    ];
 
     let socket;
-    let messages = [];  //이전 대화 기록을 유지하는 전역 messages 배열
 
     function connectWebSocket() {
         socket = new WebSocket("ws://localhost:5501/ws");
 
         socket.onopen = () => {
-            console.log("WebSocket 연결됨.");
+            console.log("문이 열리고 멋진 그대가 들어오네요우.");
         };
 
         socket.onmessage = async (event) => {
             try {
                 const audioBlob = new Blob([event.data], { type: 'audio/wav' });
                 const audioUrl = URL.createObjectURL(audioBlob);
-                const audioElement = new Audio(audioUrl);
+                audioElement.src = audioUrl;
                 audioElement.play();
+                console.log("Audio is playing...");
+                console.log(`이전에 입력된 시스템 프롬프트는? [${messages[0].content}]`)
             } catch (error) {
-                console.error("오디오 재생 오류:", error);
+                console.error("Error processing WebSocket message:", error);
             }
         };
 
         socket.onclose = (event) => {
-            console.warn("WebSocket 연결이 종료되었습니다:", event.code);
+            console.warn("WebSocket connection closed:", event.code);
         };
 
         socket.onerror = (error) => {
-            console.error("WebSocket 오류 발생:", error);
+            console.error("WebSocket error:", error);
         };
     }
 
-    connectWebSocket();
+    function appendMessage(message, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.className = `message ${sender}`;
+        messageElement.textContent = message;
+        chatbox.appendChild(messageElement);
+        chatbox.scrollTop = chatbox.scrollHeight;
+    }
 
     async function sendMessage() {
-        const apiKey = localStorage.getItem("openai_api_key");
+        const apiKey = apiKeyInput.value.trim();
         const userMessage = userInput.value.trim();
-
+    
         if (!apiKey) {
-            alert("API 키를 입력해야 합니다.");
-            return;
-        }
-        if (!selectedPersona) {
-            alert("퍼소나를 먼저 선택하세요!");
+            alert('API 키를 입력해주세요.');
             return;
         }
         if (!userMessage) {
-            alert("질문을 입력하세요.");
+            alert('메시지를 입력해주세요.');
             return;
         }
-
-        // 채팅창에 사용자 메시지 추가
-        chatbox.innerHTML += `<div><strong>사용자:</strong> ${userMessage}</div>`;
-        userInput.value = '';
-
-        // 대화 초기화: 인터뷰 정보가 포함된 system 메시지를 한 번만 설정
-        if (messages.length === 0) {
-            messages.push({
-                role: "system",
-                content: `인터뷰 주제: ${interviewTitleInput}, 인터뷰 목적: ${interviewFor}. \n인터뷰 대상자는 ${selectedPersona.name}입니다. \n
-                이 퍼소나는 ${selectedPersona.occupation} 직업을 가지고 있으며, ${selectedPersona.personality} 성격을 가졌습니다. \n
-                ${selectedPersona.speech} 방식으로 말합니다. 말하기 방식을 바탕으로 실제와 같은 느낌의 대화를 하세요.`
-            });
+    
+        // 퍼소나가 선택되지 않은 경우 경고 후 함수 종료
+        if (!selectedPersona) {
+            alert("먼저 퍼소나를 선택해주세요.");
+            return;
         }
-
-        // 사용자의 질문을 messages 배열에 추가
+    
+        const interviewTitle = interviewTitleInput.value.trim();
+    
+        // 시스템 메시지에 GPT 퍼소나 JSON의 주요 정보를 포함하여 구성
+        messages = [
+            {
+                role: "system",
+                content:
+                    `인터뷰 주제: ${interviewTitle}\n` +
+                    `인터뷰 대상: ${selectedPersona.name} (${selectedPersona.gender}, ${selectedPersona.age}세, ${selectedPersona.occupation})\n` +
+                    `성격: ${selectedPersona.personality}\n` +
+                    `관심사: ${selectedPersona.interests}\n` +
+                    `취미: ${selectedPersona.hobby}\n` +
+                    `언어습관: ${selectedPersona.speech}\n` +
+                    `위 정보를 바탕으로, 사용자가 제출한 자료에 맞는 가상의 인물로 연기해주세요. ` +
+                    `대화는 반드시 대화체로, 불필요한 표, 단락, 기호, 이모지 없이 진행해 주세요.`
+            }
+        ];
+    
+        appendMessage(userMessage, 'user');
         messages.push({ role: "user", content: userMessage });
-
-        // OpenAI API에 보낼 요청 데이터
+        userInput.value = '';
+    
         const payload = {
-            model: "ft:gpt-4o-2024-08-06:chamkkae:chamkkae-v3a:AmwkrRHc",
-            messages: messages,  // 기존 대화 포함하여 전송
+            model: modelId,
+            messages: messages,
             max_tokens: 4000,
             temperature: 0.7,
             top_p: 1,
-            frequency_penalty: 0,
-            presence_penalty: 0
+            frequency_penalty: 0.02,
+            presence_penalty: 0.06
         };
-
+    
         try {
-            const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            const response = await fetch(apiUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -379,54 +414,69 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: JSON.stringify(payload)
             });
-
+    
             if (!response.ok) {
                 throw new Error(`Error: ${response.statusText}`);
             }
-
+    
             const data = await response.json();
-            const botMessage = data.choices[0]?.message?.content || "응답을 받을 수 없습니다.";
-
-            // AI 응답을 채팅창에 추가
-            chatbox.innerHTML += `<div><strong>AI:</strong> ${botMessage}</div>`;
-
-            // AI 응답을 messages 배열에 추가하여 문맥 유지
+            const botMessage = data.choices[0]?.message?.content || "Error: API에서 응답이 없습니다.";
+    
+            appendMessage(botMessage, 'bot');
             messages.push({ role: "assistant", content: botMessage });
-
-            // WebSocket을 통해 TTS 변환 요청
+    
             if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({
-                    apiKey: apiKey,
-                    gptResponse: botMessage
-                }));
+                socket.send(JSON.stringify({ apiKey, gptResponse: botMessage }));
+                console.log("메시지 전송됨:", { apiKey, gptResponse: botMessage });
+            } else {
+                console.warn("웹소켓 연결이 중단되었습니다.");
             }
         } catch (error) {
-            console.error("API 요청 오류:", error);
+            appendMessage(`Error: ${error.message}`, 'bot');
         }
     }
+    
+
+    let isTalked = false;
 
     function enableSpeechInput() {
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = "ko-KR";
+        recognition.interimResults = false;
 
         recognition.onstart = () => {
-            console.log("음성 인식 시작...");
+            console.log("음성 인식중");
         };
 
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
+            console.log("Recognized speech:", transcript);
             userInput.value = transcript;
+            isTalked = true;
             sendMessage();
+            isTalked = false;
         };
 
         recognition.onerror = (event) => {
-            console.error("음성 인식 오류:", event.error);
+            console.error("Speech recognition error:", event.error);
+        };
+
+        recognition.onend = () => {
+            console.log("Voice recognition ended.");
         };
 
         recognition.start();
     }
 
-    sendButton.addEventListener("click", sendMessage);
-    micButton.addEventListener("click", enableSpeechInput);
+    sendButton.addEventListener('click', sendMessage);
+    micButton.addEventListener('click', enableSpeechInput); // 마이크 버튼 이벤트
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' || isTalked) {
+            sendMessage();
+            isTalked = false; // 상태 초기화
+        }
+    });
+
+    connectWebSocket();
 
 });
