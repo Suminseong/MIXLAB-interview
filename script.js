@@ -122,6 +122,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    let questions;
+
     // GPT API 호출 (인터뷰 질문 생성)
     callQuestionGPT.addEventListener("click", async () => {
         const interviewTitle = interviewTitleInput.value.trim();
@@ -162,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await response.json();
 
             if (data.choices && data.choices.length > 0) {
-                const questions = JSON.parse(data.choices[0].message.content);
+                questions = JSON.parse(data.choices[0].message.content);
                 resultContainer.innerHTML = questions.map(q => `<p>${q}</p>`).join("");
             } else {
                 resultContainer.innerHTML = "<p>질문을 생성하는데 실패했습니다.</p>";
@@ -288,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
     //아래는 음성처리부분/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     const apiUrl = "https://api.openai.com/v1/chat/completions";
-    const modelId = "ft:gpt-4o-2024-08-06:chamkkae:chamkkae-v3a:AmwkrRHc";
+    const modelId = "gpt-4o-2024-08-06";
 
     const chatbox = document.getElementById('chatbox');
     const userInput = document.getElementById('userInput');
@@ -330,7 +332,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const audioUrl = URL.createObjectURL(audioBlob);
                 audioElement.src = audioUrl;
                 audioElement.play();
-                console.log("Audio is playing...");
                 console.log(`이전에 입력된 시스템 프롬프트는? [${messages[0].content}]`)
             } catch (error) {
                 console.error("Error processing WebSocket message:", error);
@@ -387,7 +388,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     `취미: ${selectedPersona.hobby}\n` +
                     `언어습관: ${selectedPersona.speech}\n` +
                     `위 정보를 바탕으로, 사용자가 제출한 자료에 맞는 가상의 인물로 연기해주세요. ` +
-                    `대화는 반드시 대화체로, 불필요한 표, 단락, 기호, 이모지 없이 진행해 주세요.`
+                    `대화는 반드시 대화체로, 불필요한 표, 단락, 이모지는 사용하지 않고, 즐거운 상황에서는 하하하하! 하고 웃거나, 언어습관에 따라 대답을 거부하거나, 말문이 막힌 연기를 하거나, 특히 성격이 안좋다면 반복되는 질문을 귀찮아 하고, 한숨도 쉬고, 쉽게 화 냅니다. 실제 사람같은 응답을 원해요. 이렇게 출력된 답은 **interviewAnswer**라고 정의합니다. 순수 텍스트만 들어갑니다.` +
+                    `인터뷰에는 미리 정해진 질문들이 있는데, 질문 리스트는 ${questions.join(',')}순 입니다. 질문을 받는 것은 아이스 브레이킹 > 1번 질문 > 1번의 파생질문들 > 2번 질문 > ... > 마지막 질문 순서로 이루어 지는데, 지금 받은 질문이 어떤 것인지를 **interiewIndex**라고 정의합니다. 오직 숫자만 들어가며, 아이스브레이킹=0, 1번 질문과 그 파생질문=1, 2번 질문과 그 파생질문=2... 로 숫자만 표시합니다. 이전 질문에 대해 상세히 물어보거나 파생된 질문을 했을 경우에는 파생질문으로 인식하고 이전 질문과 같은 번호를 부여하되, 다른 질문 목록에 있는 질문에 더 가깝다면 그 질문의 번호를 부여합니다.`+
+                    `최종 출력은 json 형태로 하되 괄호 전후로 백틱이나 다른 글자를 넣지 마세요. interviewAnswer, interviewIndex 2가지 속성만 넣어 출력하세요.`
             }
         ];
     
