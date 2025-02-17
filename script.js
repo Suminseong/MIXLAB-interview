@@ -123,6 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     let questions;
+    let questionList;
 
     // GPT API 호출 (인터뷰 질문 생성)
     callQuestionGPT.addEventListener("click", async () => {
@@ -165,6 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (data.choices && data.choices.length > 0) {
                 questions = JSON.parse(data.choices[0].message.content);
+                questionList = questions.join("/");
+                console.log(questions)
                 resultContainer.innerHTML = questions.map(q => `<p>${q}</p>`).join("");
             } else {
                 resultContainer.innerHTML = "<p>질문을 생성하는데 실패했습니다.</p>";
@@ -228,30 +231,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             } catch (error) {
                 console.error(`퍼소나 ${i + 1} 생성 중 오류 발생:`, error);
+                personaNum ++;
             }
         }
 
         personaContainer.innerHTML = personaResults.map((p, index) => `
-        <div class="persona-box" style="
-            border: 1px solid #ccc; 
-            border-radius: 10px; 
-            padding: 15px; 
-            margin: 10px 0; 
-            background-color: #f9f9f9; 
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-            font-family: Arial, sans-serif;
-            cursor: pointer;
-        " id="persona-${index}" onclick="selectPersona(${index})">
-            <p style="margin: 5px 0;"><strong>이름:</strong> ${p.name}</p>
-            <p style="margin: 5px 0;"><strong>연령:</strong> ${p.age}</p>
-            <p style="margin: 5px 0;"><strong>직업:</strong> ${p.occupation}</p>
-            <p style="margin: 5px 0;"><strong>성격:</strong> ${p.personality}</p>
-            <p style="margin: 5px 0;"><strong>관심사:</strong> ${p.interests}</p>
-            <p style="margin: 5px 0;"><strong>언어습관:</strong> ${p.speech}</p>
-            <button style="margin-top: 10px; padding: 5px 10px; background: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;"
-                onclick="selectPersona(${index})">
-                이 퍼소나 선택
-            </button>
+        <div class="persona-box" id="persona-${index}" onclick="selectPersona(${index})">
+            <p><strong>이름:</strong> ${p.name}</p>
+            <p><strong>연령:</strong> ${p.age}</p>
+            <p><strong>직업:</strong> ${p.occupation}</p>
+            <p><strong>성격:</strong> ${p.personality}</p>
+            <p><strong>관심사:</strong> ${p.interests}</p>
+            <p><strong>언어습관:</strong> ${p.speech}</p>
+            <button onclick="selectPersona(${index})">이 퍼소나 선택</button>
         </div>
     `).join("");
 
@@ -290,23 +282,67 @@ document.addEventListener("DOMContentLoaded", () => {
     //아래는 음성처리부분/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     const apiUrl = "https://api.openai.com/v1/chat/completions";
-    const modelId = "gpt-4o-2024-08-06";
+    const modelId = "ft:gpt-4o-2024-08-06:chamkkae:chamkkae-v3a:AmwkrRHc";
 
     const chatbox = document.getElementById('chatbox');
     const userInput = document.getElementById('userInput');
     const sendButton = document.getElementById('sendButton');
     const micButton = document.getElementById('micButton'); // 음성 입력 버튼 추가
+    let nowQuestion;
 
     const audioElement = new Audio(); // 오디오 재생을 위한 HTMLAudioElement
 
-    // function extractCurlyBracesContent(text) {
-    //     const match = text.match(/\{.*?\}/);
-    //     return match ? match[0] : null;  // 괄호 포함된 부분 반환, 없으면 null
-    // }
-    // const exampleText = "퍼소나 json 답변의 변수명을 여기로 넣으씨오";
-    // const extracted = extractCurlyBracesContent(exampleText);
+    //야옹야옹 여기가 거기
+    let indexMessage = [
+        {
+            role: "system",
+            content: `인터뷰에는 미리 정해진 질문들이 있는데, 질문 리스트는 ${questions}순 입니다. 질문을 받는 것은 아이스 브레이킹 > 1번 질문 > 1번의 파생질문들 > 2번 질문 > ... > 마지막 질문 순서로 이루어 지는데, 지금 받은 질문이 어떤 것인지를 **interiewIndex**라고 정의합니다. 오직 숫자만 들어가며, 아이스브레이킹이나 자기소개=0, 1번 질문과 그 파생질문=1, 2번 질문과 그 파생질문=2... 로 숫자만 표시합니다. 이전 질문에 대해 상세히 물어보거나 파생된 질문을 했을 경우에는 파생질문으로 인식하고 가장 최근과 동일한 번호를 부여하되, 다른 질문 목록에 있는 질문에 더 가깝다면 그 질문의 번호를 부여합니다. 인터뷰 초반에 주제 또는 질문 리스트와 관련 없는 이야기를 하고 있다면 아이스브레이킹으로 간주하고 0을 출력합니다.` + `만약 사용자 입력이 어떤 질문과 동일, 또는 매우 유사하다면 그 질문 순서와 동일한 index를 부여합니다. 모든 판단은 질문 리스트에 우선합니다.` +
+            `최종 출력은 단일 숫자로 하며, 괄호, 백틱이나 다른 글자를 넣지 마세요.`
+        }
+    ];
     
-    // console.log(extracted); // "{내용:내용}"
+    async function callNewGPTApi() {
+        const userMessage = userInput.value.trim();
+        if (!userMessage) {
+            alert('메시지를 입력해주세요.');
+            return;
+        }
+    
+        // 사용자 입력을 indexMessage 배열에 추가
+        indexMessage.push({ role: "user", content: userMessage });
+    
+        const payload = {
+            model: "gpt-4o-2024-08-06",
+            messages: indexMessage, // 이전 대화 내역 유지
+            max_tokens: 100,
+            temperature: 0.0,
+            top_p: 1.0
+        };
+    
+        try {
+            const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKeyInput.value.trim()}`
+                },
+                body: JSON.stringify(payload)
+            });
+    
+            if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+    
+            const data = await response.json();
+            nowQuestion = data.choices[0]?.message?.content || "응답이 없습니다.";
+    
+            console.log("GPT Output:", nowQuestion);
+    
+            // GPT 응답을 indexMessage 배열에 추가 (다음 호출에서 기억되도록)
+            indexMessage.push({ role: "assistant", content: nowQuestion });
+        } catch (error) {
+            console.error("Error calling GPT API:", error);
+        }
+    }
+    
 
     let messages = [
         {
@@ -323,7 +359,7 @@ document.addEventListener("DOMContentLoaded", () => {
         socket = new WebSocket("ws://localhost:5501/ws");
 
         socket.onopen = () => {
-            console.log("문이 열리고 멋진 그대가 들어오네요우.");
+            console.log("웹소켓 가동!");
         };
 
         socket.onmessage = async (event) => {
@@ -358,7 +394,7 @@ document.addEventListener("DOMContentLoaded", () => {
     async function sendMessage() {
         const apiKey = apiKeyInput.value.trim();
         const userMessage = userInput.value.trim();
-    
+
         if (!apiKey) {
             alert('API 키를 입력해주세요.');
             return;
@@ -367,15 +403,17 @@ document.addEventListener("DOMContentLoaded", () => {
             alert('메시지를 입력해주세요.');
             return;
         }
-    
+
+        callNewGPTApi();
+
         // 퍼소나가 선택되지 않은 경우 경고 후 함수 종료
         if (!selectedPersona) {
             alert("먼저 퍼소나를 선택해주세요.");
             return;
         }
-    
+
         const interviewTitle = interviewTitleInput.value.trim();
-    
+
         // 시스템 메시지에 GPT 퍼소나 JSON의 주요 정보를 포함하여 구성
         messages = [
             {
@@ -388,16 +426,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     `취미: ${selectedPersona.hobby}\n` +
                     `언어습관: ${selectedPersona.speech}\n` +
                     `위 정보를 바탕으로, 사용자가 제출한 자료에 맞는 가상의 인물로 연기해주세요. ` +
-                    `대화는 반드시 대화체로, 불필요한 표, 단락, 이모지는 사용하지 않고, 즐거운 상황에서는 하하하하! 하고 웃거나, 언어습관에 따라 대답을 거부하거나, 말문이 막힌 연기를 하거나, 특히 성격이 안좋다면 반복되는 질문을 귀찮아 하고, 한숨도 쉬고, 쉽게 화 냅니다. 실제 사람같은 응답을 원해요. 이렇게 출력된 답은 **interviewAnswer**라고 정의합니다. 순수 텍스트만 들어갑니다.` +
-                    `인터뷰에는 미리 정해진 질문들이 있는데, 질문 리스트는 ${questions.join(',')}순 입니다. 질문을 받는 것은 아이스 브레이킹 > 1번 질문 > 1번의 파생질문들 > 2번 질문 > ... > 마지막 질문 순서로 이루어 지는데, 지금 받은 질문이 어떤 것인지를 **interiewIndex**라고 정의합니다. 오직 숫자만 들어가며, 아이스브레이킹=0, 1번 질문과 그 파생질문=1, 2번 질문과 그 파생질문=2... 로 숫자만 표시합니다. 이전 질문에 대해 상세히 물어보거나 파생된 질문을 했을 경우에는 파생질문으로 인식하고 이전 질문과 같은 번호를 부여하되, 다른 질문 목록에 있는 질문에 더 가깝다면 그 질문의 번호를 부여합니다.`+
-                    `최종 출력은 json 형태로 하되 괄호 전후로 백틱이나 다른 글자를 넣지 마세요. interviewAnswer, interviewIndex 2가지 속성만 넣어 출력하세요.`
+                    `대화는 반드시 대화체로, 불필요한 표, 단락, 이모지는 사용하지 않고, 즐거운 상황에서는 하하하하! 하고 웃거나, 언어습관에 따라 대답을 거부하거나, 말문이 막힌 연기를 하거나, 특히 성격이 안좋다면 반복되는 질문을 귀찮아 하고, 한숨도 쉬고, 쉽게 화 냅니다. 실제 사람같은 응답을 원해요. 이렇게 출력된 답은 순수 텍스트만 들어갑니다.`
             }
         ];
-    
+
         appendMessage(userMessage, 'user');
         messages.push({ role: "user", content: userMessage });
         userInput.value = '';
-    
+
         const payload = {
             model: modelId,
             messages: messages,
@@ -407,7 +443,7 @@ document.addEventListener("DOMContentLoaded", () => {
             frequency_penalty: 0.02,
             presence_penalty: 0.06
         };
-    
+
         try {
             const response = await fetch(apiUrl, {
                 method: "POST",
@@ -417,17 +453,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: JSON.stringify(payload)
             });
-    
+
             if (!response.ok) {
                 throw new Error(`Error: ${response.statusText}`);
             }
-    
+
             const data = await response.json();
             const botMessage = data.choices[0]?.message?.content || "Error: API에서 응답이 없습니다.";
-    
+
             appendMessage(botMessage, 'bot');
             messages.push({ role: "assistant", content: botMessage });
-    
+
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify({ apiKey, gptResponse: botMessage }));
                 console.log("메시지 전송됨:", { apiKey, gptResponse: botMessage });
@@ -438,7 +474,7 @@ document.addEventListener("DOMContentLoaded", () => {
             appendMessage(`Error: ${error.message}`, 'bot');
         }
     }
-    
+
 
     let isTalked = false;
 

@@ -48,6 +48,7 @@
                 <button id="changeApiKey">API 키 변경</button>
             </div>
         </div>
+        <!--중앙 큰 영역-->
         <div class="main-container">
             <div id="result">
                 <div id="question-page" class="page">
@@ -83,8 +84,7 @@
                     <div class="revision-box" id="revision-container"></div>
                 </div>
             </div>
-
-        </div><!--중앙 큰 영역-->
+        </div>
         <div class="sub-container">
             <div class="sub-upper">
                 <div class="container-children sub-preset sub-activate">
@@ -96,17 +96,13 @@
                         <label for="interviewFor">인터뷰 목적</label>
                         <input type="text" id="interviewFor" placeholder="ex) 서비스 피드백, 사용자 요구사항 조사 등등">
                     </div>
-                    <div class="side-box">
-                        <label for="interviewTime">인터뷰 시간</label>
-                        <input type="text" id="interviewTime" placeholder="분">
-                    </div>
                 </div>
                 <div class="container-children sub-persona sub-inactive">
                     <div class="side-box">
                         <label for="interviewTitle">인터뷰 주제</label>
                         <p id="personaTitle"></p>
                     </div>
-                    <div class="side-box">
+                    <div class="side-box" id="persona-easecreate">
                         <div class="label-box">
                             <label for="interviewFor">퍼소나 간편 생성</label>
                             <div class="toggle-container">
@@ -144,7 +140,7 @@
                             <button id="increase-btn">+</button>
                         </div>
                     </div>
-                    <button id="generate-btn">인터뷰 질문지 생성</button>
+                    <button class="create-btn-style" id="generate-btn">인터뷰 질문지 생성</button> <!--class 추가(1)-->
                 </div>
             </div>
             <div class="side-box" id="gen-persona">
@@ -157,7 +153,7 @@
                             <button id="persona-increase-btn">+</button>
                         </div>
                     </div>
-                    <button id="persona-generate-btn">퍼소나 생성</button>
+                    <button class="create-btn-style" id="persona-generate-btn">퍼소나 생성</button>
                 </div>
             </div>
         </div>

@@ -4,59 +4,25 @@
     margin: 0;
     padding: 0;
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+    letter-spacing: -0.5px;
 }
 
-.toggle-container {
-    display: inline-block;
-    position: relative;
+input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 100px #FEFEFE inset; 
+    -webkit-text-fill-color: #5B5E63; 
 }
 
-.toggle-input {
-    display: none;
-}
-
-.toggle-label {
-    display: block;
-    width: 50px;
-    height: 25px;
-    background: #ccc;
-    border-radius: 25px;
-    position: relative;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.toggle-label::after {
-    content: "";
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background: white;
-    border-radius: 50%;
-    top: 50%;
-    left: 4px;
-    transform: translateY(-50%);
-    transition: left 0.3s;
-}
-
-.toggle-input:checked + .toggle-label {
-    background: #5872FF;
-}
-
-.toggle-input:checked + .toggle-label::after {
-    left: 26px;
-}
 
 /*--------------상태 지정---------------*/
 
 body {
     width: 100vw;
     height: 100vh;
-    background-color: #f8f9fb;
+    background-color: #F8F9FB;
 }
 
 .base-container {
-    gap: 20px;
+    gap: clamp(14px, 1.2vw, 21px);
     height: 100%;
     display: flex;
     flex-direction: row;
@@ -65,224 +31,369 @@ body {
 .aside-left {
     flex-grow: 2;
     /* background-color: #fff; */
-    margin: 29px 0px;
-    margin-left: 20px;
+    margin: clamp(18px, 1.4vw, 23px) 0;
+    margin-left: clamp(14px, 1vw, 19px);
     border-radius: 50px;
-    max-width: 240px;
 }
 
 .main-container {
     flex-grow: 10;
-    margin: 29px 0px;
+    margin: clamp(14px, 1vw, 19px) 0px;
     background-color: #fff;
     border-radius: 50px;
 }
 
 .sub-container {
     flex-grow: 3;
-    margin: 29px 0px;
-    margin-right: 20px;
+    margin: clamp(14px, 1vw, 19px) 0px;
+    margin-right: clamp(14px, 1.2vw, 19px);
     border-radius: 50px;
 }
 
 /*--------------aside-left-----------------*/
 
 .logo-text {
-    font-size: 20pt;
+    font-size: clamp(16px, 1.2vw, 21px);
     font-weight: 600;
     color: #888C92;
 }
 
 #aside-bar {
-    margin-top: 29px;
-    margin-left: 42px;
+    margin-top: clamp(24px, 2vw, 32px);
+    margin-left: clamp(16px, 2.5vw, 36px);
+    margin-right: clamp(32px, 2.5vw, 34px);
     display: flex;
     flex-direction: column;
-    gap: 111px;
+    gap: clamp(60px, 6vw, 100px);
 }
 
 #nav-bar div {
     display: flex;
     flex-direction: row;
-    gap: 16px;
+    gap: clamp(10px, 0.8vw, 15px);
+    align-items: center;
 }
 
 #nav-bar div :hover {
     cursor: pointer;
     filter: brightness(80%);
+    transition: 0.2s ease, transform 0.1s ease;
 }
 
 #nav-bar {
     display: flex;
     flex-direction: column;
-    max-width: 240px;
-    gap: 32px;
+    max-width: 0;
+    gap: clamp(20px, 1.8vw, 30px);
     color: #CDD1D6;
 }
 
+/* 아이콘도 반응형으로 움직이게 vw단위로 */
 .nav-img {
-    width: 24px;
-    height: 24px;
+    width: clamp(18px, 1.4vw, 24px);
+    height: clamp(18px, 1.4vw, 24px);
 }
 
 .nav-text {
-    font-size: 20px;
+    font-size: clamp(16px, 1.2vw, 20px);
 }
 
 .nav-active {
-    color: #5B5E63;
+    color: #5872FF;
 }
 
 .nav-active .nav-img svg path {
-    fill: #5B5E63 !important;
+    fill: #5872FF !important;
 }
 
 .nav-active .nav-img svg ellipse {
-    fill: #5B5E63 !important;
+    fill: #5872FF !important;
 }
 
-.nav-active .nav-text{
+.nav-text{
+    font-weight: 300;
+}
+
+.nav-active p{
+    font-weight: 600 ;
+}
+
+#changeApiKey{
+    width: clamp(60px, 8vw, 80px);
+    font-size: clamp(12px, 0.8vw, 16px);
+}
+
+/*----------main-container 부분---------*/
+.main-container{
+    box-shadow: 0 0 1.5vw rgba(84, 88, 103, 0.04);
+    border-radius: clamp(24px, 3vw, 52px);
+    width: 40vw;
+    padding: clamp(22px, 2.5vw, 44px) clamp(20px, 3vw, 48px);
+}
+
+.page h2{
+    font-size: clamp(14px, 1vw, 17px);
     font-weight: 650;
+    color: #5B5E63;
+    margin-bottom: clamp(14px, 1.4vw, 24px);
 }
 
-/*sub-container 부분*/
+#result{
+    height: 98%;
+    overflow-y: auto;
+}
+
+#result p{
+    font-size: clamp(12px, 0.85vw, 15px);
+    color: #8F949B;
+    padding: clamp(9.5px, 0.8vw, 16px) clamp(14px, 1.2vw, 20px);
+    border: 1.5px solid #F2F3F5;
+    border-radius: 50vw;
+    margin-bottom: clamp(15px, 1.3vw, 22px);
+}
+
+/*----------sub-container 부분---------*/
 
 .sub-container {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    max-width: 350px;
+    width: clamp(210px, 14vw, 280px);
 }
 
 .container-children {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 20px;
+    gap: clamp(14px, 1.2vw, 20px);
 }
 
 .side-box {
     display: flex;
     flex-direction: column;
     background: white;
-    border-radius: 16px;
-    padding: 20px;
-    gap: 16px;
+    border-radius: clamp(16px, 1.8vw, 30px);
+    padding: clamp(16px, 1.5vw, 26px) clamp(18px, 1.7vw, 30px);
+    gap: clamp(8px, 0.8vw, 16px);
+
+    box-shadow: 0 0 1.5vw rgba(84, 88, 103, 0.06);
 }
 
-/*sub-lower 부분*/
+.side-box label{
+    font-size: clamp(13px, 0.95vw, 16px);
+    font-weight: 650;
+    color: #5B5E63;
+}
 
-.sub-lower {
+/* input 태그 안에 text입력시 배경 색상 변하게 js로 스타일링 */
+.side-box input{
+    border: none;
+    background-color: #F2F3F5;
+    padding: clamp(8px, 0.8vw, 15px) clamp(12px, 1.1vw, 17px);
+    border-radius: 20vw;
+    color: #5B5E63;
+
+    border: 1.5px solid #F2F3F5;
+    font-size: clamp(11.5px, 0.8vw, 15px);
+}
+
+.side-box input::placeholder{
+    color: #8F949B;
+    font-weight: 300;
+}
+
+.side-box input:focus{
+    outline: none;
+}
+
+/*sub-lower 부분---------->html코드에서 변경된 것 같음(.side-box / #gen-해당페이지)*/
+
+/* .sub-lower {
     background: white;
-    border-radius: 16px;
-    padding: 20px;
+    border-radius: clamp(16px, 1.8vw, 30px);
+    padding: clamp(18px, 1.7vw, 30px);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: clamp(14px, 1vw, 17px);
     bottom: 0;
-}
+
+    box-shadow: 0 0 20px rgba(84, 88, 103, 0.05);
+} */
 
 .counter-section {
+    width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+
+    align-items: center;
+    color: #5B5E63;
+    font-weight: 600;
+    font-size: clamp(13px, 0.95vw, 16px);
 }
 
 .counter {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: clamp(7px, 0.8vw, 14px);
 }
 
 .counter button {
-    width: 28px;
-    height: 28px;
-    background: #F1F3F5;
-    border: none;
+    width: clamp(20px, 1.5vw, 24px);
+    height: clamp(20px, 1.5vw, 24px);
+    background: #fff;
+    border: 1px solid #eeeeee;
     border-radius: 50%;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: clamp(15px, 1.15vw, 18px);
+    font-weight: 300;
     color: #5B5E63;
     cursor: pointer;
     transition: 0.2s ease, transform 0.1s ease;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 0.15vw;
 }
 
 .counter button:hover {
-    background: #E0E3E7;
+    background: #f3f4f5;
 }
 
 .counter button:active {
     transform: scale(0.9);
 }
 
-#generate-btn {
-    width: 100%;
-    padding: 14px 0;
-    background: #5B5E63;
-    color: white;
-    border: none;
-    border-radius: 30px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: 0.2s ease, transform 0.1s ease;
-}
-
 #generate-btn:hover {
-    background: #6D7178;
+    background: #93A4FF;
 }
 
 #generate-btn:active {
     transform: scale(0.96);
 }
 
-#persona-generate-btn {
+.sub-inactive {
+    display: none;
+}
+
+/* -------------------------------add-0211------------------------------------ */
+/* 전역 사용 스타일링 */
+.create-btn-style{
     width: 100%;
-    padding: 14px 0;
-    background: #5B5E63;
+    padding: 0.75vw 0;
+    background: #5872FF;
     color: white;
     border: none;
     border-radius: 30px;
-    font-size: 14px;
+    font-size: clamp(12px, 0.85vw, 15px);
     cursor: pointer;
     transition: 0.2s ease, transform 0.1s ease;
 }
 
-#persona-generate-btn:hover {
-    background: #6D7178;
+/* #result::-webkit-scrollbar-track {
+    border-radius: 20vw;
+} */
+
+/* -----------persona--------- */
+#personaTitle{
+    border: none;
+    background-color: #F8F9FB;
+    padding: 0.8vw 1.1vw;
+    border-radius: 10vw;
+    color: #CDD1D6;
+
+    border: 1.5px solid #F2F3F5;
+    font-size: clamp(11.5px, 0.8vw, 15px);
 }
 
-#persona-generate-btn:active {
-    transform: scale(0.96);
+#persona-easecreate{
+    padding: 1.3vw 1.7vw;
 }
 
-.sub-inactive {
-    opacity: 0;
-    transform: translateY(-100px);
-    transition: 0.3s ease;
-}
-
-.sub-activate {
-    opacity: 1;
-    transform: translateY(0px);
-    transition: 0.3s ease;
-}
-
-.label-box {
+.label-box{
     display: flex;
-    flex-direction: row;
     justify-content: space-between;
     align-items: center;
 }
 
-/*----------퍼소나--------*/
-
-#persona-side {
-    gap: 32px;
+.toggle-input{
+    display: none;
 }
 
-.persona-prompt-box {
+.toggle-label{
+    position: relative;
+    display: block;
+    width: 3vw;
+    height: 1.8vw;
+    background-color: #CDD1D6;
+    border-radius: 20vw;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-label::before{
+    content: "";
+    position: absolute;
+    top: 0.24vw;
+    left: 0.37vw;
+    width: 1.3vw;
+    height: 1.3vw;
+    background-color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 1vw rgba(84, 88, 103, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.toggle-input:checked + .toggle-label {
+    background-color: #5872FF;
+}
+
+.toggle-input:checked + .toggle-label::before {
+    transform: translateX(1vw);
+}
+
+.persona-prompt-box{
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 0.5vw;
 }
+
+.persona-prompt-box label{
+    font-size: clamp(12px, 0.9vw, 15px);
+}
+
+.persona-prompt-box input{
+    padding: 0.7vw 1.1vw;
+    margin-bottom: 0.7vw;
+}
+
+#persona-side{
+    max-height: 16.5vw;
+    overflow-y: auto;
+}
+/* 스크롤 스타일링 적용 예정 */
+
+#persona-container{
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    width: 100%;
+}
+
+.persona-box{
+    width: 90%;
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+}
+
+.persona-box p:nth-child(n+5){
+   grid-column: 2 span;
+}
+
+.persona-box p{
+    display: flex;
+    width: auto;
+}
+
+
+/* ------------interview------------ */
+
