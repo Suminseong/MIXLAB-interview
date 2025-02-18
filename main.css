@@ -253,7 +253,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding-bottom: 0.15vw;
+    padding-bottom: clamp(1px, 0.15vw, 3px); 
 }
 
 .counter button:hover {
@@ -280,11 +280,11 @@ body {
 /* 전역 사용 스타일링 */
 .create-btn-style{
     width: 100%;
-    padding: 0.75vw 0;
+    padding: clamp(7px, 0.8vw, 14px) 0;
     background: #5872FF;
     color: white;
     border: none;
-    border-radius: 30px;
+    border-radius: 20vw;
     font-size: clamp(12px, 0.85vw, 15px);
     cursor: pointer;
     transition: 0.2s ease, transform 0.1s ease;
@@ -296,9 +296,8 @@ body {
 
 /* -----------persona--------- */
 #personaTitle{
-    border: none;
     background-color: #F8F9FB;
-    padding: 0.8vw 1.1vw;
+    padding: clamp(8px, 0.8vw, 15px) clamp(12px, 1.1vw, 17px);
     border-radius: 10vw;
     color: #CDD1D6;
 
@@ -307,7 +306,7 @@ body {
 }
 
 #persona-easecreate{
-    padding: 1.3vw 1.7vw;
+    padding: clamp(16px, 1.5vw, 26px) clamp(18px, 1.7vw, 30px);
 }
 
 .label-box{
@@ -323,8 +322,8 @@ body {
 .toggle-label{
     position: relative;
     display: block;
-    width: 3vw;
-    height: 1.8vw;
+    width: clamp(34px, 3vw, 60px);
+    height: clamp(21px, 1.9vw, 36px);
     background-color: #CDD1D6;
     border-radius: 20vw;
     cursor: pointer;
@@ -334,13 +333,13 @@ body {
 .toggle-label::before{
     content: "";
     position: absolute;
-    top: 0.24vw;
-    left: 0.37vw;
-    width: 1.3vw;
-    height: 1.3vw;
+    top: clamp(2.9px, 0.3vw, 4px);
+    left: clamp(3.2px, 0.29vw, 6px);
+    width: clamp(15px, 1.3vw, 28px);
+    height: clamp(15px, 1.3vw, 28px);
     background-color: #fff;
     border-radius: 50%;
-    box-shadow: 0 0 1vw rgba(84, 88, 103, 0.3);
+    box-shadow: 0 0 clamp(14px, 1vw, 17px) rgba(84, 88, 103, 0.3);
     transition: transform 0.3s ease;
 }
 
@@ -349,13 +348,13 @@ body {
 }
 
 .toggle-input:checked + .toggle-label::before {
-    transform: translateX(1vw);
+    transform: translateX(clamp(12px, 1.1vw, 20px));
 }
 
 .persona-prompt-box{
     display: flex;
     flex-direction: column;
-    gap: 0.5vw;
+    gap: clamp(9px, 0.5vw, 13px);
 }
 
 .persona-prompt-box label{
@@ -363,26 +362,50 @@ body {
 }
 
 .persona-prompt-box input{
-    padding: 0.7vw 1.1vw;
-    margin-bottom: 0.7vw;
+    padding: clamp(9px, 0.7vw, 14px) clamp(13px, 1.1vw, 20px);
+    margin-bottom: clamp(12px, 0.7vw, 14px);
 }
 
 #persona-side{
-    max-height: 16.5vw;
+    /* max-height: 16.5vw; */ /* 노트북에서 볼 때 height 잘리는지 확인 */
     overflow-y: auto;
 }
 /* 스크롤 스타일링 적용 예정 */
 
 #persona-container{
+    width: 95%;
     display: grid;
     grid-template-columns: repeat(2,1fr);
-    width: 100%;
+
+    border: none;
+    box-shadow: none;
+    padding: 0;
 }
 
 .persona-box{
-    width: 90%;
+    width: clamp(50px, 45vw, 700px);
     display: grid;
     grid-template-columns: repeat(2,1fr);
+
+    border: 1.5px solid #EDEFF3; 
+    border-radius: clamp(16px, 1.8vw, 30px); 
+    padding: clamp(16px, 1.5vw, 26px) clamp(18px, 1.7vw, 30px); 
+    margin: clamp(6px, 1vw, 16px); 
+    background-color: #ffffff; 
+    box-shadow: 0 0 clamp(16px, 1.5vw, 26px) rgba(84, 88, 103, 0.06);
+    font-family: "Pretendard Variable";
+    cursor: pointer;
+}
+
+.persona-box button{
+    width: 100%;
+    margin-top: 10px;
+    padding: clamp(7px, 0.8vw, 14px) 0; 
+    background: #8F949B;
+    color: white;
+    border: none;
+    border-radius: 20vw;
+    cursor: pointer;
 }
 
 .persona-box p:nth-child(n+5){
@@ -392,7 +415,10 @@ body {
 .persona-box p{
     display: flex;
     width: auto;
+    margin: 0 clamp(7px, 0.8vw, 14px) 0 0;
 }
+
+/* result된 persona-box 스타일링 */
 
 
 /* ------------interview------------ */
