@@ -425,7 +425,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     `관심사: ${selectedPersona.interests}\n` +
                     `취미: ${selectedPersona.hobby}\n` +
                     `언어습관: ${selectedPersona.speech}\n` +
-                    `위 정보를 바탕으로, 사용자가 제출한 자료에 맞는 가상의 인물로 연기해주세요. ` +
+                    `위 정보를 바탕으로, 사용자가 제출한 자료에 맞는 가상의 인물로 연기해주세요. 누적된 응답들을 기억하고 개연성 있는 대화를 합니다.` +
                     `대화는 반드시 대화체로, 불필요한 표, 단락, 이모지는 사용하지 않고, 즐거운 상황에서는 하하하하! 하고 웃거나, 언어습관에 따라 대답을 거부하거나, 말문이 막힌 연기를 하거나, 특히 성격이 안좋다면 반복되는 질문을 귀찮아 하고, 한숨도 쉬고, 쉽게 화 냅니다. 실제 사람같은 응답을 원해요. 이렇게 출력된 답은 순수 텍스트만 들어갑니다.`
             }
         ];
@@ -437,7 +437,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const payload = {
             model: modelId,
             messages: messages,
-            max_tokens: 4000,
+            max_tokens: 4800,
             temperature: 0.7,
             top_p: 1,
             frequency_penalty: 0.02,
