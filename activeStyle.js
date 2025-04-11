@@ -141,7 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
             // 비활성화할 페이지: fade out 효과 후 display를 none으로 설정
             page.style.transition = "opacity 0.3s ease";
             page.style.opacity = 0;
-            
             // transition이 끝난 후 display를 none으로 변경 (여기서는 300ms 후)
             setTimeout(() => {
               page.style.display = "none";
