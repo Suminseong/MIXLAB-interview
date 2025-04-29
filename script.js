@@ -140,6 +140,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        
+
         // OpenAI API 요청 페이로드
         const payload = {
             model: "gpt-4o-mini",
@@ -153,6 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         try {
+            showLoading(); //로딩 호출기
             const response = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
@@ -175,6 +178,8 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (error) {
             console.error("API 요청 중 오류 발생:", error);
             resultContainer.innerHTML = "<p>API 호출 오류. 콘솔을 확인하세요.</p>";
+        } finally {
+            hideLoading(); //로딩 철거장치
         }
     });
     let personaResults = [];
@@ -195,8 +200,9 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        resultContainer.innerHTML = "<p>퍼소나를 생성 중입니다...</p>"; //퍼소나 로딩 ui는 여기에 입력력
+        resultContainer.innerHTML = "<p>퍼소나를 생성 중입니다...</p>"; //퍼소나 로딩 ui는 여기에 입력
 
+        showLoading();
         personaResults = [];
 
         for (let i = 0; i < personaNum; i++) {
@@ -235,6 +241,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
+        hideLoading();
+
         personaContainer.innerHTML = personaResults.map((p, index) => `
         <div class="persona-box" id="persona-${index}" onclick="selectPersona(${index})">
             <p><strong>이름:</strong> ${p.name}</p>
@@ -257,25 +265,27 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    window.selectPersona = function (index) { // window 객체에 함수 등록하여 HTML에서 접근 가능하도록 함
+    window.selectPersona = function (index) {
         selectedPersona = personaResults[index]; // 선택한 퍼소나 저장
-
+    
         alert(`${selectedPersona.name} 퍼소나를 선택하였습니다.`);
         if (personaResults.length === 0) {
             alert("퍼소나 데이터가 없습니다.");
             return;
         }
-
-        // 인터뷰 페이지로 이동
-        document.getElementById("persona-page").style.display = "none";
-        document.getElementById("interview-page").style.display = "block";
-
+        if (typeof switchMainPage === "function") {
+            switchMainPage(2); // Interview 페이지로 이동
+        } else {
+            console.error("switchMainPage 함수가 존재하지 않습니다.");
+        }
+    
         // 인터뷰 시작 시 초기 메시지 출력
         document.getElementById("chatbox").innerHTML = `
-        <div><strong>인터뷰 대상:</strong> ${selectedPersona.name} (${selectedPersona.occupation})</div>
-        <div><strong>성격:</strong> ${selectedPersona.personality}</div>
-    `;
+            <div><strong>인터뷰 대상:</strong> ${selectedPersona.name} (${selectedPersona.occupation})</div>
+            <div><strong>성격:</strong> ${selectedPersona.personality}</div>
+        `;
     };
+    
 
 
 
