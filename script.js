@@ -25,15 +25,15 @@ document.addEventListener("DOMContentLoaded", () => {
     let personaNum = 3; // 초기값
 
     let lastIndex = 0; // 현재까지의 interviewIndex 상태 기억용
-    
+
     //로딩스피너
     function showSpinner() {
         document.getElementById("loadingSpinner").style.display = "block";
-      }
-      
-      function hideSpinner() {
+    }
+
+    function hideSpinner() {
         document.getElementById("loadingSpinner").style.display = "none";
-    }    
+    }
 
     // 페이지 로드 시 API 키 입력 모달 표시
     if (!apiKey) {
@@ -136,16 +136,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // GPT API 호출 (인터뷰 질문 생성)
     callQuestionGPT.addEventListener("click", async () => {
         showSpinner();
-    
+
         const interviewTitle = interviewTitleInput.value.trim();
         const interviewPurpose = interviewFor.value.trim();
-    
+
         if (!apiKey || !interviewTitle || !interviewPurpose) {
             alert("필수 항목을 입력해주세요!");
             hideSpinner();
             return;
         }
-    
+
         const payload = {
             model: "gpt-4o-mini",
             messages: [{ role: "system", content: [{ text: `${interviewTitle}를 주제로 한 인터뷰는 ${interviewFor}을 목적으로 해야합니다. 이 인터뷰에서 해야하는는 질문을 ${questionNum}개 생성합니다. 인터뷰 질문은 인터뷰 순서에 맞게 구성되어야 하며, 개수는 user의 프롬프트에 기반합니다. 첫 질문은 인터뷰 주제에 대한 간단한 질문으로 시작합니다. 2번째 질문부터 본격적으로 목적에 맞게 질문을 작성하는데, 목적을 그대로 해석하지 말고, 목적으로부터 파생되는 심층적인 인사이트에 집중한 질문 생성을 기대합니다. 다음과 같은 이름을 부여한 인덱스로 내용을 채워 json 배열 타입으로 출력합니다. 이 양식 이외의 내용은 출력금지. json 형태로 출력하며, \n질문1\n질문2\n...\n이때, 숫자, 질문 인덱스 표시는 하지 않고, 텍스트만 큰 따옴표로 묶어서 넣고, 콤마를 삽입합니다. 그 밖의 내용은 절대 출력 금지. 개수를 정확히 준수합니다.`, type: "text" }] }],
@@ -155,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
             frequency_penalty: 0,
             presence_penalty: 0
         };
-    
+
         try {
             const response = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
@@ -165,9 +165,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: JSON.stringify(payload)
             });
-    
+
             const data = await response.json();
-    
+
             if (data.choices && data.choices.length > 0) {
                 questions = JSON.parse(data.choices[0].message.content);
                 resultContainer.innerHTML = questions.map(q => `<p>${q}</p>`).join("");
@@ -186,8 +186,8 @@ document.addEventListener("DOMContentLoaded", () => {
             hideSpinner();
         }
     });
-        
-    
+
+
     let personaResults = [];
 
     // GPT API 호출 (퍼소나 생성)
@@ -195,25 +195,25 @@ document.addEventListener("DOMContentLoaded", () => {
         const interviewTitle = interviewTitleInput.value.trim();
         const isSimpleMode = document.getElementById("toggle").checked;
         let personaPrompts = isSimpleMode ? [] : getPersonaPrompts();
-    
+
         if (!apiKey) {
             alert("API 키를 입력해야 합니다!");
             return;
         }
-    
+
         if (!interviewTitle) {
             alert("인터뷰 주제를 입력해주세요!");
             return;
         }
-    
+
         resultContainer.innerHTML = "<p>퍼소나를 생성 중입니다...</p>";
         showSpinner();
         personaResults = [];
-    
+
         try {
             for (let i = 0; i < personaNum; i++) {
                 const promptText = personaPrompts[i] || "";
-    
+
                 const payload = {
                     model: "gpt-4o",
                     messages: [
@@ -233,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     frequency_penalty: 0,
                     presence_penalty: 0
                 };
-    
+
                 const response = await fetch("https://api.openai.com/v1/chat/completions", {
                     method: "POST",
                     headers: {
@@ -242,9 +242,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     },
                     body: JSON.stringify(payload)
                 });
-    
+
                 const data = await response.json();
-    
+
                 if (data.choices && data.choices.length > 0) {
                     const persona = JSON.parse(data.choices[0].message.content);
                     personaResults.push(persona);
@@ -256,7 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } finally {
             hideSpinner();
         }
-    
+
         personaContainer.innerHTML = personaResults.map((p, index) => `
             <div class="persona-box" id="persona-${index}" onclick="selectPersona(${index})">
                 <p><strong>이름:</strong> ${p.name}</p>
@@ -269,30 +269,27 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         `).join("");
     });
-        
-        
 
-    window.selectPersona = function (index) {
-        selectedPersona = personaResults[index];
+
+
+    window.selectPersona = function (index) { // window 객체에 함수 등록하여 HTML에서 접근 가능하도록 함
+        selectedPersona = personaResults[index]; // 선택한 퍼소나 저장
+
         alert(`${selectedPersona.name} 퍼소나를 선택하였습니다.`);
         if (personaResults.length === 0) {
             alert("퍼소나 데이터가 없습니다.");
             return;
         }
+
         // 인터뷰 페이지로 이동
         document.getElementById("persona-page").style.display = "none";
         document.getElementById("interview-page").style.display = "block";
+
         // 인터뷰 시작 시 초기 메시지 출력
         document.getElementById("chatbox").innerHTML = `
         <div><strong>인터뷰 대상:</strong> ${selectedPersona.name} (${selectedPersona.occupation})</div>
         <div><strong>성격:</strong> ${selectedPersona.personality}</div>
     `;
-    // 인터뷰 시작 시간 기록 및 표시
-    const now = new Date();
-    const startTimeStr = now.toLocaleTimeString('ko-KR', { hour12: false });
-    document.getElementById('start-time').textContent = startTimeStr;
-    document.getElementById('end-time').textContent = '--:--:--';
-    window._interviewStartTime = now; // 전역에 저장
     };
 
 
@@ -315,7 +312,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // }
     // const exampleText = "퍼소나 json 답변의 변수명을 여기로 넣으씨오";
     // const extracted = extractCurlyBracesContent(exampleText);
-    
+
     // console.log(extracted); // "{내용:내용}"
 
     let messages = [
@@ -370,17 +367,17 @@ document.addEventListener("DOMContentLoaded", () => {
             lastHighlightedIndex = null;
             return;
         }
-    
+
         // 1번 질문부터는 하이라이트
         const realIndex = index - 1;
-    
+
         if (lastHighlightedIndex === realIndex) return;
-    
+
         questionItems.forEach((item, i) => {
             item.classList.toggle('active-question', i === realIndex);
         });
-    
-        lastHighlightedIndex = realIndex;        
+
+        lastHighlightedIndex = realIndex;
     }
 
     // function appendMessage(message, sender) {
@@ -394,20 +391,20 @@ document.addEventListener("DOMContentLoaded", () => {
         if (sender === 'bot') {
             const wrapper = document.createElement('div');
             wrapper.className = 'message-wrapper';
-    
+
             const nameTag = document.createElement('div');
             nameTag.className = 'persona-name-tag';
-    
+
             if (selectedPersona && selectedPersona.name) {
                 nameTag.textContent = selectedPersona.name.slice(-2); // 성 제외, 두 글자
             } else {
                 nameTag.textContent = "퍼소나"; // fallback
             }
-    
+
             const messageElement = document.createElement('div');
             messageElement.className = 'message bot';
             messageElement.textContent = message;
-    
+
             wrapper.appendChild(nameTag);
             wrapper.appendChild(messageElement);
             chatbox.appendChild(wrapper);
@@ -421,7 +418,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             messageElement.scrollIntoView({ behavior: "smooth", block: "start" });//스크롤 이동
         }
-    
+
         chatbox.scrollTop = chatbox.scrollHeight;
     }
 
@@ -442,7 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
     async function sendMessage() {
         const apiKey = apiKeyInput.value.trim();
         const userMessage = userInput.value.trim();
-    
+
         if (!apiKey) {
             alert('API 키를 입력해주세요.');
             return;
@@ -451,18 +448,15 @@ document.addEventListener("DOMContentLoaded", () => {
             alert('메시지를 입력해주세요.');
             return;
         }
-    
+
         // 퍼소나가 선택되지 않은 경우 경고 후 함수 종료
         if (!selectedPersona) {
             alert("먼저 퍼소나를 선택해주세요.");
             return;
         }
-        // 현재 선택된 퍼소나 인덱스 추출
-        let personaIdx = (window.personaResults||[]).findIndex(p => p.name === selectedPersona.name);
-        if (personaIdx < 0) personaIdx = 0; // 방어 코드: 못 찾으면 0번으로
-    
+
         const interviewTitle = interviewTitleInput.value.trim();
-    
+
         // 시스템 메시지에 GPT 퍼소나 JSON의 주요 정보를 포함하여 구성
         messages = [
             {
@@ -476,15 +470,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     `언어습관: ${selectedPersona.speech}\n` +
                     `위 정보를 바탕으로, 사용자가 제출한 자료에 맞는 가상의 인물로 연기해주세요. ` +
                     `대화는 반드시 대화체로, 불필요한 표, 단락, 이모지는 사용하지 않고, 즐거운 상황에서는 하하하하! 하고 웃거나, 언어습관에 따라 대답을 거부하거나, 말문이 막힌 연기를 하거나, 특히 성격이 안좋다면 반복되는 질문을 귀찮아 하고, 한숨도 쉬고, 쉽게 화 냅니다. 실제 사람같은 응답을 원해요. 이렇게 출력된 답은 **interviewAnswer**라고 정의합니다. 순수 텍스트만 들어갑니다.` +
-                    `인터뷰에는 미리 정해진 질문들이 있는데, 질문 리스트는 ${questions.join(',')}순 입니다. 질문을 받는 것은 아이스 브레이킹 > 1번 질문 > 1번의 파생질문들 > 2번 질문 > ... > 마지막 질문 순서로 이루어 지는데, 지금 받은 질문이 어떤 것인지를 **interiewIndex**라고 정의합니다. 오직 숫자만 들어가며, 아이스브레이킹=0, 1번 질문과 그 파생질문=1, 2번 질문과 그 파생질문=2... 로 숫자만 표시합니다. 이전 질문에 대해 상세히 물어보거나 파생된 질문을 했을 경우에는 파생질문으로 인식하고 이전 질문과 같은 번호를 부여하되, 다른 질문 목록에 있는 질문에 더 가깝다면 그 질문의 번호를 부여합니다.`+
+                    `인터뷰에는 미리 정해진 질문들이 있는데, 질문 리스트는 ${questions.join(',')}순 입니다. 질문을 받는 것은 아이스 브레이킹 > 1번 질문 > 1번의 파생질문들 > 2번 질문 > ... > 마지막 질문 순서로 이루어 지는데, 지금 받은 질문이 어떤 것인지를 **interiewIndex**라고 정의합니다. 오직 숫자만 들어가며, 아이스브레이킹=0, 1번 질문과 그 파생질문=1, 2번 질문과 그 파생질문=2... 로 숫자만 표시합니다. 이전 질문에 대해 상세히 물어보거나 파생된 질문을 했을 경우에는 파생질문으로 인식하고 이전 질문과 같은 번호를 부여하되, 다른 질문 목록에 있는 질문에 더 가깝다면 그 질문의 번호를 부여합니다.` +
                     `최종 출력은 json 형태로 하되 괄호 전후로 백틱이나 다른 글자를 넣지 마세요. interviewAnswer, interviewIndex 2가지 속성만 넣어 출력하세요.`
             }
         ];
-    
+
         appendMessage(userMessage, 'user');
         messages.push({ role: "user", content: userMessage });
         userInput.value = '';
-    
+
         const payload = {
             model: modelId,
             messages: messages,
@@ -494,9 +488,9 @@ document.addEventListener("DOMContentLoaded", () => {
             frequency_penalty: 0.02,
             presence_penalty: 0.06
         };
-    
+
         sendStartTime = Date.now(); // 유저 입력 시각 기록
-    
+
         try {
             const response = await fetch(apiUrl, {
                 method: "POST",
@@ -506,33 +500,33 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: JSON.stringify(payload)
             });
-    
+
             if (!response.ok) {
                 throw new Error(`Error: ${response.statusText}`);
             }
-    
+
             const data = await response.json();
             const botMessage = data.choices[0]?.message?.content || "Error: API에서 응답이 없습니다.";
-            
+
             try {
                 const parsed = JSON.parse(botMessage);
                 const answerText = parsed.interviewAnswer;
                 const index = parseInt(parsed.interviewIndex);
 
                 highlightCurrentQuestion(index);
-            
+
                 // 안내 문구 삽입 조건
                 if (index === 0 && lastIndex === 0 && !chatbox.querySelector('.stage-message')) {
                     appendStageMessage("아이스브레이킹을 진행하세요");
                 } else if (index > 0 && lastIndex === 0) {
                     appendStageMessage("인터뷰를 시작합니다");
                 }
-            
+
                 lastIndex = index;
-            
+
                 appendMessage(answerText, 'bot');
                 messages.push({ role: "assistant", content: answerText });
-                // 인터뷰 로그 기록 (퍼소나 인덱스 포함)
+                // 인터뷰 로그 기록
                 const endTime = Date.now();
                 interviewLog.push({
                     questionIndex: index,
@@ -540,12 +534,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     userMessage: userMessage,
                     botAnswer: answerText,
                     timestampStart: sendStartTime,
-                    timestampEnd: endTime,
-                    personaIndex: personaIdx
+                    timestampEnd: endTime
                 });
-                // 인터뷰 로그 콘솔 출력
-                console.log('interviewLog', interviewLog);
-            
+
                 if (socket && socket.readyState === WebSocket.OPEN) {
                     socket.send(JSON.stringify({ apiKey, gptResponse: answerText }));
                     console.log("메시지 전송됨:", { apiKey, gptResponse: answerText });
@@ -556,7 +547,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error("GPT 응답 파싱 오류:", err);
                 appendMessage(botMessage, 'bot'); // fallback 처리
             }
-    
+
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify({ apiKey, gptResponse: botMessage }));
                 console.log("메시지 전송됨:", { apiKey, gptResponse: botMessage });
@@ -567,125 +558,196 @@ document.addEventListener("DOMContentLoaded", () => {
             appendMessage(`Error: ${error.message}`, 'bot');
         }
     }
-    
 
-    // ===================== 분석 대시보드 리팩토링 (퍼소나/탭/요약/GPT/종료 후만 활성) =====================
 
-    // 분석페이지 렌더링 진입점
-    function showAnalysisPage(selectedPersonaIdx = 0) {
-        const analyzePage = document.getElementById("analyze-page");
-        if (!analyzePage) return;
-        // 1. 상단 프로필/탭/태그 동적 생성
-        const personaTabs = analyzePage.querySelector('.analyze-persona-tabs');
-        const profileBar = analyzePage.querySelector('.analyze-profile-bar');
-        const personaList = window.personaResults || [];
-        if (!personaList.length) return;
-        // 탭 생성
-        personaTabs.innerHTML = personaList.map((p,i)=>`<button class="persona-tab${i===selectedPersonaIdx?' active':''}" data-idx="${i}">퍼소나${i+1}</button>`).join('');
-        // 프로필/태그 생성
-        const p = personaList[selectedPersonaIdx];
-        profileBar.innerHTML = `
-            <div class="analyze-profile-info">
-                <span class="profile-name">${p.name || '-'}</span>
-                <span class="profile-age">${p.age ? p.age+'세' : ''}</span>
-                <span class="profile-gender">${p.gender || ''}</span>
-                <span class="profile-type">${p.personality ? p.personality.split(' ')[0] : ''}</span>
-            </div>
-            <div class="analyze-profile-tags">
-                ${(p.occupation ? `<span>${p.occupation}</span>` : '')}
-                ${(p.interests ? `<span>${p.interests}</span>` : '')}
-                ${(p.hobby ? `<span>${p.hobby}</span>` : '')}
-                ${(p.speech ? `<span>${p.speech}</span>` : '')}
-            </div>
+    // 분석 결과 렌더링 함수
+    window.renderAnalysis = function renderAnalysis() {
+        const container = document.getElementById("analyze-container");
+        if (!container) return;
+        if (interviewLog.length === 0) {
+            container.innerHTML = "<p>분석할 인터뷰 기록이 없습니다.</p>";
+            return;
+        }
+        const avgDurations = interviewLog.map(log => ({
+            index: log.questionIndex,
+            durationSec: ((log.timestampEnd - log.timestampStart) / 1000).toFixed(1),
+        }));
+        const totalTime = avgDurations.reduce((acc, d) => acc + parseFloat(d.durationSec), 0);
+        const avgTime = (totalTime / avgDurations.length).toFixed(1);
+        container.innerHTML = `
+            <h3>인터뷰 분석 요약</h3>
+            <ul style="font-size:14px; line-height:1.6;">
+                <li><strong>총 질문 수:</strong> ${interviewLog.length}개</li>
+                <li><strong>평균 소요 시간:</strong> ${avgTime}초</li>
+            </ul>
+            <h4>질문별 응답 시간</h4>
+            <canvas id="barChart" width="400" height="200"></canvas>
+            <ul>
+                ${avgDurations.map(d => `<li>Q${d.index}: ${d.durationSec}초</li>`).join("")}
+            </ul>
         `;
-        // 탭 클릭 이벤트
-        personaTabs.querySelectorAll('.persona-tab').forEach(btn => {
-            btn.onclick = () => showAnalysisPage(Number(btn.dataset.idx));
-        });
-        // 2. 분석 위젯 렌더링(해당 퍼소나의 인터뷰 로그만)
-        const logs = (window.interviewLog||[]).filter(l=>l.personaIndex===selectedPersonaIdx);
-        renderAnalysisDashboardReal(logs, p);
-        // 3. 인터뷰 요약(GPT API)
-        renderInterviewSummaryGPT(logs, selectedPersonaIdx);
-    }
 
-    // GPT API로 인터뷰 요약 생성
-    async function renderInterviewSummaryGPT(logs, personaIdx) {
-        const summaryEl = document.getElementById('summaryText');
-        if (!logs.length) { summaryEl.textContent = '-'; return; }
-        summaryEl.textContent = '요약 생성 중...';
-        try {
-            const text = logs.map(l=>`Q: ${l.question}\nA: ${l.userMessage}`).join('\n');
-            const prompt = `다음은 인터뷰 기록입니다. 각 Q는 질문, A는 답변입니다. 이 인터뷰의 핵심 내용을 2~3문장으로 요약해 주세요.\n${text}`;
-            const apiKey = localStorage.getItem("openai_api_key") || '';
-            const payload = {
-                model: "gpt-4o-mini",
-                messages: [{ role: "system", content: [{ text: prompt, type: "text" }] }],
-                temperature: 0.5,
-                max_tokens: 256
-            };
-            const response = await fetch("https://api.openai.com/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${apiKey}`
-                },
-                body: JSON.stringify(payload)
-            });
-            const data = await response.json();
-            if (data.choices && data.choices.length > 0) {
-                summaryEl.textContent = data.choices[0].message.content.trim();
-            } else {
-                summaryEl.textContent = '-';
+        // barChart 캔버스가 DOM에 추가된 후 getContext 호출
+        const ctx = document.getElementById('barChart').getContext('2d');
+        const labels = avgDurations.map(d => `Q${d.index}`);
+        const data = avgDurations.map(d => d.durationSec);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '질문별 응답 시간(초)',
+                    data: data,
+                    backgroundColor: '#4F8CFF'
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true }
+                }
             }
-        } catch (e) {
-            summaryEl.textContent = '요약 생성 실패';
-        }
-    }
-
-    // 분석 위젯 렌더링 함수는 반드시 logs 파라미터만 사용해야 함
-    function renderAnalysisDashboardReal(logs, persona) {
-        // logs: 해당 퍼소나의 인터뷰 기록만 전달됨
-        // persona: 현재 선택된 퍼소나 정보
-        // 아래는 예시(실제 구현은 기존 코드 활용)
-        // 예시: 키워드 클라우드, 피드백, 차트 등 모두 logs만 참조
-        // ...기존 위젯 렌더링 코드...
-    }
-
-    // 인터뷰 종료 버튼에서만 분석페이지 진입 허용
-    const endBtn = document.getElementById("endInterviewBtn");
-    if (endBtn) {
-        endBtn.addEventListener("click", () => {
-            document.getElementById("interview-page").style.display = "none";
-            document.getElementById("analyze-page").style.display = "block";
-            document.querySelector(".sub-interview").classList.add("sub-inactive");
-            document.querySelector(".sub-analysis").classList.remove("sub-inactive");
-            // 인터뷰 종료 시간 기록 및 표시
-            const now = new Date();
-            const endTimeStr = now.toLocaleTimeString('ko-KR', { hour12: false });
-            document.getElementById('end-time').textContent = endTimeStr;
-            window._interviewEndTime = now;
-            showAnalysisPage(0); // 첫 퍼소나 기준 분석
         });
     }
 
-    // 분석페이지 직접 진입 방지(종료 전엔 안내)
-    document.addEventListener("DOMContentLoaded", () => {
-        const analyzePage = document.getElementById("analyze-page");
-        if (analyzePage) {
-            analyzePage.style.display = "none";
+    // 분석 버튼 이벤트 리스너 예시 (분석 버튼/컨테이너가 없다면 HTML에 추가 필요)
+
+    document.getElementById("endInterviewBtn").addEventListener("click", () => {
+        document.getElementById("interview-page").style.display = "none";
+        document.getElementById("analyze-page").style.display = "block";
+
+        document.querySelector(".sub-interview").classList.add("sub-inactive");
+        document.querySelector(".sub-analysis").classList.remove("sub-inactive");
+        if (typeof window.renderAnalysis === "function") {
+            window.renderAnalysis();
+        } else {
+            console.warn("renderAnalysis 함수가 정의되어 있지 않습니다. script.js를 확인하세요.");
         }
     });
 
-    // 인터뷰 기록에 personaIndex 추가 필요(질문/답변 기록 시)
-    // 예시: interviewLog.push({ ..., personaIndex: selectedPersonaIdx, ... });
+    // ===================== 분석 대시보드 렌더링 =====================
 
-    // 메시지 전송 버튼/엔터 이벤트 연결
-    sendButton.addEventListener("click", sendMessage);
-    userInput.addEventListener("keydown", function(e) {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
+    // 분석 대시보드 렌더링 함수
+    function renderAnalysisDashboard() {
+        // 1. Bar Chart (질문별 응답 시간)
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        if (window.barChartInstance) window.barChartInstance.destroy();
+        const barLabels = ['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8'];
+        const barData = [35, 60, 28, 32, 36, 40, 38, 15];
+        window.barChartInstance = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: barLabels,
+                datasets: [{
+                    label: '응답 시간(초)',
+                    data: barData,
+                    backgroundColor: barData.map((v, i) => i === 1 ? '#5872FF' : '#DDE2EB'),
+                    borderRadius: 12,
+                    barPercentage: 0.6,
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 90,
+                        ticks: { stepSize: 10, color: '#B0B4BC', font: { size: 13 } },
+                        grid: { color: '#F2F3F5' }
+                    },
+                    x: {
+                        ticks: { color: '#B0B4BC', font: { size: 13 } },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // 2. 도넛 차트 (인터뷰 종합 시간)
+        const donutCtx = document.getElementById('donutChart').getContext('2d');
+        if (window.donutChartInstance) window.donutChartInstance.destroy();
+        window.donutChartInstance = new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['진행', '남은 시간'],
+                datasets: [{
+                    data: [15, 5],
+                    backgroundColor: ['#5872FF', '#F2F3F5'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '75%',
+                plugins: { legend: { display: false } },
+                responsive: false
+            }
+        });
+        document.getElementById('donutPercent').textContent = '80%';
+
+        // 3. 키워드 클라우드 (d3-cloud)
+        const keywords = [
+            { text: '사용성', size: 24 },
+            { text: '편의성', size: 16 },
+            { text: '저렴한', size: 9 },
+            { text: '이웃주민', size: 7.5 },
+            { text: '친절', size: 18.5 },
+            { text: '거래', size: 9.5 },
+            { text: '미소', size: 7.5 },
+            { text: '추억', size: 10 },
+            { text: '소통', size: 9 }
+
+        ];
+        const cloudEl = document.getElementById('keywordCloud');
+        cloudEl.innerHTML = '';
+        const w = 180, h = 80; // SVG 영역을 줄여 여백 최소화
+        const svg = d3.select(cloudEl).append('svg').attr('width', w).attr('height', h);
+        d3.layout.cloud().size([w, h])
+            .words(keywords)
+            .padding(1)
+            .rotate(() => 0)
+            .font('Pretendard Variable')
+            .fontSize(d => d.size)
+            .on('end', drawCloud)
+            .start();
+        function drawCloud(words) {
+            svg.append('g')
+                .attr('transform', `translate(${w / 2},${h / 2})`)
+                .selectAll('text')
+                .data(words)
+                .enter().append('text')
+                .style('font-size', d => d.size + 'px')
+                .style('fill', (d, i) => i === 2 ? '#5872FF' : '#B0B4BC')
+                .style('font-family', 'Pretendard Variable')
+                .attr('text-anchor', 'middle')
+                .attr('transform', d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
+                .text(d => d.text);
         }
-    });
+
+        // 4. 요약/피드백
+        document.getElementById('summaryText').textContent =
+            '유지연씨는 환경보호에 관심이 많지만 본인의 편리함을 위해 일회용품을 사용하는 경우가 많습니다.';
+        document.getElementById('feedbackList').innerHTML = `
+            <li>놓친 질문 포인트<br>인터뷰 목적에 따라 추가했으면 좋았던 질문</li>
+            <li>AI 기반 질문 리비전<br>인터뷰 전체를 기반으로 AI가 추천하는 리비전 질문 목록</li>
+            <li>퍼소나 친밀도 추이 그래프<br>시간 경과에 따라 친밀도가 어떻게 변했는지 (선 그래프)</li>
+        `;
+
+        // 5. 친밀도 스텝 (예시: 1단계 활성)
+        document.querySelectorAll('.affinity-step').forEach((el, i) => {
+            el.classList.toggle('active', i === 0);
+        });
+        // 6. 말의 속도 (예시: 85%)
+        document.getElementById('speedBar').style.width = '85%';
+        document.querySelector('.speed-label').textContent = '85% 조금 빨랐어요';
+        // 7. 언어습관 피드백 (예시)
+        document.getElementById('langFeedbackList').innerHTML = `
+            <li>문장을 읽는 중간에 말을 더듬는 습관이 있어요.</li>
+            <li>인터뷰 질문지를 미리 읽는 연습을 통해 말 더듬는 습관을 개선해 보세요!</li>
+        `;
+    }
+
+    // 분석페이지 진입 시 자동 렌더링 (탭 연동 시 아래 코드 위치 조정)
+    if (document.getElementById('analyze-page')) {
+        renderAnalysisDashboard();
+    }
 });
