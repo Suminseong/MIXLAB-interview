@@ -333,7 +333,7 @@ body {
 .toggle-label::before{
     content: "";
     position: absolute;
-    top: clamp(2.9px, 0.3vw, 4px);
+    top: clamp(2.9px, 0.32vw, 4.8px);
     left: clamp(3.2px, 0.29vw, 6px);
     width: clamp(15px, 1.3vw, 28px);
     height: clamp(15px, 1.3vw, 28px);
@@ -367,7 +367,7 @@ body {
 }
 
 #persona-side{
-    /* max-height: 16.5vw; */ /* 노트북에서 볼 때 height 잘리는지 확인 */
+    max-height: clamp(120px, 16vw, 600px);
     overflow-y: auto;
 }
 /* 스크롤 스타일링 적용 예정 */
@@ -383,14 +383,14 @@ body {
 }
 
 .persona-box{
-    width: clamp(50px, 45vw, 700px);
+    width: clamp(50px, 23vw, 700px);
     display: grid;
     grid-template-columns: repeat(2,1fr);
 
     border: 1.5px solid #EDEFF3; 
     border-radius: clamp(16px, 1.8vw, 30px); 
     padding: clamp(16px, 1.5vw, 26px) clamp(18px, 1.7vw, 30px); 
-    margin: clamp(6px, 1vw, 16px); 
+    margin: clamp(6px, 0.5vw, 16px); 
     background-color: #ffffff; 
     box-shadow: 0 0 clamp(16px, 1.5vw, 26px) rgba(84, 88, 103, 0.06);
     font-family: "Pretendard Variable";
@@ -422,4 +422,204 @@ body {
 
 
 /* ------------interview------------ */
+#interview-container{
+    overflow-x: hidden;
+}
+
+#chatbox {
+    display: flex;
+    flex-direction: column;
+    border: none ;
+    height: 90%;
+    padding: 10px;
+    width: 100%;
+    overflow-y: scroll;
+    margin-bottom: 10px;
+}
+
+/* 공통 메시지 스타일 */
+.message {
+    max-width: 70%;
+    margin: 8px 0;
+    padding: 10px 15px;
+    border-radius: 18px;
+    font-size: 16px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    display: inline-block;
+}
+
+/* 사용자 메시지 (오른쪽 정렬) */
+.message.user {
+    background-color: #5872FF;
+    color: #000;
+    border-bottom-right-radius: 4px;
+    text-align: right;
+    color: white;
+    margin-left: auto;
+}
+
+/* 챗봇 메시지 (왼쪽 정렬) */
+.message.bot {
+    align-self: flex-start;
+    background-color: #F2F3F5;
+    color: #8F949B;
+    border-bottom-left-radius: 4px;
+    text-align: left;
+}
+
+.message-wrapper {
+    display: flex;
+    margin-bottom: clamp(8px, 0.7vw, 12px);
+    align-items: center;
+}
+
+.persona-name-tag {
+    background-color: #CDD1D6;
+    color: white;
+    width: clamp(40px, 2vw, 52px);
+    height: clamp(40px, 2vw, 52px);
+    border-radius: 50%;
+    text-align: center;
+    line-height: clamp(40px, 2vw, 52px);
+    margin-right: clamp(10px, 0.625vw, 16px);
+}
+
+.stage-message {
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+    margin: 16px 0;
+}
+
+/* 인텁 질문지지 */
+
+
+/* 로딩스피너 */
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  border: 6px solid #ccc;
+  border-top: 6px solid #5872FF;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* -----------인터뷰 질문지 불러오기기------------ */
+#questionListContainer {
+  /* width: clamp(260px, 20vw, 320px); */
+  padding: 24px;
+  background-color: #F8F9FB;
+  border-left: 1px solid #E0E2E6;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: clamp(24px, 2vw, 32px);
+}
+
+.interview-meta {
+  margin-bottom: 20px;
+}
+
+.interview-time {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: space-around;
+}
+
+.interview-time p:first-child,
+.interview-time p:nth-child(3) {
+  font-size: 12px;
+  color: #8F949B;
+}
+
+.interview-time p:nth-child(2),
+.interview-time p:last-child {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2D2E32;
+}
+
+.interview-questions {
+  margin-top: 20px;
+}
+
+.interview-questions h4 {
+  font-size: 16px;
+  font-weight: bold;
+  color: #5B5E63;
+  margin-bottom: 12px;
+}
+
+#questionList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#questionList li {
+  background-color: #ffffff;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  color: #4A4E57;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: background 0.2s;
+}
+
+#questionList li:hover {
+  background-color: #EEF1FF;
+}
+
+#endInterviewBtn {
+  margin-top: 20px;
+  padding: 12px;
+  background-color: #5872FF;
+  color: white;
+  font-size: 14px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#endInterviewBtn:hover {
+  background-color: #475ED8;
+}
+
+/* 질문지 하이라이트*/
+#questionList li.active-question {
+    background-color: #DDE2FF;
+    font-weight: 600;
+}
+
+
 

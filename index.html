@@ -9,6 +9,12 @@
 </head>
 
 <body>
+    <div id="loadingSpinner" style="display:none;">
+        <div class="spinner-overlay">
+          <div class="spinner"></div>
+        </div>
+    </div>
+
     <div id="apiKeyModal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);">
         <div style="background: white; padding: 20px; margin: 20% auto; width: 300px; text-align: center;">
@@ -62,9 +68,9 @@
                 </div>
 
                 <div id="interview-page" class="page" style="display: none;">
-                    <h2>인터뷰 진행</h2>
+                    <!-- <h2>인터뷰 진행</h2> -->
                     <div class="interview-box" id="interview-container">
-                        <div id="chatbox" style="border: 1px solid #ccc; padding: 10px; width: 100%; height: 300px; overflow-y: scroll; margin-bottom: 10px;">
+                        <div id="chatbox">
                             <!-- 대화 내용이 여기에 기록됨 -->
                         </div>
                         <input type="text" id="userInput" placeholder="질문을 입력하거나 마이크 버튼을 누르세요." style="width: 80%; padding: 8px;">
@@ -126,7 +132,26 @@
                         </div>
                     </div>
                 </div>
-                <div class="container-children sub-interview sub-inactive"></div> <!--인터뷰 사이드 영역-->
+                <div class="container-children sub-interview sub-inactive">
+                    <div class="interview-meta">
+                      <div class="interview-time">
+                            <div class="interview-start">
+                                <p>발화 시간</p>
+                                <p id="start-time">19:02</p>
+                            </div>
+                            <div class="interview-end">
+                                <p>종료 시간</p>
+                                <p id="end-time">20:00</p>
+                            </div>
+                      </div>
+                    </div>
+                    <div class="interview-questions">
+                      <h4>인터뷰 질문지</h4>
+                      <ul id="questionList"></ul>
+                    </div>
+                    <button id="endInterviewBtn">인터뷰 종료</button>
+                </div>
+                <!--인터뷰 사이드 영역-->
                 <div class="container-children sub-analysis sub-inactive"></div>
                 <div class="container-children sub-revision sub-inactive"></div>
             </div>
@@ -160,7 +185,7 @@
     </div>
     </div>
 </body>
-<script src="activeStyle.js"></script>
 <script src="script.js"></script>
-<script src="loading.js"></script>
+<script src="activeStyle.js"></script>
+
 </html>

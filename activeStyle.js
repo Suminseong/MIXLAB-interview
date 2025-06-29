@@ -113,6 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         subItems.forEach((subItem, index) => {
             if (subItem.classList.contains("sub-activate")) {
+                showSideBoxes(subItem);
                 toggleGenerationBoxes(index);
             }
         });
@@ -141,6 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // 비활성화할 페이지: fade out 효과 후 display를 none으로 설정
             page.style.transition = "opacity 0.3s ease";
             page.style.opacity = 0;
+            
             // transition이 끝난 후 display를 none으로 변경 (여기서는 300ms 후)
             setTimeout(() => {
               page.style.display = "none";
@@ -237,6 +239,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     toggleInput.addEventListener("change", togglePersonaBox);
+
+    document.getElementById("endInterviewBtn").addEventListener("click", () => {
+    // 1. 인터뷰 분석 화면 보여주기
+    document.getElementById("interview-page").style.display = "none";
+    document.getElementById("analyze-page").style.display = "block";
+
+    // 2. 사이드 뷰 전환 (sub 인터뷰 → sub-analysis)
+    document.querySelector(".sub-interview").classList.add("sub-inactive");
+    document.querySelector(".sub-analysis").classList.remove("sub-inactive");
+
+    // 3. 분석 내용 렌더링
+    renderAnalysis();
+});
+
 
     // 페이지 로드 시 초기 상태 설정
     initializePage();
