@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -80,9 +81,67 @@
                 </div>
                 
 
-                <div id="analyze-page" class="page" style="display: none;">
+                <div id="analyze-page" class="page" style="display: none;"> <!--분석 페이지 추가하는 곳-->
                     <h2>인터뷰 분석</h2>
-                    <div class="analyze-box" id="analyze-container"></div>
+                    <div class="analyze-dashboard">
+                        <div class="analyze-main">
+                            <div class="analyze-profile-bar">
+                                <div class="analyze-profile-info"><!-- JS에서 동적으로 생성 --></div>
+                                <div class="analyze-profile-tags"><!-- JS에서 동적으로 생성 --></div>
+                            </div>
+                            <div class="analyze-persona-tabs"><!-- JS에서 동적으로 생성 --></div>
+                            <div class="analyze-chart-section">
+                                <div class="analyze-title">Time table</div>
+                                <canvas id="barChart" width="600" height="220"></canvas>
+                            </div>
+                            <div class="analyze-keywords-summary">
+                                <div class="analyze-keywords">
+                                    <div class="keywords-title">핵심 키워드</div>
+                                    <div id="keywordCloud" class="keyword-cloud"></div>
+                                </div>
+                                <div class="analyze-summary-panels">
+                                    <div class="summary-panel">
+                                        <div class="summary-title">인터뷰 요약</div>
+                                        <div id="summaryText" class="summary-text"></div>
+                                    </div>
+                                    <div class="feedback-panel">
+                                        <div class="feedback-title">-</div>
+                                        <ul id="feedbackList" class="feedback-list"></ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="analyze-side">
+                            <div class="side-widget donut-widget">
+                                <div class="widget-title">인터뷰 종합 시간</div>
+                                <canvas id="donutChart" width="160" height="160"></canvas>
+                                <div class="donut-center-text">
+                                    <span id="donutPercent">80%</span>
+                                    <span id="donutTime">15 out of 20 minutes</span>
+                                </div>
+                            </div>
+                            <div class="side-widget affinity-widget">
+                                <div class="widget-title">퍼소나 친밀도 <span class="info-tooltip" title="이 그래프는 인터뷰 초기 아이스브레이킹 단계에서 퍼소나와의 친화 형성 정도로 시각화한 것으로...">?</span></div>
+                                <div class="affinity-stepper">
+                                    <div class="affinity-step active">1</div>
+                                    <div class="affinity-step">2</div>
+                                    <div class="affinity-step">3</div>
+                                </div>
+                                <div class="affinity-desc">이 그래프는 인터뷰 초기 아이스브레이킹 단계에서 퍼소나와의 친화 형성 정도로 시각화한 것으로...</div>
+                            </div>
+                            <div class="side-widget speed-widget">
+                                <div class="widget-title">말의 속도</div>
+                                <div class="speed-bar-bg">
+                                    <div class="speed-bar" id="speedBar" style="width: 85%"></div>
+                                </div>
+                                <div class="speed-label">85% 조금 빨랐어요</div>
+                            </div>
+                            <div class="side-widget lang-widget">
+                                <div class="widget-title">언어습관 피드백</div>
+                                <ul class="lang-feedback-list" id="langFeedbackList"><!-- JS에서 동적으로 생성 --></ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="revision-page" class="page" style="display: none;">
@@ -152,10 +211,10 @@
                     <button id="endInterviewBtn">인터뷰 종료</button>
                 </div>
                 <!--인터뷰 사이드 영역-->
-                <div class="container-children sub-analysis sub-inactive"></div>
+                <div class="container-children sub-analysis sub-inactive"></div> <!--분석 페이지 추가하는 곳-->
                 <div class="container-children sub-revision sub-inactive"></div>
             </div>
-            <div class="side-box" id="gen-question"> <!--사이드 하단 영역, 질문, 퍼소나, 리비전 제외하고 사용X-->
+            <div class="side-box" id="gen-question"> 
                 <div class="container-children">
                     <div class="counter-section">
                         <span>질문 생성 개수</span>

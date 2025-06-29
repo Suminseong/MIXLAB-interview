@@ -240,18 +240,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     toggleInput.addEventListener("change", togglePersonaBox);
 
-    document.getElementById("endInterviewBtn").addEventListener("click", () => {
-    // 1. 인터뷰 분석 화면 보여주기
-    document.getElementById("interview-page").style.display = "none";
-    document.getElementById("analyze-page").style.display = "block";
-
-    // 2. 사이드 뷰 전환 (sub 인터뷰 → sub-analysis)
-    document.querySelector(".sub-interview").classList.add("sub-inactive");
-    document.querySelector(".sub-analysis").classList.remove("sub-inactive");
-
-    // 3. 분석 내용 렌더링
-    renderAnalysis();
-});
 
 
     // 페이지 로드 시 초기 상태 설정
