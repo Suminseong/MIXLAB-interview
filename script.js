@@ -750,4 +750,22 @@ document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById('analyze-page')) {
         renderAnalysisDashboard();
     }
+
+    document.getElementById("sendButton").addEventListener("click", sendMessage);
+    document.getElementById("userInput").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // Enter 키의 기본 동작 방지
+            sendMessage();
+        }
+    });
+    micButton.addEventListener("click", () => {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ action: "startRecording" }));
+            console.log("음성 녹음 시작");
+        } else {
+            console.warn("웹소켓 연결이 중단되었습니다.");
+        }
+    }
+    );
 });
+
