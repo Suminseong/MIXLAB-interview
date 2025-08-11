@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>음성 대화 및 모의인터뷰 사후 분석 테스트용</title>
+        <link rel="stylesheet" href="style.css">
+        <script src="script.js" defer></script>
+    </head>
+    <body>
+        <div id="interview-page" class="page">
+            <!-- <h2>인터뷰 진행</h2> -->
+            <div class="interview-box" id="interview-container">
+                <div id="chatbox">
+                    <!-- 대화 내용이 여기에 기록됨 -->
+                </div>
+                <input type="text" id="apiKeyInput"
+                    placeholder="GPT API 키를 입력하세요" style="width: 80%; padding: 8px;">
+                <button id="micButton">🎤</button>
+            </div>
+        </div>
+        <div id="analysis-page" class="page" style="display: none;">
+            <h2>모의 인터뷰 분석</h2>
+            <div id="analysis-container">
+                <!-- 분석 결과가 여기에 표시됨 -->
+                <p>여기에 분석 결과가 표시됩니다.</p>
+            </div>
+            <button id="backButton">뒤로</button>
+        </div>
+    </body>
+</html>

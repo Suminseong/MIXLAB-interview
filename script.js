@@ -684,7 +684,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         document.getElementById('donutPercent').textContent = '80%';
 
-        // 3. 키워드 클라우드 (d3-cloud)
+        // 3. 키워드 클라우드 (d3-cloud) / 예시. 추후 갯수 count에 따라 동적으로 변경
         const keywords = [
             { text: '사용성', size: 24 },
             { text: '편의성', size: 16 },
@@ -723,14 +723,55 @@ document.addEventListener("DOMContentLoaded", () => {
                 .text(d => d.text);
         }
 
-        // 4. 요약/피드백
-        document.getElementById('summaryText').textContent =
-            '유지연씨는 환경보호에 관심이 많지만 본인의 편리함을 위해 일회용품을 사용하는 경우가 많습니다.';
-        document.getElementById('feedbackList').innerHTML = `
-            <li>놓친 질문 포인트<br>인터뷰 목적에 따라 추가했으면 좋았던 질문</li>
-            <li>AI 기반 질문 리비전<br>인터뷰 전체를 기반으로 AI가 추천하는 리비전 질문 목록</li>
-            <li>퍼소나 친밀도 추이 그래프<br>시간 경과에 따라 친밀도가 어떻게 변했는지 (선 그래프)</li>
-        `;
+        // 4. 요약/피드백 / 예시. GPT 연동으로 수정해야 함
+        // document.getElementById('feedbackList').innerHTML = `
+        //     <li>놓친 질문 포인트<br>인터뷰 목적에 따라 추가했으면 좋았던 질문</li>
+        //     <li>AI 기반 질문 리비전<br>인터뷰 전체를 기반으로 AI가 추천하는 리비전 질문 목록</li>
+        //     <li>퍼소나 친밀도 추이 그래프<br>시간 경과에 따라 친밀도가 어떻게 변했는지 (선 그래프)</li>
+        // `;
+        
+        async function fetchSummary() {
+            const apiKey = localStorage.getItem("openai_api_key");
+            if (!apiKey) {
+                alert("API 키가 설정되어 있지 않습니다.");
+                return;
+            }
+            const payload = {
+                model: "gpt-4o",
+                messages: [
+                    {
+                        role: "system",
+                        content: `당신은 인터뷰 분석 전문가입니다. 사용자가 제공한 인터뷰 로그를 바탕으로, 인터뷰 질문과 응답, 대응에 대한 한줄 평가를 작성합니다. 인터뷰 로그는 JSON 배열 형태로, 각 항목은 질문 인덱스, 질문 내용, 사용자 메시지, 봇 응답, 시작 및 종료 타임스탬프를 포함합니다. 이 정보를 바탕으로 다음과 같은 내용을 작성해주세요:`
+                    },
+                    {
+                        role: "user",
+                        content: JSON.stringify(interviewLog)
+                    }
+                ],
+                temperature: 0.7,
+                max_tokens: 100000
+            };
+            try {
+                const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "authorization": `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (data.choices && data.choices.length > 0) {
+                    const summary = data.choices[0].message.content;
+                    document.getElementById('summaryText').textContent = summary;
+                }
+            } catch (error) {
+                console.error("요약 생성 중 오류:", error);
+                document.getElementById('summaryText').textContent = "요약 생성 중 오류가 발생했습니다.";
+            }
+        }
+        fetchSummary();
+        
 
         // 5. 친밀도 스텝 (예시: 1단계 활성)
         document.querySelectorAll('.affinity-step').forEach((el, i) => {
