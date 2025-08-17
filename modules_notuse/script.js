@@ -203,12 +203,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const whispering = '없음';
             // 나이 데이터를 반영한 말투 프롬프트 적용. 30대 이하, 50대 이하, 50대 이상 구분
             if (selectedPersona.age && selectedPersona.age < 30) {
-                content += `\n말투 설정: 젊은 층의 목소리`;
+                content += `\n 음성 설정: 젊은 층의 목소리`;
             }   
             else if (selectedPersona.age && selectedPersona.age < 50) {
-                content += `\n말투 설정: 중년층의 차분한 목소리`;
+                content += `\n 음성 설정: 중년층의 차분한 목소리`;
             } else if (selectedPersona.age && selectedPersona.age >= 50) {
-                content += `\n말투 설정: 노년층의 중후한 목소리`;
+                content += `\n 음성 설정: 노년층의 중후한 목소리`;
             }
             content += `\n말투 설정:`;
             content += `\n- Accent: ${accent}`;
@@ -296,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 페이지 진입 시 자동으로 듣기 시작 (브라우저 정책상 차단될 수 있음)
+    // 페이지 진입 시 자동으로 듣기 시작 (브라우저 정책상 차단될 수 있음. 크롬은 이상X)
     setTimeout(() => {
         try {
             safeStartRecognition();
