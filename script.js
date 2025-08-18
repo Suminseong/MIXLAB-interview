@@ -302,9 +302,73 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatbox = document.getElementById('chatbox');
     const userInput = document.getElementById('userInput');
     const sendButton = document.getElementById('sendButton');
-    const micButton = document.getElementById('micButton'); // 음성 입력 버튼 추가
+    const micButton = document.getElementById('micButton'); // 음성 입력 버튼
+    const micStatus = document.getElementById('micStatus'); // 음성 인식 상태 표시용(추가 필요)
 
     const audioElement = new Audio(); // 오디오 재생을 위한 HTMLAudioElement
+
+    // 음성 인식 자동화 (Web Speech API)
+    const speechRecognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    speechRecognition.lang = 'ko-KR';
+    speechRecognition.interimResults = false;
+    speechRecognition.continuous = false;
+
+    let isListening = false;
+    let isSpeaking = false;
+    let isPending = false;
+
+    function updateMicStatus(status) {
+        if (micStatus) micStatus.textContent = status;
+        if (micButton) {
+            if (status === '듣는 중') {
+                micButton.classList.add('active');
+            } else {
+                micButton.classList.remove('active');
+            }
+        }
+    }
+
+    function safeStartRecognition() {
+        try {
+            speechRecognition.start();
+        } catch (e) {}
+    }
+
+    speechRecognition.onstart = function() {
+        isListening = true;
+        updateMicStatus('듣는 중');
+    };
+    speechRecognition.onend = function() {
+        isListening = false;
+        updateMicStatus('대기');
+        if (!isSpeaking && !isPending) {
+            setTimeout(safeStartRecognition, 250);
+        }
+    };
+    speechRecognition.onerror = function(event) {
+        isListening = false;
+        updateMicStatus('에러');
+        const nonFatal = ['no-speech', 'audio-capture', 'not-allowed', 'aborted'];
+        if (!isSpeaking && !isPending && !nonFatal.includes(event.error)) {
+            setTimeout(safeStartRecognition, 600);
+        }
+    };
+    speechRecognition.onresult = function(event) {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const res = event.results[i];
+            if (res.isFinal) {
+                finalTranscript += res[0].transcript;
+            }
+        }
+        if (finalTranscript) {
+            userInput.value = finalTranscript;
+            sendMessage(finalTranscript, true); // 음성 입력 자동 전송
+        }
+    };
+
+    // 페이지 진입 시 자동 음성 인식 시작
+    setTimeout(safeStartRecognition, 500);
 
     // function extractCurlyBracesContent(text) {
     //     const match = text.match(/\{.*?\}/);
@@ -433,13 +497,38 @@ document.addEventListener("DOMContentLoaded", () => {
         chatbox.appendChild(divider);
     }
 
+
+    // legacy 대화 기록 구조 병합
+    let dataInterviewChatText = '';
+    let dataInterviewChatIndex = 0;
+    let dataInterviewArr = [
+        {
+            id: dataInterviewChatIndex,
+            text: dataInterviewChatText,
+            isUser: true,
+            timestamp: new Date().toISOString()
+        }
+    ];
     let interviewLog = []; // 인터뷰 Q&A 기록용
     let sendStartTime = null;
 
-    async function sendMessage() {
-        const apiKey = apiKeyInput.value.trim();
-        const userMessage = userInput.value.trim();
+    // 음성 인식 결과를 dataInterviewArr에 저장하는 함수 (legacy 병합)
+    function saveSpeechResultToInterviewArr(finalTranscript) {
+        if (!finalTranscript) return;
+        dataInterviewChatText = finalTranscript;
+        dataInterviewChatIndex++;
+        dataInterviewArr.push({
+            id: dataInterviewChatIndex,
+            text: dataInterviewChatText,
+            isUser: true,
+            timestamp: new Date().toISOString()
+        });
+    }
 
+    // sendMessage: 음성 입력 자동 전송 지원, persona 특성 기반 프롬프트/음성합성 지원
+    async function sendMessage(voiceInput, isVoice) {
+        const apiKey = apiKeyInput.value.trim();
+        let userMessage = (typeof voiceInput === 'string') ? voiceInput : userInput.value.trim();
         if (!apiKey) {
             alert('API 키를 입력해주세요.');
             return;
@@ -448,36 +537,45 @@ document.addEventListener("DOMContentLoaded", () => {
             alert('메시지를 입력해주세요.');
             return;
         }
-
-        // 퍼소나가 선택되지 않은 경우 경고 후 함수 종료
         if (!selectedPersona) {
             alert("먼저 퍼소나를 선택해주세요.");
             return;
         }
-
         const interviewTitle = interviewTitleInput.value.trim();
 
-        // 시스템 메시지에 GPT 퍼소나 JSON의 주요 정보를 포함하여 구성
-        messages = [
-            {
-                role: "system",
-                content:
-                    `인터뷰 주제: ${interviewTitle}\n` +
-                    `인터뷰 대상: ${selectedPersona.name} (${selectedPersona.gender}, ${selectedPersona.age}세, ${selectedPersona.occupation})\n` +
-                    `성격: ${selectedPersona.personality}\n` +
-                    `관심사: ${selectedPersona.interests}\n` +
-                    `취미: ${selectedPersona.hobby}\n` +
-                    `언어습관: ${selectedPersona.speech}\n` +
-                    `위 정보를 바탕으로, 사용자가 제출한 자료에 맞는 가상의 인물로 연기해주세요. ` +
-                    `대화는 반드시 대화체로, 불필요한 표, 단락, 이모지는 사용하지 않고, 즐거운 상황에서는 하하하하! 하고 웃거나, 언어습관에 따라 대답을 거부하거나, 말문이 막힌 연기를 하거나, 특히 성격이 안좋다면 반복되는 질문을 귀찮아 하고, 한숨도 쉬고, 쉽게 화 냅니다. 실제 사람같은 응답을 원해요. 이렇게 출력된 답은 **interviewAnswer**라고 정의합니다. 순수 텍스트만 들어갑니다.` +
-                    `인터뷰에는 미리 정해진 질문들이 있는데, 질문 리스트는 ${questions.join(',')}순 입니다. 질문을 받는 것은 아이스 브레이킹 > 1번 질문 > 1번의 파생질문들 > 2번 질문 > ... > 마지막 질문 순서로 이루어 지는데, 지금 받은 질문이 어떤 것인지를 **interiewIndex**라고 정의합니다. 오직 숫자만 들어가며, 아이스브레이킹=0, 1번 질문과 그 파생질문=1, 2번 질문과 그 파생질문=2... 로 숫자만 표시합니다. 이전 질문에 대해 상세히 물어보거나 파생된 질문을 했을 경우에는 파생질문으로 인식하고 이전 질문과 같은 번호를 부여하되, 다른 질문 목록에 있는 질문에 더 가깝다면 그 질문의 번호를 부여합니다.` +
-                    `최종 출력은 json 형태로 하되 괄호 전후로 백틱이나 다른 글자를 넣지 마세요. interviewAnswer, interviewIndex 2가지 속성만 넣어 출력하세요.`
+        // 퍼소나 특성 기반 동적 프롬프트 생성
+        let systemPrompt = `대화는 한국어로 진행됩니다. 사용자의 음성 발화를 받아 자연스럽게 한 사람처럼 대화하세요. 불필요한 이모지, 표는 사용하지 마세요.`;
+        systemPrompt += `\n인터뷰 주제: ${interviewTitle}`;
+        if (selectedPersona) {
+            systemPrompt += `\n인터뷰 대상: ${selectedPersona.name} (${selectedPersona.gender || ''}, ${selectedPersona.age || ''}세, ${selectedPersona.occupation || ''})`;
+            systemPrompt += `\n성격: ${selectedPersona.personality || ''}`;
+            systemPrompt += `\n관심사: ${selectedPersona.interests || ''}`;
+            if (selectedPersona.hobby) systemPrompt += `\n취미: ${selectedPersona.hobby}`;
+            if (selectedPersona.speech) systemPrompt += `\n언어습관: ${selectedPersona.speech}`;
+            // 나이 기반 음성 프롬프트
+            if (selectedPersona.age && selectedPersona.age < 30) {
+                systemPrompt += `\n음성 설정: 젊은 층의 목소리`;
+            } else if (selectedPersona.age && selectedPersona.age < 50) {
+                systemPrompt += `\n음성 설정: 중년층의 차분한 목소리`;
+            } else if (selectedPersona.age && selectedPersona.age >= 50) {
+                systemPrompt += `\n음성 설정: 노년층의 중후한 목소리`;
             }
+        }
+        if (questions) {
+            systemPrompt += `\n질문 리스트(순서): ${questions.join(',')}`;
+            systemPrompt += `\n사용자가 이전 질문에 대한 파생 질문을 하면 같은 질문 번호로 분류하고, 다른 질문에 가까우면 해당 질문 번호로 분류하세요.`;
+            systemPrompt += `\n가능하면 다음 질문 흐름을 자연스럽게 이어갈 수 있도록 간결히 답하세요.`;
+        }
+
+        messages = [
+            { role: "system", content: systemPrompt }
         ];
 
+        // 음성 입력 결과도 dataInterviewArr에 저장 (텍스트 입력도 동일하게 저장)
+        saveSpeechResultToInterviewArr(userMessage);
         appendMessage(userMessage, 'user');
         messages.push({ role: "user", content: userMessage });
-        userInput.value = '';
+        if (!isVoice) userInput.value = '';
 
         const payload = {
             model: modelId,
@@ -490,6 +588,8 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         sendStartTime = Date.now(); // 유저 입력 시각 기록
+        isPending = true;
+        updateMicStatus('GPT 응답 대기');
 
         try {
             const response = await fetch(apiUrl, {
@@ -508,11 +608,29 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await response.json();
             const botMessage = data.choices[0]?.message?.content || "Error: API에서 응답이 없습니다.";
 
+            // legacy: JSON이면 interviewAnswer 우선 추출, 아니면 원문 사용
+            let toSpeak = botMessage;
+            let answerText = botMessage;
+            let index = null;
             try {
-                const parsed = JSON.parse(botMessage);
-                const answerText = parsed.interviewAnswer;
-                const index = parseInt(parsed.interviewIndex);
+                const trimmed = botMessage.trim();
+                if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+                    const parsed = JSON.parse(trimmed);
+                    if (parsed.interviewAnswer) {
+                        toSpeak = String(parsed.interviewAnswer);
+                        answerText = toSpeak;
+                    }
+                    if (parsed.interviewIndex !== undefined) {
+                        index = parseInt(parsed.interviewIndex);
+                    }
+                }
+            } catch (err) {
+                // JSON 파싱 실패 시 원문 사용
+                toSpeak = botMessage;
+                answerText = botMessage;
+            }
 
+            if (index !== null) {
                 highlightCurrentQuestion(index);
 
                 // 안내 문구 삽입 조건
@@ -523,37 +641,42 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 lastIndex = index;
-
-                appendMessage(answerText, 'bot');
-                messages.push({ role: "assistant", content: answerText });
-                // 인터뷰 로그 기록
-                const endTime = Date.now();
-                interviewLog.push({
-                    questionIndex: index,
-                    question: questions && questions[index - 1] ? questions[index - 1] : "(파생 질문)",
-                    userMessage: userMessage,
-                    botAnswer: answerText,
-                    timestampStart: sendStartTime,
-                    timestampEnd: endTime
-                });
-
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify({ apiKey, gptResponse: answerText }));
-                    console.log("메시지 전송됨:", { apiKey, gptResponse: answerText });
-                } else {
-                    console.warn("웹소켓 연결이 중단되었습니다.");
-                }
-            } catch (err) {
-                console.error("GPT 응답 파싱 오류:", err);
-                appendMessage(botMessage, 'bot'); // fallback 처리
             }
 
+            appendMessage(answerText, 'bot');
+            messages.push({ role: "assistant", content: answerText });
+
+            // 인터뷰 로그 기록 (기존)
+            const endTime = Date.now();
+            interviewLog.push({
+                questionIndex: index,
+                question: questions && index && questions[index - 1] ? questions[index - 1] : "(파생 질문)",
+                userMessage: userMessage,
+                botAnswer: answerText,
+                timestampStart: sendStartTime,
+                timestampEnd: endTime
+            });
+
+            // legacy: bot 답변도 dataInterviewArr에 저장
+            dataInterviewChatIndex++;
+            dataInterviewArr.push({
+                id: dataInterviewChatIndex,
+                text: answerText,
+                isUser: false,
+                timestamp: new Date().toISOString()
+            });
+
+            // 답변을 음성으로 읽어주기 (퍼소나 특성 기반)
+            await speakTextPersona(answerText, selectedPersona);
+
             if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({ apiKey, gptResponse: botMessage }));
-                console.log("메시지 전송됨:", { apiKey, gptResponse: botMessage });
+                socket.send(JSON.stringify({ apiKey, gptResponse: answerText }));
+                console.log("메시지 전송됨:", { apiKey, gptResponse: answerText });
             } else {
                 console.warn("웹소켓 연결이 중단되었습니다.");
             }
+            isPending = false;
+            updateMicStatus('듣는 중');
         } catch (error) {
             appendMessage(`Error: ${error.message}`, 'bot');
         }
@@ -792,21 +915,80 @@ document.addEventListener("DOMContentLoaded", () => {
         renderAnalysisDashboard();
     }
 
-    document.getElementById("sendButton").addEventListener("click", sendMessage);
+    document.getElementById("sendButton").addEventListener("click", () => sendMessage());
     document.getElementById("userInput").addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
-            e.preventDefault(); // Enter 키의 기본 동작 방지
+            e.preventDefault();
             sendMessage();
         }
     });
     micButton.addEventListener("click", () => {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ action: "startRecording" }));
-            console.log("음성 녹음 시작");
-        } else {
-            console.warn("웹소켓 연결이 중단되었습니다.");
+        if (!isListening) safeStartRecognition();
+    });
+
+    // 퍼소나 특성 기반 음성 합성 함수
+    async function speakTextPersona(text, persona) {
+        if (!text) return;
+        isSpeaking = true;
+        let voice = 'coral'; // 기본값
+        if (persona && persona.gender) {
+            const gender = String(persona.gender).trim();
+            if (gender === '여자' || gender === '여성' || gender === 'female' || gender === 'woman') {
+                voice = 'alloy';
+            } else if (gender === '남자' || gender === '남성' || gender === 'male' || gender === 'man') {
+                voice = 'echo';
+            }
+        }
+        let instructions = '자연스럽고 친근한 톤으로 말해주세요.';
+        if (persona && persona.speech) {
+            instructions += ` ${persona.speech}`;
+        }
+        // 연령 기반 음성 스타일
+        if (persona && persona.age) {
+            if (persona.age < 30) instructions += ' 젊은 목소리.';
+            else if (persona.age < 50) instructions += ' 중년 목소리.';
+            else instructions += ' 노년 목소리.';
+        }
+        try {
+            const key = apiKeyInput.value.trim();
+            if (!key) return;
+            const res = await fetch('https://api.openai.com/v1/audio/speech', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${key}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini-tts',
+                    input: text,
+                    voice,
+                    instructions,
+                    response_format: 'wav',
+                    speed: 1.0
+                })
+            });
+            if (!res.ok) throw new Error('TTS API 오류: ' + res.status);
+            const audioBlob = await res.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            audioElement.src = audioUrl;
+            audioElement.onended = () => {
+                isSpeaking = false;
+                updateMicStatus('듣는 중');
+                if (!isListening && !isPending) safeStartRecognition();
+                URL.revokeObjectURL(audioUrl);
+            };
+            audioElement.onerror = () => {
+                isSpeaking = false;
+                updateMicStatus('듣는 중');
+                if (!isListening && !isPending) safeStartRecognition();
+                URL.revokeObjectURL(audioUrl);
+            };
+            audioElement.play();
+        } catch (e) {
+            isSpeaking = false;
+            updateMicStatus('듣는 중');
+            if (!isListening && !isPending) safeStartRecognition();
         }
     }
-    );
 });
 
