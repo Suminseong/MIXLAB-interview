@@ -1,0 +1,3407 @@
+/* 메뉴 ?�체 hover ???�이�? ?�어, ?�국??모두 진해�??�시??*/
+.btn-preset:hover .nav-img img,
+.btn-persona:hover .nav-img img,
+.btn-interview:hover .nav-img img,
+.btn-analysis:hover .nav-img img,
+.btn-revision:hover .nav-img img {
+  filter: brightness(0.7) saturate(1.5);
+}
+.btn-preset:hover .nav-text,
+.btn-persona:hover .nav-text,
+.btn-interview:hover .nav-text,
+.btn-analysis:hover .nav-text,
+.btn-revision:hover .nav-text {
+  color: #5B5E63;
+}
+.btn-preset:hover .nav-text[data-label]::after,
+.btn-persona:hover .nav-text[data-label]::after,
+.btn-interview:hover .nav-text[data-label]::after,
+.btn-analysis:hover .nav-text[data-label]::after,
+.btn-revision:hover .nav-text[data-label]::after {
+  color: #5B5E63;
+  opacity: 1;
+}
+/* API Key Modal X (close) button style */
+.api-key-modal-x {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #888;
+  cursor: pointer;
+  box-shadow: none;
+  padding: 0;
+  line-height: 1;
+  z-index: 1;
+  transition: color 0.15s;
+}
+.api-key-modal-x:hover {
+  color: #f15461;
+}
+/* ===== API Key ?�력 모달 ===== */
+#apiKeyModal {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#apiKeyModal.active {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.api-key-modal-content {
+  background: white;
+  padding: 32px 24px;
+  width: 320px;
+  text-align: center;
+  border-radius: 16px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.api-key-icon{
+  width: clamp(20px, 6vw, 120px);
+  height: auto;
+  margin-bottom: 10px;
+}
+
+#apiKeyInput{
+  border-radius: 20vw;
+  border: 1px solid #d1d2d3;
+}
+
+.apikey_text {
+  display: flex;
+  text-align: left;
+}
+
+/* 추�???질문지 ?�각?�으�??�인 가?�하�??�두?�으�?. */
+.question-edit-input::placeholder {
+  color: #f15461 !important; 
+  opacity: 1;
+}
+
+.question-edit-input[placeholder='?�용???�력?�세??'] {
+  border-color: #ffeaea !important;
+  color: #f15461 !important;
+}
+
+/* 빈칸???�닐 ?�는 기본 ?�상 */
+.question-edit-input:not([placeholder='?�용???�력?�세??']) {
+  color: #8F949B;
+  border-color: #F2F3F5;
+}
+
+.question-edit-input.added-question {
+  border-color: #ddefe5 !important;
+}
+
+
+/* ====== ?�역 질문 추�?(?�러?? 버튼 ?��???====== */
+#global-question-add-btn {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  bottom: -1.2vw;
+  opacity: 0;
+  pointer-events: none;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.18s, transform 0.18s, background 0.18s;
+  padding: 0;
+  z-index: 10;
+}
+
+/* 질문 추�? 버튼???��??????�래 질문?�이 ?�연?�럽�??�래�??�동?�는 ?�과 */
+.question-edit-wrapper {
+  /* margin-bottom: 10px;   ??기본 간격 ?��? */
+  transition: margin-top 0.2s ease;
+}
+
+#global-question-add-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 100%; /* 버튼???�른�??��????�작 */
+  width: 10vw; /* ???�측?�로 40px ?�장 */
+  height: 100%;
+  pointer-events: auto;       /* ???�제 마우???�벤??감�? */
+  background: transparent;    /* ??보이지 ?�게 처리 */
+}
+
+.question-edit-wrapper.hovered {
+  margin-top: 40px;      /* ???�래 간격?� ?�것�?*/
+  padding-bottom: 0;     /* ???�요 ?�다�??�거 */
+  margin-bottom: 0;      /* ??반드???�거 */
+  min-height: auto;      /* ???�어??무�??��?�??�거?�도 ??*/
+}
+
+.question-edit-wrapper.hover-next {
+  margin-top: 2vw;
+  transition: margin-top 0.2s ease;
+}
+
+#global-question-add-btn.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#global-question-add-btn svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+
+#global-question-add-btn svg circle {
+  stroke: #F2F3F5 !important;
+}
+
+#global-question-add-btn:hover {
+  background: #F8F9FB;
+  border-radius: 50%;
+}
+
+#global-question-add-btn:active {
+  background: #E7F0FF;
+  border-radius: 50%;
+  transform: scale(0.92);
+}
+
+/* 질문지 관???��???*/
+.question-edit-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  transition: padding-bottom 0.18s;
+}
+.question-edit-wrapper.hovered {
+  padding-bottom: 40px;
+}
+
+.question-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+  padding: 0;
+  margin-bottom: clamp(15px, 1.3vw, 22px);
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  margin-left: 0;
+  transition: opacity 0.18s, background 0.18s, transform 0.18s;
+  position: relative;
+  z-index: 2;
+}
+.question-delete-btn.active {
+  opacity: 1;
+  pointer-events: auto;
+  margin-left: 8px;
+  z-index: 3;
+}
+.question-delete-btn svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+.question-delete-btn svg circle {
+  stroke: #F2F3F5 !important;
+}
+.question-delete-btn:hover {
+  background: #F8F9FB;
+  border-radius: 50%;
+}
+.question-delete-btn:active {
+  background: #E7F0FF;
+  border-radius: 50%;
+  transform: scale(0.92);
+}
+
+#nav-item .nav-img img,
+#nav-item .nav-text,
+#nav-item .nav-text[data-label]::after {
+  transition: filter 0.2s, color 0.2s, opacity 0.2s;
+}
+
+#nav-item .nav-text {
+  font-size: clamp(17px, 1.15vw, 20px);
+  color: #222;
+  font-weight: 500;
+  text-align: left;
+}
+
+#nav-item .nav-text[data-label]::after {
+  content: attr(data-label);
+  display: block;
+  font-size: clamp(12px, 0.85vw, 14px);
+  color: #888;
+  font-weight: 400;
+  text-align: left;
+  margin-top: 2px;
+  opacity: 1;
+  pointer-events: none;
+  transition: color 0.2s;
+}
+
+#nav-item:hover .nav-img img,
+#nav-item.active .nav-img img {
+  filter: brightness(0.2) saturate(1.2) !important;
+}
+
+#nav-item:hover .nav-text,
+#nav-item.active .nav-text {
+  color: #222 !important;
+}
+
+#nav-item:hover .nav-text[data-label]::after,
+#nav-item.active .nav-text[data-label]::after {
+  color: #333 !important;
+  opacity: 1;
+}
+
+#nav-item .nav-text,
+#nav-item .nav-text[data-label]::after {
+  color: #CDD1D6 !important;
+  font-weight: 400 !important;
+}
+#nav-item .nav-img img {
+  filter: grayscale(0) brightness(1) sepia(1) hue-rotate(180deg) saturate(0) brightness(1) !important;
+  /* ?�이�?기본 ?�상: #CDD1D6??맞게 hue-rotate ??조정 ?�요. ?�제 ?�이�??�상?� SVG/PNG???�라 ?�름 */
+}
+#nav-item:hover .nav-text,
+#nav-item:hover .nav-text[data-label]::after {
+  color: #5B5E63 !important;
+  font-weight: 400 !important;
+}
+#nav-item:hover .nav-img img {
+  filter: grayscale(0) brightness(1) sepia(1) hue-rotate(0deg) saturate(2) brightness(1.1) !important;
+  /* hover ???�이�??�상: #5B5E63??맞게 hue-rotate ??조정 ?�요 */
+}
+#nav-item.nav-active .nav-text,
+#nav-item.nav-active .nav-text[data-label]::after,
+#nav-item.active .nav-text,
+#nav-item.active .nav-text[data-label]::after {
+  color: #357AFF !important;
+  font-weight: 700 !important;
+}
+
+
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+    letter-spacing: -0.5px;
+}
+
+input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 100px #FEFEFE inset; 
+    -webkit-text-fill-color: #5B5E63; 
+}
+
+/* --------마우??커서-------- */
+/* 커스?� 마우??커서 ?�자??*/
+
+.custom-cursor {
+  width: 28px;
+  height: 28px;
+  background: transparent; /* ?��? 채�? ?�음 */
+  border: 1px solid #6B6B6B; /* 1px 진한 ?�색 ?�곽??*/
+  border-radius: 50%;
+  position: fixed;
+  transform: translate(-50%, -50%) scale(1.1);
+  pointer-events: none;
+  z-index: 2147483647;
+  box-shadow: 0 2px 12px 2px rgba(80,80,80,0.10); /* ???�한 ?�색 그림??*/
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    box-shadow 0.18s,
+    transform 0.18s,
+    opacity 0.18s;
+  mix-blend-mode: normal;
+}
+
+
+.custom-cursor.main-active {
+  background: transparent;
+  border-color: #6B6B6B;
+  box-shadow: 0 2px 16px 2px rgba(80,80,80,0.14);
+  transform: translate(-50%, -50%) scale(1.18);
+}
+
+
+.custom-cursor.click {
+  background: transparent;
+  border-color: #232323;
+  box-shadow: 0 1px 8px 1px rgba(80,80,80,0.18);
+  transform: translate(-50%, -50%) scale(0.8);
+}
+
+
+.custom-cursor.hovering {
+  background: transparent;
+  border-color: #6B6B6B;
+  box-shadow: 0 2px 20px 2px rgba(80,80,80,0.16);
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
+
+/* 메인 진입 ?? ?�색 */
+.custom-cursor.main-active {
+  background-color: transparent;
+}
+
+
+/* ?�릭 ?? ?�아지면서 진한 ?�색 */
+.custom-cursor.click {
+  transform: translate(-50%, -50%) scale(0.7);
+  background-color: transparent;
+}
+
+
+.custom-cursor.hovering {
+  background-color: transparent;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+body,
+*[draggable="true"],
+img,
+a,
+button {
+  cursor: none !important;
+}
+
+
+/*--------------?�태 지??--------------*/
+
+body {
+    width: 100vw;
+    min-width: 1000px;
+    height: 100vh;
+    min-height: 590px;
+    background-color: #F8F9FB;
+    overflow-x: hidden;
+    overflow-y: hidden; 
+    scrollbar-width: none; /* Firefox */
+}
+body::-webkit-scrollbar {
+    display: none;
+}
+
+.base-container {
+    gap: clamp(14px, 1.2vw, 21px);
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    /* padding-top: 20px;  */
+}
+
+.aside-left {
+    flex-grow: 2;
+    min-width: clamp(120px, 12vw, 180px);
+    /* background-color: #fff; */
+    margin: clamp(18px, 1.4vw, 23px) 0;
+    margin-left: clamp(14px, 1vw, 19px);
+    border-radius: 50px;
+}
+
+.main-container {
+    position: relative;
+    flex-grow: 10;
+    min-width: clamp(300px, 25vw, 500px);
+    margin: clamp(14px, 1vw, 19px) 0px;
+    background-color: #fff;
+    border-radius: 50px;
+}
+
+.sub-container {
+    flex-grow: 3;
+    min-width: clamp(150px, 15vw, 250px);
+    margin: clamp(14px, 1vw, 19px) 0px;
+    margin-right: clamp(14px, 1.2vw, 19px);
+    border-radius: 50px;
+}
+
+/*--------------aside-left-----------------*/
+
+.logo-text {
+    font-size: clamp(16px, 1.2vw, 21px);
+    font-weight: 600;
+    color: #888C92;
+}
+
+#aside-bar {
+    margin-top: clamp(24px, 2vw, 32px);
+    margin-left: clamp(16px, 2.5vw, 36px);
+    margin-right: clamp(32px, 2.5vw, 34px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(60px, 6vw, 100px);
+}
+
+#nav-bar div {
+    display: flex;
+    flex-direction: row;
+    gap: clamp(10px, 0.8vw, 15px);
+    align-items: center;
+}
+
+#nav-bar div :hover {
+    cursor: pointer;
+    filter: brightness(80%);
+    transition: 0.2s ease, transform 0.1s ease;
+}
+
+#nav-bar {
+    display: flex;
+    flex-direction: column;
+    max-width: 0;
+    gap: clamp(20px, 1.8vw, 30px);
+    color: #CDD1D6;
+}
+
+/* ?�이콘도 반응?�으�??�직이�?vw?�위�?*/
+.nav-img {
+    width: clamp(18px, 1.4vw, 24px);
+    height: clamp(18px, 1.4vw, 24px);
+}
+
+.nav-active {
+    color: #5872FF;
+}
+
+.nav-active .nav-img svg path {
+    fill: #5872FF !important;
+}
+
+.nav-active .nav-img svg ellipse {
+    fill: #5872FF !important;
+}
+
+.nav-text{
+    font-weight: 300;
+}
+
+.nav-active p{
+    font-weight: 600 ;
+}
+
+#changeApiKey{
+    border: none;
+    background-color: rgba(0, 0, 0, 0);
+    display: flex;
+    position: absolute;
+    bottom: 5vw;
+}
+
+#changeApiKey img{
+    width: clamp(20px, 2vw, 30px);
+    height: auto;
+}
+
+/*----------main-container 부�?--------*/
+.main-container{
+    box-shadow: 0 0 1.5vw rgba(84, 88, 103, 0.04);
+    border-radius: clamp(24px, 1.5vw, 30px);
+    width: 40vw;
+    padding: clamp(22px, 2.5vw, 44px) clamp(20px, 3vw, 48px);
+}
+
+.page h2{
+    font-size: clamp(14px, 1vw, 17px);
+    font-weight: 650;
+    color: #5B5E63;
+    margin-bottom: clamp(14px, 1.4vw, 24px);
+}
+
+#result{
+    height: 98%;
+    /* overflow-y: auto; */
+}
+
+
+.question-box {
+    overflow-y: auto;
+    max-height: 73vh;
+    display: flex;
+    flex-direction: column;
+    /* ?�요???�라 height ?�는 max-height 조정 */
+    /* 부�??�역???��? ?�게, ?��??�서�??�크�?*/
+}
+
+/* ====== 공통 ?�크롤바 ?��???====== */
+/* ===== ?�롬, ?��?, ?�파리용 ?�크롤바 ===== */
+*::-webkit-scrollbar {
+  width: 13px;
+  height: 13px;
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #E7F0FF;
+  border-radius: 10vw;
+  border: 3px solid transparent;
+  min-height: 30px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #8ab7ff; /* hover???�일 ?�상 ?��? */
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  box-shadow: none;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 모든 방향 ?�크롤바 버튼 ?�거 */
+*::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button:single-button,
+*::-webkit-scrollbar-button:single-button:vertical:decrement,
+*::-webkit-scrollbar-button:single-button:vertical:increment,
+*::-webkit-scrollbar-button:single-button:horizontal:decrement,
+*::-webkit-scrollbar-button:single-button:horizontal:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: none !important;
+}
+
+
+
+/* ===== ?�이?�폭?�용 ===== */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: #E7F0FF transparent;
+}
+
+
+
+/* 질문 ?�정 input ?��???(질문지 input ?�용) */
+/* 질문 ?�정 input + ??�� 버튼 ?�퍼 */
+.question-edit-wrapper {
+  display: inline-flex;
+  align-items: center;   /* ???�로 중앙 ?�렬 */
+  gap: 0.5vw;              /* input�?버튼 간격 */
+}
+
+.question-edit-input {
+  width: auto;
+
+
+  font-size: clamp(12px, 0.85vw, 15px);
+  color: #8F949B;
+  padding: clamp(9.5px, 0.8vw, 16px) clamp(18px, 1vw, 44px);
+  border: 1.5px solid #F2F3F5;
+  border-radius: 50vw;
+  margin-bottom: clamp(15px, 1.3vw, 22px);
+  background: #fff;
+  outline: none;
+  box-sizing: content-box !important;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.question-index-num{
+  margin-bottom: clamp(15px, 1.3vw, 22px);
+  color: #CDD1D6;
+}
+
+
+/* ??�� 버튼 기본 ?��?, input hover ???�시 */
+.question-delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: auto;     /* input ?�이??맞춰�?*/
+    padding: 0;
+    margin-bottom: clamp(15px, 1.3vw, 22px); /* input�?맞추�??�으�???�?지??*/
+
+    background: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s;
+    padding: 0;
+    z-index: 2;
+}
+
+
+.question-edit-wrapper:hover .question-delete-btn,
+.question-edit-input:focus + .question-delete-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ??�� 버튼 SVG ?��???(?�시: ?�형 배경 + X) */
+.question-delete-btn svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+.question-delete-btn svg circle {
+  stroke: #F2F3F5 !important;
+}
+.question-delete-btn svg circle {
+  stroke: #F2F3F5 !important;
+}
+.question-delete-btn:hover {
+  background: #F8F9FB;
+  border-radius: 50%;
+}
+.question-delete-btn:active {
+  background: #E7F0FF;
+}
+.question-edit-input:focus {
+    border-color: #93A4FF;
+    box-shadow: 0 0 0 2px #E7F0FF;
+    color: #5B5E63;
+    background: #F8F9FB;
+}
+
+/*----------sub-container 부�?--------*/
+
+.sub-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: clamp(210px, 14vw, 280px);
+}
+
+.container-children {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 1.2vw, 20px);
+}
+
+.side-box {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: clamp(16px, 1.3vw, 30px);
+    padding: clamp(16px, 1.5vw, 26px) clamp(18px, 1.7vw, 30px);
+    gap: clamp(8px, 0.8vw, 16px);
+
+    box-shadow: 0 0 1.5vw rgba(84, 88, 103, 0.06);
+}
+
+.side-box label{
+    font-size: clamp(13px, 0.95vw, 16px);
+    font-weight: 650;
+    color: #5B5E63;
+}
+
+/* input ?�그 ?�에 text?�력??배경 ?�상 변?�게 js�??��??�링 */
+.side-box input{
+    border: none;
+    background-color: #F2F3F5;
+    padding: clamp(8px, 0.8vw, 15px) clamp(12px, 1.1vw, 17px);
+    border-radius: 20vw;
+    color: #5B5E63;
+
+    border: 1.5px solid #F2F3F5;
+    font-size: clamp(11.5px, 0.8vw, 15px);
+}
+
+.side-box input::placeholder{
+    color: #8F949B;
+    font-weight: 300;
+}
+
+.side-box input:focus{
+    outline: none;
+}
+
+/*sub-lower 부�?--------->html코드?�서 변경된 �?같음(.side-box / #gen-?�당?�이지)*/
+
+/* .sub-lower {
+    background: white;
+    border-radius: clamp(16px, 1.8vw, 30px);
+    padding: clamp(18px, 1.7vw, 30px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(14px, 1vw, 17px);
+    bottom: 0;
+
+    box-shadow: 0 0 20px rgba(84, 88, 103, 0.05);
+} */
+
+.counter-section {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    align-items: center;
+  color: #5B5E63;
+  font-weight: 700;
+    font-size: clamp(13px, 0.95vw, 16px);
+}
+.counter {
+    display: flex;
+    align-items: center;
+    gap: clamp(7px, 0.8vw, 14px);
+}
+
+.counter button {
+    width: clamp(20px, 1.5vw, 24px);
+    height: clamp(20px, 1.5vw, 24px);
+    background: #fff;
+    border: 1px solid #eeeeee;
+    border-radius: 50%;
+    font-size: clamp(15px, 1.15vw, 18px);
+    font-weight: 300;
+    color: #5B5E63;
+    cursor: pointer;
+    transition: 0.2s ease, transform 0.1s ease;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: clamp(1px, 0.15vw, 3px); 
+}
+
+.counter button:hover {
+    background: #f3f4f5;
+}
+
+.counter button:active {
+    transform: scale(0.9);
+}
+
+#generate-btn:hover {
+    background: #93A4FF;
+}
+
+#generate-btn:active {
+    transform: scale(0.96);
+}
+
+.sub-inactive {
+    display: none;
+}
+
+/* -------------------------------add-0211------------------------------------ */
+/* ?�역 ?�용 ?��??�링 */
+.create-btn-style{
+    width: 100%;
+    padding: clamp(7px, 0.8vw, 14px) 0;
+    background: #5872FF;
+    color: white;
+    border: none;
+    border-radius: 20vw;
+    font-size: clamp(12px, 0.85vw, 15px);
+    cursor: pointer;
+    transition: 0.2s ease, transform 0.1s ease;
+}
+
+/* #result::-webkit-scrollbar-track {
+    border-radius: 20vw;
+} */
+
+/* -----------persona--------- */
+#personaTitle{
+    background-color: #F8F9FB;
+    padding: clamp(8px, 0.8vw, 15px) clamp(12px, 1.1vw, 17px);
+    border-radius: 10vw;
+    color: #CDD1D6;
+
+    border: 1.5px solid #F2F3F5;
+    font-size: clamp(11.5px, 0.8vw, 15px);
+}
+
+#persona-easecreate{
+    padding: clamp(16px, 1.5vw, 26px) clamp(18px, 1.7vw, 30px);
+}
+
+.label-box{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.toggle-input{
+    display: none;
+}
+
+.toggle-label{
+    position: relative;
+    display: block;
+    width: clamp(34px, 3vw, 60px);
+    height: clamp(21px, 1.9vw, 36px);
+    background-color: #CDD1D6;
+    border-radius: 20vw;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-label::before{
+    content: "";
+    position: absolute;
+    top: clamp(2.9px, 0.32vw, 4.8px);
+    left: clamp(3.2px, 0.29vw, 6px);
+    width: clamp(15px, 1.3vw, 28px);
+    height: clamp(15px, 1.3vw, 28px);
+    background-color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 clamp(14px, 1vw, 17px) rgba(84, 88, 103, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.toggle-input:checked + .toggle-label {
+    background-color: #5872FF;
+}
+
+.toggle-input:checked + .toggle-label::before {
+    transform: translateX(clamp(12px, 1.1vw, 20px));
+}
+
+.persona-prompt-box{
+    display: flex;
+    flex-direction: column;
+    gap: clamp(9px, 0.5vw, 13px);
+}
+
+.persona-prompt-box label{
+    font-size: clamp(12px, 0.9vw, 15px);
+}
+
+.persona-prompt-box input{
+    padding: clamp(9px, 0.7vw, 14px) clamp(13px, 1.1vw, 20px);
+    margin-bottom: clamp(12px, 0.7vw, 14px);
+}
+
+#persona-side{
+    max-height: clamp(120px, 16vw, 600px);
+    overflow-y: auto;
+}
+#question-container {
+  padding-bottom: clamp(32px, 5vw, 64px);
+}
+/* ?�크�??��??�링 ?�용 ?�정 */
+
+.persona-wrapper {
+  display: flex;
+  transition: transform 0.4s ease;
+  width: max-content; /* ?�체 ?�비 ?�보 */
+}
+
+
+/* ?�로???��?지 */
+.persona-profile-img {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: #E7F0FF;
+  object-fit: cover;
+  margin-bottom: 24px;
+  display: block;
+  box-shadow: 0 2px 16px rgba(84,88,103,0.08);
+}
+/* ?�름 + ?�별 */
+.persona-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #222;
+  text-align: center;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.persona-gender {
+  color: #F15461;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-left: 4px;
+}
+/* ?�보 ?�벨/�??�운??박스 */
+.persona-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.persona-info-label {
+  background: #F8F9FB;
+  border-radius: 20vw;
+  padding: 7px 20px;
+  color: #8F949B;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  display: inline-block;
+  border: none;
+}
+.persona-info-value {
+  background: #fff;
+  border-radius: 20vw;
+  padding: 7px 20px;
+  color: #5B5E63;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  display: inline-block;
+  border: none;
+}
+/* ?�견(�??�스?? */
+.persona-opinion {
+  margin-top: 18px;
+  color: #8F949B;
+  font-size: 1rem;
+  text-align: center;
+  background: #F8F9FB;
+  border-radius: 16px;
+  padding: 12px 20px;
+  width: 100%;
+}
+
+/* result??persona-box ?��??�링 */
+
+
+/* ------------interview------------ */
+#interview-container{
+    overflow-x: hidden;
+}
+
+#chatbox {
+    display: flex;
+    flex-direction: column;
+    border: none ;
+    height: 90%;
+    padding: 10px;
+    width: 100%;
+    overflow-y: scroll;
+    margin-bottom: 10px;
+}
+
+/* 공통 메시지 ?��???*/
+.message {
+    max-width: 70%;
+    margin: 8px 0;
+    padding: 10px 15px;
+    border-radius: 18px;
+    font-size: 16px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    display: inline-block;
+}
+
+/* ?�용??메시지 (?�른�??�렬) */
+.message.user {
+    background-color: #5872FF;
+    color: #000;
+    border-bottom-right-radius: 4px;
+    text-align: right;
+    color: white;
+    margin-left: auto;
+}
+
+/* 챗봇 메시지 (?�쪽 ?�렬) */
+.message.bot {
+    align-self: flex-start;
+    background-color: #F2F3F5;
+    color: #8F949B;
+    border-bottom-left-radius: 4px;
+    text-align: left;
+}
+
+.message-wrapper {
+    display: flex;
+    margin-bottom: clamp(8px, 0.7vw, 12px);
+    align-items: center;
+}
+
+.persona-name-tag {
+    background-color: #CDD1D6;
+    color: white;
+    width: clamp(40px, 2vw, 52px);
+    height: clamp(40px, 2vw, 52px);
+    border-radius: 50%;
+    text-align: center;
+    line-height: clamp(40px, 2vw, 52px);
+    margin-right: clamp(10px, 0.625vw, 16px);
+}
+
+.stage-message {
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+    margin: 16px 0;
+}
+
+/* ?�텁 질문지지 */
+
+
+/* 로딩?�피??*/
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(71, 71, 71, 0.5);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.spinner {
+  border: 6px solid #ccc;
+  border-top: 6px solid #5872FF;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* -----------?�터�?질문지 불러?�기�?----------- */
+#questionListContainer {
+  /* width: clamp(260px, 20vw, 320px); */
+  padding: 24px;
+  background-color: #F8F9FB;
+  border-left: 1px solid #E0E2E6;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: clamp(24px, 2vw, 32px);
+}
+
+.interview-meta {
+  margin-bottom: 20px;
+}
+
+.interview-time {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.interview-time p:first-child,
+.interview-time p:nth-child(3) {
+  font-size: 12px;
+  color: #8F949B;
+}
+
+.interview-time p:nth-child(2),
+.interview-time p:last-child {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2D2E32;
+}
+
+.interview-questions {
+  margin-top: 20px;
+}
+
+.interview-questions h4 {
+  font-size: 16px;
+  font-weight: bold;
+  color: #5B5E63;
+  margin-bottom: 12px;
+}
+
+#questionList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#questionList li {
+  background-color: #ffffff;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  color: #4A4E57;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: background 0.2s;
+}
+
+#questionList li:hover {
+  background-color: #EEF1FF;
+}
+
+#endInterviewBtn {
+  margin-top: 20px;
+  padding: 12px;
+  background-color: #5872FF;
+  color: white;
+  font-size: 14px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#endInterviewBtn:hover {
+  background-color: #475ED8;
+}
+
+/* 질문지 ?�이?�이??/
+#questionList li.active-question {
+    background-color: #DDE2FF;
+    font-weight: 600;
+}
+
+/* ===================== 분석 ?�?�보???��???===================== */
+.analyze-dashboard {
+    display: flex;
+    flex-direction: row;
+    gap: 32px;
+    margin-top: 12px;
+}
+.analyze-main {
+    flex: 2 1 0;
+    background: #fff;
+    border-radius: 32px;
+    padding: 32px 36px 24px 36px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    box-shadow: 0 0 32px rgba(84,88,103,0.04);
+    color: #B0B4BC;
+    border-radius: 16px;
+    padding: 4px 14px;
+    font-size: 13px;
+    margin-right: 6px;
+}
+.analyze-persona-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+.persona-tab {
+    background: #F8F9FB;
+    border: none;
+    border-radius: 16px;
+    padding: 6px 22px;
+    color: #B0B4BC;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.persona-tab.active {
+    background: #5872FF;
+    color: #fff;
+}
+.analyze-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #5B5E63;
+    margin-bottom: 8px;
+}
+.analyze-chart-section {
+    background: #F8F9FB;
+    border-radius: 24px;
+    padding: 24px 24px 12px 24px;
+    margin-bottom: 18px;
+}
+.analyze-keywords-summary {
+    display: flex;
+    gap: 24px;
+    margin-top: 10px;
+}
+.analyze-keywords {
+    flex: 1 1 0;
+    background: #fff;
+    border-radius: 24px;
+    padding: 18px 18px 8px 18px;
+    min-width: 180px;
+    box-shadow: 0 0 12px rgba(84,88,103,0.04);
+}
+.keywords-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #5B5E63;
+    margin-bottom: 8px;
+}
+.keyword-cloud {
+    width: 100%;
+    height: 110px;
+    min-height: 80px;
+    background: #F8F9FB;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.analyze-summary-panels {
+    flex: 2 1 0;
+    display: flex;
+    gap: 16px;
+}
+.summary-panel, .feedback-panel {
+    background: #fff;
+    border-radius: 24px;
+    padding: 18px 18px 8px 18px;
+    min-width: 180px;
+    box-shadow: 0 0 12px rgba(84,88,103,0.04);
+    flex: 1 1 0;
+}
+.summary-title, .feedback-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #5B5E63;
+    margin-bottom: 8px;
+}
+.summary-text {
+    font-size: 14px;
+    color: #8F949B;
+    background: #F8F9FB;
+    border-radius: 16px;
+    padding: 10px 16px;
+}
+.feedback-list {
+    font-size: 13px;
+    color: #8F949B;
+    padding-left: 16px;
+    margin: 0;
+}
+.feedback-list li {
+    margin-bottom: 6px;
+}
+.analyze-side {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 220px;
+}
+.side-widget {
+    background: #fff;
+    border-radius: 24px;
+    padding: 18px 18px 8px 18px;
+    box-shadow: 0 0 12px rgba(84,88,103,0.04);
+    margin-bottom: 0;
+}
+.donut-widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 200px;
+}
+.donut-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+#donutPercent {
+    font-size: 32px;
+    font-weight: 700;
+    color: #5872FF;
+    display: block;
+}
+#donutTime {
+    font-size: 13px;
+    color: #8F949B;
+    display: block;
+}
+.affinity-widget {
+    min-height: 110px;
+}
+.affinity-stepper {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0 8px 0;
+}
+.affinity-step {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #F2F3F5;
+    color: #8F949B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+    transition: background 0.2s, color 0.2s;
+}
+.affinity-step.active {
+    background: #5872FF;
+    color: #fff;
+}
+.affinity-desc {
+    font-size: 12px;
+    color: #8F949B;
+    margin-top: 2px;
+}
+.speed-widget {
+    min-height: 70px;
+}
+.speed-bar-bg {
+    width: 100%;
+    height: 12px;
+    background: #F2F3F5;
+    border-radius: 8px;
+    margin: 8px 0 4px 0;
+    position: relative;
+}
+.speed-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #5872FF 60%, #A3B6FF 100%);
+    border-radius: 8px;
+    transition: width 0.5s;
+}
+.speed-label {
+    font-size: 13px;
+    color: #8F949B;
+    margin-left: 2px;
+}
+.lang-widget {
+    min-height: 70px;
+}
+.lang-feedback-list {
+    font-size: 13px;
+    color: #8F949B;
+    padding-left: 16px;
+    margin: 0;
+}
+.lang-feedback-list li {
+    margin-bottom: 6px;
+}
+.info-tooltip {
+    background: #F2F3F5;
+    color: #8F949B;
+    border-radius: 50%;
+    padding: 0 7px;
+    font-size: 13px;
+    cursor: pointer;
+    margin-left: 4px;
+    border: 1px solid #E0E2E6;
+}
+
+/* ?�트�??�니메이??*/
+#intro {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: #5872FF;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    margin-bottom: 1em;
+}
+
+#intro-logo {
+    display: flex;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    color: #fff;
+    overflow: hidden;
+    gap: 0.03em;
+
+    margin-bottom: 0.3em;
+}
+
+#intro-logo span {
+    display: inline-block;
+    transform: translateY(-20px);
+    opacity: 0;
+}
+
+.svg-wrapper svg {
+    width: 100px;
+    height: auto;
+}
+
+.draw-path {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: none;
+}
+
+
+
+/* input ?�그??마우??hover???�니메이??*/
+.ripple-input {
+  transition: transform 0.4s ease, filter 0.4s ease;
+  will-change: transform;
+  border: 1.5px solid #F2F3F5;
+  background-color: #F2F3F5;
+  padding: clamp(8px, 0.8vw, 15px) clamp(12px, 1.1vw, 17px);
+  border-radius: 20vw;
+  color: #5B5E63;
+  font-size: clamp(11.5px, 0.8vw, 15px);
+  width: 88%;
+}
+
+/* ?�쪽?�서 ?�른쪽으�?커졌?��? ?�상복�? ?�니메이??*/
+@keyframes inputExpand {
+  0% {
+    transform: scaleX(1);
+  }
+  40% {
+    transform: scaleX(1.06);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+
+.ripple-input {
+  /* ...기존 ?��???.. */
+  position: relative;
+  overflow: hidden;
+  transition: filter 0.3s;
+  z-index: 1;
+}
+
+.ripple-input::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(88,114,255,0.08);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+  transform: scaleY(1) scaleX(0);
+  opacity: 0;
+}
+
+.ripple-input.ripple-animate::after {
+  animation: inputWave 0.5s cubic-bezier(0.33,1,0.68,1) 1;
+}
+
+@keyframes inputWave {
+  0% {
+    transform: scaleY(1) scaleX(0);
+    opacity: 0.5;
+  }
+  20% {
+    transform: scaleY(1.5) scaleX(0.2);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scaleY(1.7) scaleX(0.7);
+    opacity: 0.8;
+  }
+  80% {
+    transform: scaleY(1) scaleX(1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scaleY(1) scaleX(1);
+    opacity: 0;
+  }
+}
+
+.ripple-input.ripple-animate {
+  animation: inputExpand 0.5s cubic-bezier(0.33, 1, 0.68, 1) 1;
+  filter: brightness(1.03);
+}
+
+/* ===== API Key ?�력 모달 ===== */
+#apiKeyModal {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#apiKeyModal.active {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.api-key-modal-content {
+  background: white;
+  padding: 32px 24px;
+  width: 320px;
+  text-align: center;
+  border-radius: 16px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.api-key-icon{
+  width: clamp(20px, 6vw, 120px);
+  height: auto;
+  margin-bottom: 10px;
+}
+
+#apiKeyInput{
+  border-radius: 20vw;
+  border: 1px solid #d1d2d3;
+}
+
+.apikey_text {
+  display: flex;
+  text-align: left;
+}
+
+/* 추�???질문지 ?�각?�으�??�인 가?�하�??�두?�으�?. */
+.question-edit-input::placeholder {
+  color: #f15461 !important; 
+  opacity: 1;
+}
+
+.question-edit-input[placeholder='?�용???�력?�세??'] {
+  border-color: #ffeaea !important;
+  color: #f15461 !important;
+}
+
+/* 빈칸???�닐 ?�는 기본 ?�상 */
+.question-edit-input:not([placeholder='?�용???�력?�세??']) {
+  color: #8F949B;
+  border-color: #F2F3F5;
+}
+
+.question-edit-input.added-question {
+  border-color: #ddefe5 !important;
+}
+
+
+#question-container {
+  padding-bottom: clamp(32px, 5vw, 64px);
+}
+
+/* ====== ?�역 질문 추�?(?�러?? 버튼 ?��???====== */
+#global-question-add-btn {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  bottom: -1.2vw;
+  opacity: 0;
+  pointer-events: none;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.18s, transform 0.18s, background 0.18s;
+  padding: 0;
+  z-index: 10;
+}
+
+/* 질문 추�? 버튼???��??????�래 질문?�이 ?�연?�럽�??�래�??�동?�는 ?�과 */
+.question-edit-wrapper {
+  /* margin-bottom: 10px;   ??기본 간격 ?��? */
+  transition: margin-top 0.2s ease;
+}
+
+#global-question-add-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 100%; /* 버튼???�른�??��????�작 */
+  width: 10vw; /* ???�측?�로 40px ?�장 */
+  height: 100%;
+  pointer-events: auto;       /* ???�제 마우???�벤??감�? */
+  background: transparent;    /* ??보이지 ?�게 처리 */
+}
+
+.question-edit-wrapper.hovered {
+  margin-top: 40px;      /* ???�래 간격?� ?�것�?*/
+  padding-bottom: 0;     /* ???�요 ?�다�??�거 */
+  margin-bottom: 0;      /* ??반드???�거 */
+  min-height: auto;      /* ???�어??무�??��?�??�거?�도 ??*/
+}
+
+.question-edit-wrapper.hover-next {
+  margin-top: 2vw;
+  transition: margin-top 0.2s ease;
+}
+
+#global-question-add-btn.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#global-question-add-btn svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+
+#global-question-add-btn svg circle {
+  stroke: #F2F3F5 !important;
+}
+
+#global-question-add-btn:hover {
+  background: #F8F9FB;
+  border-radius: 50%;
+}
+
+#global-question-add-btn:active {
+  background: #E7F0FF;
+  border-radius: 50%;
+  transform: scale(0.92);
+}
+
+/* 질문지 관???��???*/
+.question-edit-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  transition: padding-bottom 0.18s;
+}
+.question-edit-wrapper.hovered {
+  padding-bottom: 40px;
+}
+
+.question-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+  padding: 0;
+  margin-bottom: clamp(15px, 1.3vw, 22px);
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  margin-left: 0;
+  transition: opacity 0.18s, background 0.18s, transform 0.18s;
+  position: relative;
+  z-index: 2;
+}
+.question-delete-btn.active {
+  opacity: 1;
+  pointer-events: auto;
+  margin-left: 8px;
+  z-index: 3;
+}
+.question-delete-btn svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+.question-delete-btn svg circle {
+  stroke: #F2F3F5 !important;
+}
+.question-delete-btn:hover {
+  background: #F8F9FB;
+  border-radius: 50%;
+}
+.question-delete-btn:active {
+  background: #E7F0FF;
+  border-radius: 50%;
+  transform: scale(0.92);
+}
+
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+    letter-spacing: -0.5px;
+}
+
+input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 100px #FEFEFE inset; 
+    -webkit-text-fill-color: #5B5E63; 
+}
+
+/* --------마우??커서-------- */
+/* 커스?� 마우??커서 ?�자??*/
+
+.custom-cursor {
+  width: 28px;
+  height: 28px;
+  background: transparent; /* ?��? 채�? ?�음 */
+  border: 1px solid #6B6B6B; /* 1px 진한 ?�색 ?�곽??*/
+  border-radius: 50%;
+  position: fixed;
+  transform: translate(-50%, -50%) scale(1.1);
+  pointer-events: none;
+  z-index: 2147483647;
+  box-shadow: 0 2px 12px 2px rgba(80,80,80,0.10); /* ???�한 ?�색 그림??*/
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    box-shadow 0.18s,
+    transform 0.18s,
+    opacity 0.18s;
+  mix-blend-mode: normal;
+}
+
+
+.custom-cursor.main-active {
+  background: transparent;
+  border-color: #6B6B6B;
+  box-shadow: 0 2px 16px 2px rgba(80,80,80,0.14);
+  transform: translate(-50%, -50%) scale(1.18);
+}
+
+
+.custom-cursor.click {
+  background: transparent;
+  border-color: #232323;
+  box-shadow: 0 1px 8px 1px rgba(80,80,80,0.18);
+  transform: translate(-50%, -50%) scale(0.8);
+}
+
+
+.custom-cursor.hovering {
+  background: transparent;
+  border-color: #6B6B6B;
+  box-shadow: 0 2px 20px 2px rgba(80,80,80,0.16);
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
+
+/* 메인 진입 ?? ?�색 */
+.custom-cursor.main-active {
+  background-color: transparent;
+}
+
+
+/* ?�릭 ?? ?�아지면서 진한 ?�색 */
+.custom-cursor.click {
+  transform: translate(-50%, -50%) scale(0.7);
+  background-color: transparent;
+}
+
+
+.custom-cursor.hovering {
+  background-color: transparent;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.nav-text {
+  position: relative;
+}
+
+
+.nav-active {
+    color: #5872FF;
+}
+
+.nav-active .nav-img svg path {
+    fill: #5872FF !important;
+}
+
+.nav-active .nav-img svg ellipse {
+    fill: #5872FF !important;
+}
+
+.nav-active p{
+    font-weight: 600 ;
+}
+
+#changeApiKey{
+    border: none;
+    background-color: rgba(0, 0, 0, 0);
+    display: flex;
+    position: absolute;
+    bottom: 5vw;
+}
+
+#changeApiKey img{
+    width: clamp(20px, 2vw, 30px);
+    height: auto;
+}
+
+/*----------main-container 부�?--------*/
+.main-container{
+    box-shadow: 0 0 1.5vw rgba(84, 88, 103, 0.04);
+    border-radius: clamp(24px, 1.5vw, 30px);
+    width: 40vw;
+    padding: clamp(22px, 2.5vw, 44px) clamp(20px, 3vw, 48px);
+}
+
+.page h2{
+    font-size: clamp(14px, 1vw, 17px);
+    font-weight: 650;
+    color: #5B5E63;
+    margin-bottom: clamp(14px, 1.4vw, 24px);
+}
+
+#result{
+    height: 98%;
+    /* overflow-y: auto; */
+}
+
+
+.question-box {
+    overflow-y: auto;
+    max-height: 73vh;
+    display: flex;
+    flex-direction: column;
+    /* ?�요???�라 height ?�는 max-height 조정 */
+    /* 부�??�역???��? ?�게, ?��??�서�??�크�?*/
+}
+
+/* ====== 공통 ?�크롤바 ?��???====== */
+/* ===== ?�롬, ?��?, ?�파리용 ?�크롤바 ===== */
+*::-webkit-scrollbar {
+  width: 13px;
+  height: 13px;
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #E7F0FF;
+  border-radius: 10vw;
+  border: 3px solid transparent;
+  min-height: 30px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #8ab7ff; /* hover???�일 ?�상 ?��? */
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  box-shadow: none;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 모든 방향 ?�크롤바 버튼 ?�거 */
+*::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button:single-button,
+*::-webkit-scrollbar-button:single-button:vertical:decrement,
+*::-webkit-scrollbar-button:single-button:vertical:increment,
+*::-webkit-scrollbar-button:single-button:horizontal:decrement,
+*::-webkit-scrollbar-button:single-button:horizontal:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: none !important;
+}
+
+
+
+/* ===== ?�이?�폭?�용 ===== */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: #E7F0FF transparent;
+}
+
+
+
+/* 질문 ?�정 input ?��???(질문지 input ?�용) */
+/* 질문 ?�정 input + ??�� 버튼 ?�퍼 */
+.question-edit-wrapper {
+  display: inline-flex;
+  align-items: center;   /* ???�로 중앙 ?�렬 */
+  gap: 0.5vw;              /* input�?버튼 간격 */
+}
+
+.question-edit-input {
+  width: auto;
+
+
+  font-size: clamp(12px, 0.85vw, 15px);
+  color: #8F949B;
+  padding: clamp(9.5px, 0.8vw, 16px) clamp(18px, 1vw, 44px);
+  border: 1.5px solid #F2F3F5;
+  border-radius: 50vw;
+  margin-bottom: clamp(15px, 1.3vw, 22px);
+  background: #fff;
+  outline: none;
+  box-sizing: content-box !important;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.question-index-num{
+  margin-bottom: clamp(15px, 1.3vw, 22px);
+  color: #CDD1D6;
+}
+
+
+/* ??�� 버튼 기본 ?��?, input hover ???�시 */
+.question-delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: auto;     /* input ?�이??맞춰�?*/
+    padding: 0;
+    margin-bottom: clamp(15px, 1.3vw, 22px); /* input�?맞추�??�으�???�?지??*/
+
+    background: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s;
+    padding: 0;
+    z-index: 2;
+}
+
+
+.question-edit-wrapper:hover .question-delete-btn,
+.question-edit-input:focus + .question-delete-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ??�� 버튼 SVG ?��???(?�시: ?�형 배경 + X) */
+.question-delete-btn svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+.question-delete-btn svg circle {
+  stroke: #F2F3F5 !important;
+}
+.question-delete-btn svg circle {
+  stroke: #F2F3F5 !important;
+}
+.question-delete-btn:hover {
+  background: #F8F9FB;
+  border-radius: 50%;
+}
+.question-delete-btn:active {
+  background: #E7F0FF;
+}
+.question-edit-input:focus {
+    border-color: #93A4FF;
+    box-shadow: 0 0 0 2px #E7F0FF;
+    color: #5B5E63;
+    background: #F8F9FB;
+}
+
+/*----------sub-container 부�?--------*/
+
+.sub-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: clamp(210px, 14vw, 280px);
+}
+
+.container-children {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 1.2vw, 20px);
+}
+
+.side-box {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: clamp(16px, 1.3vw, 30px);
+    padding: clamp(16px, 1.5vw, 26px) clamp(18px, 1.7vw, 30px);
+    gap: clamp(8px, 0.8vw, 16px);
+
+    box-shadow: 0 0 1.5vw rgba(84, 88, 103, 0.06);
+}
+
+.side-box label{
+    font-size: clamp(13px, 0.95vw, 16px);
+    font-weight: 650;
+    color: #5B5E63;
+}
+
+/* input ?�그 ?�에 text?�력??배경 ?�상 변?�게 js�??��??�링 */
+.side-box input{
+    border: none;
+    background-color: #F2F3F5;
+    padding: clamp(8px, 0.8vw, 15px) clamp(12px, 1.1vw, 17px);
+    border-radius: 20vw;
+    color: #5B5E63;
+
+    border: 1.5px solid #F2F3F5;
+    font-size: clamp(11.5px, 0.8vw, 15px);
+}
+
+.side-box input::placeholder{
+    color: #8F949B;
+    font-weight: 300;
+}
+
+.side-box input:focus{
+    outline: none;
+}
+
+/*sub-lower 부�?--------->html코드?�서 변경된 �?같음(.side-box / #gen-?�당?�이지)*/
+
+/* .sub-lower {
+    background: white;
+    border-radius: clamp(16px, 1.8vw, 30px);
+    padding: clamp(18px, 1.7vw, 30px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(14px, 1vw, 17px);
+    bottom: 0;
+
+    box-shadow: 0 0 20px rgba(84, 88, 103, 0.05);
+} */
+
+.counter-section {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    align-items: center;
+  color: #5B5E63;
+  font-weight: 700;
+    font-size: clamp(13px, 0.95vw, 16px);
+}
+.counter {
+    display: flex;
+    align-items: center;
+    gap: clamp(7px, 0.8vw, 14px);
+}
+
+.counter button {
+    width: clamp(20px, 1.5vw, 24px);
+    height: clamp(20px, 1.5vw, 24px);
+    background: #fff;
+    border: 1px solid #eeeeee;
+    border-radius: 50%;
+    font-size: clamp(15px, 1.15vw, 18px);
+    font-weight: 300;
+    color: #5B5E63;
+    cursor: pointer;
+    transition: 0.2s ease, transform 0.1s ease;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: clamp(1px, 0.15vw, 3px); 
+}
+
+.counter button:hover {
+    background: #f3f4f5;
+}
+
+.counter button:active {
+    transform: scale(0.9);
+}
+
+#generate-btn:hover {
+    background: #93A4FF;
+}
+
+#generate-btn:active {
+    transform: scale(0.96);
+}
+
+.sub-inactive {
+    display: none;
+}
+
+/* -------------------------------add-0211------------------------------------ */
+/* ?�역 ?�용 ?��??�링 */
+.create-btn-style{
+    width: 100%;
+    padding: clamp(7px, 0.8vw, 14px) 0;
+    background: #5872FF;
+    color: white;
+    border: none;
+    border-radius: 20vw;
+    font-size: clamp(12px, 0.85vw, 15px);
+    cursor: pointer;
+    transition: 0.2s ease, transform 0.1s ease;
+}
+
+/* #result::-webkit-scrollbar-track {
+    border-radius: 20vw;
+} */
+
+/* -----------persona--------- */
+#personaTitle{
+    background-color: #F8F9FB;
+    padding: clamp(8px, 0.8vw, 15px) clamp(12px, 1.1vw, 17px);
+    border-radius: 10vw;
+    color: #CDD1D6;
+
+    border: 1.5px solid #F2F3F5;
+    font-size: clamp(11.5px, 0.8vw, 15px);
+}
+
+#persona-easecreate{
+    padding: clamp(16px, 1.5vw, 26px) clamp(18px, 1.7vw, 30px);
+}
+
+.label-box{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.toggle-input{
+    display: none;
+}
+
+.toggle-label{
+    position: relative;
+    display: block;
+    width: clamp(34px, 3vw, 60px);
+    height: clamp(21px, 1.9vw, 36px);
+    background-color: #CDD1D6;
+    border-radius: 20vw;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-label::before{
+    content: "";
+    position: absolute;
+    top: clamp(2.9px, 0.32vw, 4.8px);
+    left: clamp(3.2px, 0.29vw, 6px);
+    width: clamp(15px, 1.3vw, 28px);
+    height: clamp(15px, 1.3vw, 28px);
+    background-color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 clamp(14px, 1vw, 17px) rgba(84, 88, 103, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.toggle-input:checked + .toggle-label {
+    background-color: #5872FF;
+}
+
+.toggle-input:checked + .toggle-label::before {
+    transform: translateX(clamp(12px, 1.1vw, 20px));
+}
+
+.persona-prompt-box{
+    display: flex;
+    flex-direction: column;
+    gap: clamp(9px, 0.5vw, 13px);
+}
+
+.persona-prompt-box label{
+    font-size: clamp(12px, 0.9vw, 15px);
+}
+
+.persona-prompt-box input{
+    padding: clamp(9px, 0.7vw, 14px) clamp(13px, 1.1vw, 20px);
+    margin-bottom: clamp(12px, 0.7vw, 14px);
+}
+
+#persona-side{
+    max-height: clamp(120px, 16vw, 600px);
+    overflow-y: auto;
+}
+#question-container {
+  padding-bottom: clamp(32px, 5vw, 64px);
+}
+/* ?�크�??��??�링 ?�용 ?�정 */
+
+/* -----------persona--------- */
+#persona-container{
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    align-items: center;
+    gap: clamp(8px, 0.8vw, 16px);
+}
+
+.persona-container-box{
+    display: flex;
+    align-items: center;
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+    margin-left: 8px;
+    position: relative;
+}
+
+.persona-box{
+    width: clamp(320px, 23vw, 700px);
+    /* display: grid;
+    grid-template-columns: repeat(2,1fr); */
+
+    border: 1.5px solid #EDEFF3; 
+    border-radius: clamp(16px, 1.8vw, 30px); 
+    padding: clamp(16px, 1.5vw, 26px) clamp(18px, 1.7vw, 30px); 
+    margin: clamp(6px, 0.5vw, 16px); 
+    background-color: #ffffff; 
+    box-shadow: 0 0 clamp(16px, 1.5vw, 26px) rgba(84, 88, 103, 0.06);
+    font-family: "Pretendard Variable";
+    cursor: pointer;
+    align-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.4s ease;
+}
+
+.persona-box:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 36px rgba(84, 88, 103, 0.12);
+}
+
+.persona-box.selected {
+  border: 2.5px solid #357AFF;
+  box-shadow: 0 6px 36px rgba(53,122,255,0.12);
+}
+
+
+.persona-box button{
+    display: none;
+}
+
+/* 직업과 성격 박스에 우측 마진 추가 */
+.persona-box p:nth-child(5), /* 직업 */
+.persona-box p:nth-child(6)  /* 성격 */ {
+    margin-right: clamp(40px, 4vw, 80px);
+}
+
+/* 관심사와 언어습관 박스에도 우측 마진 추가 */
+.persona-box p:nth-child(7), /* 관심사 */
+.persona-box p:nth-child(8)  /* 언어습관 */ {
+    margin-right: clamp(40px, 4vw, 80px);
+}
+
+.persona-box p{
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    margin: 0 clamp(7px, 0.8vw, 14px) 0 0;
+    padding: clamp(7px, 0.7vw, 14px) clamp(18px, 1vw, 44px);
+    background: #F8F9FB;
+    border-radius: 50vw;
+    border: 1.5px solid #F2F3F5;
+    font-size: clamp(13px, 0.95vw, 15.7px);
+    color: #5B5E63;
+    font-weight: 500;
+    margin-bottom: clamp(8px, 0.7vw, 14px);
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+/* - */
+.persona-navigation-con{
+  display: none;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  margin-top: -5vw;
+}
+
+.persona-navigation-con.show{
+  display: flex;
+}
+
+.persona-nav-btn{
+  border-radius: 50px;
+  width: clamp(30px, 2vw, 50px);
+  height: clamp(30px, 2vw, 50px);
+  border: solid 1.5px #EDEFF3;
+  background-color: #fff;
+  box-shadow: 0 0 clamp(16px, 1.5vw, 26px) rgba(84, 88, 103, 0.06);
+  color: #5B5E63;
+  cursor: pointer;
+  position: relative;
+  z-index: 1000;
+}
+
+#personaLeftBtn{
+  margin-left: -16px;
+  position: relative;
+  z-index: 100;
+}
+
+#personaRightBtn{
+  margin-right: -16px;
+  position: relative;
+  z-index: 100;
+}
+
+.persona-nav-btn:hover {
+  background-color: #f0f0f0;
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+.persona-nav-btn:active {
+  transform: scale(0.95);
+}
+
+.persona-nav-btn img{
+  width: 50%;
+  height: 50%;
+  align-items: center;
+  padding-top: clamp(2px, 0.2vw, 6px);
+}
+
+#persona-page{
+  position: relative;
+  overflow: visible;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+}
+
+/* ------------interview------------ */
+#interview-container{
+    overflow-x: hidden;
+}
+
+#chatbox {
+    display: flex;
+    flex-direction: column;
+    border: none ;
+    height: 90%;
+    padding: 10px;
+    width: 100%;
+    overflow-y: scroll;
+    margin-bottom: 10px;
+}
+
+/* 공통 메시지 ?��???*/
+.message {
+    max-width: 70%;
+    margin: 8px 0;
+    padding: 10px 15px;
+    border-radius: 18px;
+    font-size: 16px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    display: inline-block;
+}
+
+/* ?�용??메시지 (?�른�??�렬) */
+.message.user {
+    background-color: #5872FF;
+    color: #000;
+    border-bottom-right-radius: 4px;
+    text-align: right;
+    color: white;
+    margin-left: auto;
+}
+
+/* 챗봇 메시지 (?�쪽 ?�렬) */
+.message.bot {
+    align-self: flex-start;
+    background-color: #F2F3F5;
+    color: #8F949B;
+    border-bottom-left-radius: 4px;
+    text-align: left;
+}
+
+.message-wrapper {
+    display: flex;
+    margin-bottom: clamp(8px, 0.7vw, 12px);
+    align-items: center;
+}
+
+.persona-name-tag {
+    background-color: #CDD1D6;
+    color: white;
+    width: clamp(40px, 2vw, 52px);
+    height: clamp(40px, 2vw, 52px);
+    border-radius: 50%;
+    text-align: center;
+    line-height: clamp(40px, 2vw, 52px);
+    margin-right: clamp(10px, 0.625vw, 16px);
+}
+
+.stage-message {
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+    margin: 16px 0;
+}
+
+/* ?�텁 질문지지 */
+
+
+/* 로딩?�피??*/
+
+.spinner {
+  border: 6px solid #ccc;
+  border-top: 6px solid #5872FF;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* -----------?�터�?질문지 불러?�기�?----------- */
+#questionListContainer {
+  /* width: clamp(260px, 20vw, 320px); */
+  padding: 24px;
+  background-color: #F8F9FB;
+  border-left: 1px solid #E0E2E6;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: clamp(24px, 2vw, 32px);
+}
+
+.interview-meta {
+  margin-bottom: 20px;
+}
+
+.interview-time {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: space-around;
+}
+
+.interview-time p:first-child,
+.interview-time p:nth-child(3) {
+  font-size: 12px;
+  color: #8F949B;
+}
+
+.interview-time p:nth-child(2),
+.interview-time p:last-child {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2D2E32;
+}
+
+.interview-questions {
+  margin-top: 20px;
+}
+
+.interview-questions h4 {
+  font-size: 16px;
+  font-weight: bold;
+  color: #5B5E63;
+  margin-bottom: 12px;
+}
+
+#questionList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#questionList li {
+  background-color: #ffffff;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  color: #4A4E57;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: background 0.2s;
+}
+
+#questionList li:hover {
+  background-color: #EEF1FF;
+}
+
+#endInterviewBtn {
+  margin-top: 20px;
+  padding: 12px;
+  background-color: #5872FF;
+  color: white;
+  font-size: 14px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#endInterviewBtn:hover {
+  background-color: #475ED8;
+}
+
+/* 질문지 ?�이?�이??/
+#questionList li.active-question {
+    background-color: #DDE2FF;
+    font-weight: 600;
+}
+
+/* ===================== 분석 ?�?�보???��???===================== */
+.analyze-dashboard {
+    display: flex;
+    flex-direction: row;
+    gap: 32px;
+    margin-top: 12px;
+}
+.analyze-main {
+    flex: 2 1 0;
+    background: #fff;
+    border-radius: 32px;
+    padding: 32px 36px 24px 36px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    box-shadow: 0 0 32px rgba(84,88,103,0.04);
+    color: #B0B4BC;
+    border-radius: 16px;
+    padding: 4px 14px;
+    font-size: 13px;
+    margin-right: 6px;
+}
+.analyze-persona-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+.persona-tab {
+    background: #F8F9FB;
+    border: none;
+    border-radius: 16px;
+    padding: 6px 22px;
+    color: #B0B4BC;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.persona-tab.active {
+    background: #5872FF;
+    color: #fff;
+}
+.analyze-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #5B5E63;
+    margin-bottom: 8px;
+}
+.analyze-chart-section {
+    background: #F8F9FB;
+    border-radius: 24px;
+    padding: 24px 24px 12px 24px;
+    margin-bottom: 18px;
+}
+.analyze-keywords-summary {
+    display: flex;
+    gap: 24px;
+    margin-top: 10px;
+}
+.analyze-keywords {
+    flex: 1 1 0;
+    background: #fff;
+    border-radius: 24px;
+    padding: 18px 18px 8px 18px;
+    min-width: 180px;
+    box-shadow: 0 0 12px rgba(84,88,103,0.04);
+}
+.keywords-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #5B5E63;
+    margin-bottom: 8px;
+}
+.keyword-cloud {
+    width: 100%;
+    height: 110px;
+    min-height: 80px;
+    background: #F8F9FB;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.analyze-summary-panels {
+    flex: 2 1 0;
+    display: flex;
+    gap: 16px;
+}
+.summary-panel, .feedback-panel {
+    background: #fff;
+    border-radius: 24px;
+    padding: 18px 18px 8px 18px;
+    min-width: 180px;
+    box-shadow: 0 0 12px rgba(84,88,103,0.04);
+    flex: 1 1 0;
+}
+.summary-title, .feedback-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #5B5E63;
+    margin-bottom: 8px;
+}
+.summary-text {
+    font-size: 14px;
+    color: #8F949B;
+    background: #F8F9FB;
+    border-radius: 16px;
+    padding: 10px 16px;
+}
+.feedback-list {
+    font-size: 13px;
+    color: #8F949B;
+    padding-left: 16px;
+    margin: 0;
+}
+.feedback-list li {
+    margin-bottom: 6px;
+}
+.analyze-side {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 220px;
+}
+.side-widget {
+    background: #fff;
+    border-radius: 24px;
+    padding: 18px 18px 8px 18px;
+    box-shadow: 0 0 12px rgba(84,88,103,0.04);
+    margin-bottom: 0;
+}
+.donut-widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 200px;
+}
+.donut-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+#donutPercent {
+    font-size: 32px;
+    font-weight: 700;
+    color: #5872FF;
+    display: block;
+}
+#donutTime {
+    font-size: 13px;
+    color: #8F949B;
+    display: block;
+}
+.affinity-widget {
+    min-height: 110px;
+}
+.affinity-stepper {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0 8px 0;
+}
+.affinity-step {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #F2F3F5;
+    color: #8F949B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+    transition: background 0.2s, color 0.2s;
+}
+.affinity-step.active {
+    background: #5872FF;
+    color: #fff;
+}
+.affinity-desc {
+    font-size: 12px;
+    color: #8F949B;
+    margin-top: 2px;
+}
+.speed-widget {
+    min-height: 70px;
+}
+.speed-bar-bg {
+    width: 100%;
+    height: 12px;
+    background: #F2F3F5;
+    border-radius: 8px;
+    margin: 8px 0 4px 0;
+    position: relative;
+}
+.speed-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #5872FF 60%, #A3B6FF 100%);
+    border-radius: 8px;
+    transition: width 0.5s;
+}
+.speed-label {
+    font-size: 13px;
+    color: #8F949B;
+    margin-left: 2px;
+}
+.lang-widget {
+    min-height: 70px;
+}
+.lang-feedback-list {
+    font-size: 13px;
+    color: #8F949B;
+    padding-left: 16px;
+    margin: 0;
+}
+.lang-feedback-list li {
+    margin-bottom: 6px;
+}
+.info-tooltip {
+    background: #F2F3F5;
+    color: #8F949B;
+    border-radius: 50%;
+    padding: 0 7px;
+    font-size: 13px;
+    cursor: pointer;
+    margin-left: 4px;
+    border: 1px solid #E0E2E6;
+}
+
+/* ?�트�??�니메이??*/
+#intro {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: #5872FF;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    margin-bottom: 1em;
+}
+
+#intro-logo {
+    display: flex;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    color: #fff;
+    overflow: hidden;
+    gap: 0.03em;
+
+    margin-bottom: 0.3em;
+}
+
+#intro-logo span {
+    display: inline-block;
+    transform: translateY(-20px);
+    opacity: 0;
+}
+
+.svg-wrapper svg {
+    width: 100px;
+    height: auto;
+}
+
+.draw-path {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: none;
+}
+
+/* ?�음 버튼 ?��??�링 */
+#question-page {
+  position: relative; /* 기�?????�� */
+}
+
+/* 공통 ?�음 버튼 ?��??�링 */
+.nextBtn {
+  position: absolute;
+  right: 0px;
+  bottom: 0px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(8px, 0.8vw, 12px) clamp(20px, 2.2vw, 32px);
+  gap: clamp(6px, 0.8vw, 12px);
+
+  background: #E7F0FF;
+  border: 1px solid #ABC4FF;
+  border-radius: 50px;
+
+  font-family: 'Pretendard';
+  font-weight: 600;
+  font-size: clamp(13px, 1.1vw, 17px);
+  line-height: clamp(16px, 1.3vw, 20px);
+  letter-spacing: -0.03em;
+  color: #8194FF;
+
+  cursor: pointer;
+  transition: opacity 0.4s ease, transform 0.2s ease;
+}
+
+.nextBtn:hover {
+  transform: scale(1.02);
+}
+
+.nextBtn:active {
+  transform: scale(0.98);
+}
+
+#goToPersonaBtn {
+  opacity: 0;
+  display: none;
+  z-index: 10;
+}
+
+#goToInterviewBtn{
+  opacity: 0;
+  display: none;
+  z-index: 1000;
+  bottom: 64px;
+}
+
+/* input ?�그??마우??hover???�니메이??*/
+.ripple-input {
+  transition: transform 0.4s ease, filter 0.4s ease;
+  will-change: transform;
+  border: 1.5px solid #F2F3F5;
+  background-color: #F2F3F5;
+  padding: clamp(8px, 0.8vw, 15px) clamp(12px, 1.1vw, 17px);
+  border-radius: 20vw;
+  color: #5B5E63;
+  font-size: clamp(11.5px, 0.8vw, 15px);
+  width: 88%;
+}
+
+/* ?�쪽?�서 ?�른쪽으�?커졌?��? ?�상복�? ?�니메이??*/
+@keyframes inputExpand {
+  0% {
+    transform: scaleX(1);
+  }
+  40% {
+    transform: scaleX(1.06);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+
+.ripple-input {
+  /* ...기존 ?��???.. */
+  position: relative;
+  overflow: hidden;
+  transition: filter 0.3s;
+  z-index: 1;
+}
+
+.ripple-input::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(88,114,255,0.08);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+  transform: scaleY(1) scaleX(0);
+  opacity: 0;
+}
+
+.ripple-input.ripple-animate::after {
+  animation: inputWave 0.5s cubic-bezier(0.33,1,0.68,1) 1;
+}
+
+@keyframes inputWave {
+  0% {
+    transform: scaleY(1) scaleX(0);
+    opacity: 0.5;
+  }
+  20% {
+    transform: scaleY(1.5) scaleX(0.2);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scaleY(1.7) scaleX(0.7);
+    opacity: 0.8;
+  }
+  80% {
+    transform: scaleY(1) scaleX(1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scaleY(1) scaleX(1);
+    opacity: 0;
+  }
+}
+
+.ripple-input.ripple-animate {
+  animation: inputExpand 0.5s cubic-bezier(0.33, 1, 0.68, 1) 1;
+  filter: brightness(1.03);
+}
+
+/* ===== API Key ?�력 모달 ===== */
+#apiKeyModal {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#apiKeyModal.active {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.api-key-modal-content {
+  background: white;
+  padding: 32px 24px;
+  width: 320px;
+  text-align: center;
+  border-radius: 16px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.api-key-icon{
+  width: clamp(20px, 6vw, 120px);
+  height: auto;
+  margin-bottom: 10px;
+}
+
+#apiKeyInput{
+  border-radius: 20vw;
+  border: 1px solid #d1d2d3;
+}
+
+.apikey_text {
+  display: flex;
+  text-align: left;
+}
+
+/* 추�???질문지 ?�각?�으�??�인 가?�하�??�두?�으�?. */
+.question-edit-input::placeholder {
+  color: #f15461 !important; 
+  opacity: 1;
+}
+
+.question-edit-input[placeholder='?�용???�력?�세??'] {
+  border-color: #ffeaea !important;
+  color: #f15461 !important;
+}
+
+/* 빈칸???�닐 ?�는 기본 ?�상 */
+.question-edit-input:not([placeholder='?�용???�력?�세??']) {
+  color: #8F949B;
+  border-color: #F2F3F5;
+}
+
+.question-edit-input.added-question {
+  border-color: #ddefe5 !important;
+}
+
+
+/* ====== ?�역 질문 추�?(?�러?? 버튼 ?��???====== */
+#global-question-add-btn {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  bottom: -1.2vw;
+  opacity: 0;
+  pointer-events: none;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.18s, transform 0.18s, background 0.18s;
+  padding: 0;
+  z-index: 10;
+}
+
+/* 질문 추�? 버튼???��??????�래 질문?�이 ?�연?�럽�??�래�??�동?�는 ?�과 */
+.question-edit-wrapper {
+  /* margin-bottom: 10px;   ??기본 간격 ?��? */
+  transition: margin-top 0.2s ease;
+}
+
+#global-question-add-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 100%; /* 버튼???�른�??��????�작 */
+  width: 10vw; /* ???�측?�로 40px ?�장 */
+  height: 100%;
+  pointer-events: auto;       /* ???�제 마우???�벤??감�? */
+  background: transparent;    /* ??보이지 ?�게 처리 */
+}
+
+.question-edit-wrapper.hovered {
+  margin-top: 40px;      /* ???�래 간격?� ?�것�?*/
+  padding-bottom: 0;     /* ???�요 ?�다�??�거 */
+  margin-bottom: 0;      /* ??반드???�거 */
+  min-height: auto;      /* ???�어??무�??��?�??�거?�도 ??*/
+}
+
+.question-edit-wrapper.hover-next {
+  margin-top: 2vw;
+  transition: margin-top 0.2s ease;
+}
+
+#global-question-add-btn.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#global-question-add-btn svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+
+#global-question-add-btn svg circle {
+  stroke: #F2F3F5 !important;
+}
+
+#global-question-add-btn:hover {
+  background: #F8F9FB;
+  border-radius: 50%;
+}
+
+#global-question-add-btn:active {
+  background: #E7F0FF;
+  border-radius: 50%;
+  transform: scale(0.92);
+}
+
+/* 질문지 관???��???*/
+.question-edit-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  transition: padding-bottom 0.18s;
+}
+.question-edit-wrapper.hovered {
+  padding-bottom: 40px;
+}
+
+.question-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+  padding: 0;
+  margin-bottom: clamp(15px, 1.3vw, 22px);
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  margin-left: 0;
+  transition: opacity 0.18s, background 0.18s, transform 0.18s;
+  position: relative;
+  z-index: 2;
+}
+.question-delete-btn.active {
+  opacity: 1;
+  pointer-events: auto;
+  margin-left: 8px;
+  z-index: 3;
+}
+.question-delete-btn svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+.question-delete-btn svg circle {
+  stroke: #F2F3F5 !important;
+}
+.question-delete-btn:hover {
+  background: #F8F9FB;
+  border-radius: 50%;
+}
+.question-delete-btn:active {
+  background: #E7F0FF;
+  border-radius: 50%;
+  transform: scale(0.92);
+}
+
+/* persona 관???��???*/
+.persona-img{
+    width: clamp(130px, 11vw, 600px);
+    height: auto;
+    border-radius: 50%;
+    margin-bottom: clamp(10px, 2vw, 28px);
+    display: block;
+    margin-top: -7vw;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ===== 인터뷰 시간 설정 팝업 ===== */
+#interviewTimeModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+}
+
+.interview-time-modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+}
+
+.interview-time-modal-content h3 {
+    margin-bottom: 1.5rem;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.time-option {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.time-option:hover {
+    border-color: #007bff;
+    background: #f8f9fa;
+}
+
+.time-option.selected {
+    border-color: #007bff;
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.time-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.time-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.time-btn.confirm {
+    background: #007bff;
+    color: white;
+}
+
+.time-btn.confirm:hover {
+    background: #0056b3;
+}
+
+.time-btn.cancel {
+    background: #6c757d;
+    color: white;
+}
+
+.time-btn.cancel:hover {
+    background: #545b62;
+}
+
+/* ===== 인터뷰 종료 모달 버튼 호버 효과 ===== */
+#goToAnalysisBtn:hover {
+    background: #0056b3 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* ===== 인터뷰 질문지 컨테이너 스타일 ===== */
+.interview-questions-container {
+    background: white;
+    border-radius: clamp(16px, 1.3vw, 30px);
+    padding: clamp(16px, 1.5vw, 26px) clamp(18px, 1.7vw, 30px);
+    box-shadow: 0 0 1.5vw rgba(84, 88, 103, 0.06);
+    height: auto;
+}
+
+.interview-questions-container .interview-questions {
+    margin-top: 0;
+}
+
+.interview-questions-container li{
+    border-radius: 20vw;
+    color: #5B5E63 !important;
+    font-weight: 400;
+
+    border: 1.5px solid #F2F3F5;
+    font-size: clamp(11.5px, 0.8vw, 15px) !important;
+}
+
+/* ===== 인터뷰 메타 간격 조정 ===== */
+.interview-meta {
+    margin-bottom: 0 !important;
+}
+
+/* ===== 인터뷰 종료 버튼 컨테이너 내 스타일 ===== */
+.interview-questions-container #endInterviewBtn {
+    margin-top: clamp(16px, 1.2vw, 20px);
+    width: 100%;
+    padding: clamp(7px, 0.8vw, 14px) 0;
+    background: #5872FF;
+    color: white;
+    border: none;
+    border-radius: 20vw;
+    font-size: clamp(12px, 0.85vw, 15px);
+    cursor: pointer;
+    transition: 0.2s ease, transform 0.1s ease;
+}
+
+/* ===== 인터뷰 진행 페이지에서 side-box 숨기기 ===== */
+.sub-interview .side-box {
+    display: none !important;
+}
+
+.interview-questions h4{
+  font-size: clamp(13px, 0.95vw, 16px);
+}
+
+/* 타이머 */
+#left-time, #set-time {
+  font-size: clamp(20px, 1.5vw, 32px);
+}
+
+.interview-time{
+  text-align: center;
+}
+
+#left-time{
+  color: #6BA4FF;
+  font-weight: 600;
+}
+
+#set-time{
+  color: #8F949B;
+  font-weight: 300;
+}
+
+.interview-set p, .interview-left p{
+  font-size: clamp(14px, 1vw, 18px);
+}
+
+.time_subtitle{
+  font-size: clamp(8px, 0.9vw, 16px);
+}
