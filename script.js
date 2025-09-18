@@ -405,154 +405,154 @@ document.addEventListener("DOMContentLoaded", () => {
         personaState.followupsOnCurrent = 0;
     }
 
-        // === phase/intent 감지 ===
-        const GREET_REGEX = /(안녕|안녕하세요|처음|반갑|만나서)/i;
-        const SMALLTALK_REGEX = /(날씨|주말|요즘|점심|커피|출근|취미|취향|근황)/i;
-        function detectPhase({ lastIndex, turnCount, userText }) {
-            // 0: icebreaking/greeting, 1: smalltalk, 2: core
-            if (turnCount <= 2 || GREET_REGEX.test(userText)) return 0;
-            if (lastIndex === 0 || SMALLTALK_REGEX.test(userText)) return 1;
-            return 2;
-        }
+    // === phase/intent 감지 ===
+    const GREET_REGEX = /(안녕|안녕하세요|처음|반갑|만나서)/i;
+    const SMALLTALK_REGEX = /(날씨|주말|요즘|점심|커피|출근|취미|취향|근황)/i;
+    function detectPhase({ lastIndex, turnCount, userText }) {
+        // 0: icebreaking/greeting, 1: smalltalk, 2: core
+        if (turnCount <= 2 || GREET_REGEX.test(userText)) return 0;
+        if (lastIndex === 0 || SMALLTALK_REGEX.test(userText)) return 1;
+        return 2;
+    }
 
-        // 안전한 JSON 파싱 도우미
-        function safeParseJSON(s) {
-            try { return JSON.parse(s); } catch (e) {}
-            const m = s && s.match(/\{[\s\S]*\}/);
-            if (m) { try { return JSON.parse(m[0]); } catch (e) {} }
-            return null;
-        }
+    // 안전한 JSON 파싱 도우미
+    function safeParseJSON(s) {
+        try { return JSON.parse(s); } catch (e) { }
+        const m = s && s.match(/\{[\s\S]*\}/);
+        if (m) { try { return JSON.parse(m[0]); } catch (e) { } }
+        return null;
+    }
 
-        // 저렴한 모델로부터 스타일 힌트를 JSON으로 받기
-        async function getStyleHintsLLM(apiKey, { personaState, userMessage, phase, predictedIndex, questions }) {
-            const baseHints = {
-                tone: "neutral",
-                allow_micro_openers: [],
-                use_short_episode: false,
-                sentence_target: "2-3",
-                followup: { should_ask: false, template: "" }
-            };
+    // 저렴한 모델로부터 스타일 힌트를 JSON으로 받기
+    async function getStyleHintsLLM(apiKey, { personaState, userMessage, phase, predictedIndex, questions }) {
+        const baseHints = {
+            tone: "neutral",
+            allow_micro_openers: [],
+            use_short_episode: false,
+            sentence_target: "2-3",
+            followup: { should_ask: false, template: "" }
+        };
 
-            const prompt = `\n당신은 인터뷰 톤 코치입니다. 아래 정보를 보고 '스타일 힌트'를 JSON으로만 반환하세요.\n\n[퍼소나]\n이름: ${personaState?.name ?? "-"}\n나이/성별/직업: ${personaState?.age ?? "-"} / ${personaState?.gender ?? "-"} / ${personaState?.occupation ?? "-"}\n성격: ${personaState?.personality ?? "-"}\n\n[대화 단계] ${phase}  (0=아이스브레이킹, 1=잡담, 2=본론)\n[현재 질문 번호 후보] ${predictedIndex}\n[사용자 발화] """${(userMessage||"").slice(0, 500)}"""\n[질문 목록 샘플] ${Array.isArray(questions) ? questions.slice(0, 6).join(" / ") : "-"}\n\n원칙:\n- JSON 이외 출력 금지.\n- 키: tone(“casual|neutral|analytical|warm|blunt” 중 택1), allow_micro_openers(array, optional, 아주 짧은 접속부 추천), use_short_episode(boolean), sentence_target("2-3"|"3-4"), followup:{should_ask:boolean, template:string}\n- phase<=1이면 allow_micro_openers는 0~2개 가볍게, use_short_episode=false 권장.\n- phase=2면 tone은 성격을 반영하되 과도한 형식화 금지, sentence_target은 2-3 또는 3-4.\n- followup.should_ask는 정말 필요할 때만 true.\n`;
+        const prompt = `\n당신은 인터뷰 톤 코치입니다. 아래 정보를 보고 '스타일 힌트'를 JSON으로만 반환하세요.\n\n[퍼소나]\n이름: ${personaState?.name ?? "-"}\n나이/성별/직업: ${personaState?.age ?? "-"} / ${personaState?.gender ?? "-"} / ${personaState?.occupation ?? "-"}\n성격: ${personaState?.personality ?? "-"}\n\n[대화 단계] ${phase}  (0=아이스브레이킹, 1=잡담, 2=본론)\n[현재 질문 번호 후보] ${predictedIndex}\n[사용자 발화] """${(userMessage || "").slice(0, 500)}"""\n[질문 목록 샘플] ${Array.isArray(questions) ? questions.slice(0, 6).join(" / ") : "-"}\n\n원칙:\n- JSON 이외 출력 금지.\n- 키: tone(“casual|neutral|analytical|warm|blunt” 중 택1), allow_micro_openers(array, optional, 아주 짧은 접속부 추천), use_short_episode(boolean), sentence_target("2-3"|"3-4"), followup:{should_ask:boolean, template:string}\n- phase<=1이면 allow_micro_openers는 0~2개 가볍게, use_short_episode=false 권장.\n- phase=2면 tone은 성격을 반영하되 과도한 형식화 금지, sentence_target은 2-3 또는 3-4.\n- followup.should_ask는 정말 필요할 때만 true.\n`;
 
-            try {
-                const res = await fetch("https://api.openai.com/v1/chat/completions", {
-                    method: "POST",
-                    headers: { "Content-Type":"application/json", "Authorization": `Bearer ${apiKey}` },
-                    body: JSON.stringify({
-                        model: "gpt-4o-mini",
-                        messages: [{ role: "user", content: prompt }],
-                        temperature: 0.6,
-                        max_tokens: 300
-                    })
-                });
-                const data = await res.json();
-                const parsed = safeParseJSON(data?.choices?.[0]?.message?.content || "");
-                if (!parsed) return baseHints;
-                return {
-                    tone: parsed.tone || baseHints.tone,
-                    allow_micro_openers: Array.isArray(parsed.allow_micro_openers) ? parsed.allow_micro_openers.slice(0,3) : [],
-                    use_short_episode: !!parsed.use_short_episode,
-                    sentence_target: parsed.sentence_target || baseHints.sentence_target,
-                    followup: { should_ask: !!(parsed.followup && parsed.followup.should_ask), template: (parsed.followup && parsed.followup.template) || "" }
-                };
-            } catch (e) {
-                return baseHints;
-            }
-        }
-        // New: build system prompt that injects style hints but does NOT force string concatenation
-        function buildSystemPrompt(interviewTitle, questions, predictedIndex, phase, personaState, styleHints) {
-            const qref = Array.isArray(questions) ? questions.join(', ') : '';
-            const openers = (styleHints?.allow_micro_openers || []).join(" / ");
-
-            return `\n당신은 인터뷰 대상 퍼소나입니다. 자연스러운 구어체로 답변하세요.\n\n[역할] ${personaState.name} (${personaState.age}세, ${personaState.gender}, ${personaState.occupation})\n[성격] ${personaState.personality || "평범"}\n[언어습관] ${personaState.speech || "자연스러운 구어체"}\n[대화 단계] ${phase} (0=아이스브레이킹, 1=잡담, 2=본론)\n[현재 질문 번호 후보] ${predictedIndex}\n[인터뷰 주제] ${interviewTitle}\n[질문 목록(참고)] ${qref}\n\n[스타일 힌트]\n- tone: ${styleHints.tone}\n- sentence_target: ${styleHints.sentence_target}문장\n- optional micro-openers (예시): ${openers || "(없음)"}\n- short episode 허용: ${styleHints.use_short_episode ? "가능" : "지양"}\n- follow-up 권고: ${styleHints.followup?.should_ask ? `가능 (예: "${styleHints.followup.template.slice(0,50)}...")` : "지양"}\n\n[원칙]\n- 위 예시 표현을 그대로 복사하지 말고, 맥락상 자연스러우면 의미상 유사하게 의역해서 사용합니다. 어울리지 않으면 사용하지 않습니다.\n- 아이스브레이킹/잡담(phase<=1)에서는 가볍고 짧게. 본론(phase=2)에서만 필요 시 간단한 사례 1개를 덧붙입니다.\n- 이모지·표·메타발화(\"AI로서…\") 금지.\n- 한 번의 응답에서 문장 수는 ${styleHints.sentence_target}문장 정도로 유지.\n- follow-up 필요 시 한 문장짜리 짧은 질문을 맨 끝에 1개만 덧붙이되, 맥락이 맞을 때만 사용합니다.\n`.trim();
-        }
-
-        // New: generate core answer via FT model (no client-side concatenation)
-        async function generateCoreAnswer(apiKey, systemPrompt, userMessage, { phase }) {
-            const payload = {
-                model: modelId, // fine-tuned model id
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userMessage }
-                ],
-                temperature: (phase <= 1 ? 0.7 : 0.9),
-                max_tokens: (phase <= 1 ? 220 : 420),
-                top_p: 1,
-                frequency_penalty: 0.15,
-                presence_penalty: 0.1
-            };
+        try {
             const res = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
-                headers: { "Content-Type":"application/json", "Authorization": `Bearer ${apiKey}` },
-                body: JSON.stringify(payload)
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+                body: JSON.stringify({
+                    model: "gpt-4o-mini",
+                    messages: [{ role: "user", content: prompt }],
+                    temperature: 0.6,
+                    max_tokens: 300
+                })
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error?.message || "gen error");
-            return (data.choices?.[0]?.message?.content || "").trim();
+            const parsed = safeParseJSON(data?.choices?.[0]?.message?.content || "");
+            if (!parsed) return baseHints;
+            return {
+                tone: parsed.tone || baseHints.tone,
+                allow_micro_openers: Array.isArray(parsed.allow_micro_openers) ? parsed.allow_micro_openers.slice(0, 3) : [],
+                use_short_episode: !!parsed.use_short_episode,
+                sentence_target: parsed.sentence_target || baseHints.sentence_target,
+                followup: { should_ask: !!(parsed.followup && parsed.followup.should_ask), template: (parsed.followup && parsed.followup.template) || "" }
+            };
+        } catch (e) {
+            return baseHints;
         }
+    }
+    // New: build system prompt that injects style hints but does NOT force string concatenation
+    function buildSystemPrompt(interviewTitle, questions, predictedIndex, phase, personaState, styleHints) {
+        const qref = Array.isArray(questions) ? questions.join(', ') : '';
+        const openers = (styleHints?.allow_micro_openers || []).join(" / ");
+
+        return `\n당신은 인터뷰 대상 퍼소나입니다. 자연스러운 구어체로 답변하세요.\n\n[역할] ${personaState.name} (${personaState.age}세, ${personaState.gender}, ${personaState.occupation})\n[성격] ${personaState.personality || "평범"}\n[언어습관] ${personaState.speech || "자연스러운 구어체"}\n[대화 단계] ${phase} (0=아이스브레이킹, 1=잡담, 2=본론)\n[현재 질문 번호 후보] ${predictedIndex}\n[인터뷰 주제] ${interviewTitle}\n[질문 목록(참고)] ${qref}\n\n[스타일 힌트]\n- tone: ${styleHints.tone}\n- sentence_target: ${styleHints.sentence_target}문장\n- optional micro-openers (예시): ${openers || "(없음)"}\n- short episode 허용: ${styleHints.use_short_episode ? "가능" : "지양"}\n- follow-up 권고: ${styleHints.followup?.should_ask ? `가능 (예: "${styleHints.followup.template.slice(0, 50)}...")` : "지양"}\n\n[원칙]\n- 위 예시 표현을 그대로 복사하지 말고, 맥락상 자연스러우면 의미상 유사하게 의역해서 사용합니다. 어울리지 않으면 사용하지 않습니다.\n- 아이스브레이킹/잡담(phase<=1)에서는 가볍고 짧게. 본론(phase=2)에서만 필요 시 간단한 사례 1개를 덧붙입니다.\n- 이모지·표·메타발화(\"AI로서…\") 금지.\n- 한 번의 응답에서 문장 수는 ${styleHints.sentence_target}문장 정도로 유지.\n- follow-up 필요 시 한 문장짜리 짧은 질문을 맨 끝에 1개만 덧붙이되, 맥락이 맞을 때만 사용합니다.\n`.trim();
+    }
+
+    // New: generate core answer via FT model (no client-side concatenation)
+    async function generateCoreAnswer(apiKey, systemPrompt, userMessage, { phase }) {
+        const payload = {
+            model: modelId, // fine-tuned model id
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userMessage }
+            ],
+            temperature: (phase <= 1 ? 0.7 : 0.9),
+            max_tokens: (phase <= 1 ? 220 : 420),
+            top_p: 1,
+            frequency_penalty: 0.15,
+            presence_penalty: 0.1
+        };
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error?.message || "gen error");
+        return (data.choices?.[0]?.message?.content || "").trim();
+    }
 
     // === 분석용 추가 유틸 ===
-    function approxTokenCount(text){ if(!text) return 0; return Math.ceil(text.length / 3); }
+    function approxTokenCount(text) { if (!text) return 0; return Math.ceil(text.length / 3); }
     const FILLER_REGEX = /(\b|\s)(음+|어+|그+|그러니까|그런데|뭐랄까)(?=\b|\s)/g;
-    function countFillers(text){ if(!text) return 0; const m = text.match(FILLER_REGEX); return m ? m.length : 0; }
-    function buildAnalysis(log, targetMinutes=20){
-        if(!Array.isArray(log) || !log.length) return null;
-        const first = Math.min(...log.map(r=>r.timestampStart||Infinity));
-        const last = Math.max(...log.map(r=>r.timestampEnd||-Infinity));
-        const elapsedMs = (isFinite(first)&&isFinite(last)&&last>=first)? last-first : 0;
-        const targetMs = targetMinutes*60000;
+    function countFillers(text) { if (!text) return 0; const m = text.match(FILLER_REGEX); return m ? m.length : 0; }
+    function buildAnalysis(log, targetMinutes = 20) {
+        if (!Array.isArray(log) || !log.length) return null;
+        const first = Math.min(...log.map(r => r.timestampStart || Infinity));
+        const last = Math.max(...log.map(r => r.timestampEnd || -Infinity));
+        const elapsedMs = (isFinite(first) && isFinite(last) && last >= first) ? last - first : 0;
+        const targetMs = targetMinutes * 60000;
         const turns = log.length; // each entry is one user->bot pair
         // perQuestion stats
         const map = new Map();
-        log.forEach(r=>{ const idx = r.questionIndex||0; const dur=(r.timestampEnd||0)-(r.timestampStart||0); if(!map.has(idx)) map.set(idx,{ index:idx, durations:[], count:0}); const o=map.get(idx); o.durations.push(Math.max(0,dur)); o.count++; });
-        const perQuestion = [...map.values()].sort((a,b)=>a.index-b.index).map(o=>({ index:o.index, meanMs: o.durations.length? (o.durations.reduce((a,b)=>a+b,0)/o.durations.length):0, count:o.count }));
+        log.forEach(r => { const idx = r.questionIndex || 0; const dur = (r.timestampEnd || 0) - (r.timestampStart || 0); if (!map.has(idx)) map.set(idx, { index: idx, durations: [], count: 0 }); const o = map.get(idx); o.durations.push(Math.max(0, dur)); o.count++; });
+        const perQuestion = [...map.values()].sort((a, b) => a.index - b.index).map(o => ({ index: o.index, meanMs: o.durations.length ? (o.durations.reduce((a, b) => a + b, 0) / o.durations.length) : 0, count: o.count }));
         // strategy (followups)
-        const followups = perQuestion.filter(p=>p.index>0).map(p=>({ index:p.index, count: Math.max(0, p.count-1)}));
-        const addedCount = followups.reduce((a,b)=>a+b.count,0);
+        const followups = perQuestion.filter(p => p.index > 0).map(p => ({ index: p.index, count: Math.max(0, p.count - 1) }));
+        const addedCount = followups.reduce((a, b) => a + b.count, 0);
         const totalQ = followups.length || 1;
         // speaking ratio
-        const totalUserChars = log.reduce((a,b)=>a+(b.userChars||0),0);
-        const totalBotChars = log.reduce((a,b)=>a+(b.botChars||0),0);
+        const totalUserChars = log.reduce((a, b) => a + (b.userChars || 0), 0);
+        const totalBotChars = log.reduce((a, b) => a + (b.botChars || 0), 0);
         const charsPerSec = 6.5;
         const userSec = totalUserChars / charsPerSec;
         const botSec = totalBotChars / charsPerSec;
         const speakingTotal = userSec + botSec || 1;
         // language habits
-        const totalFillers = log.reduce((a,b)=>a+(b.userFillerCount||0),0);
-        const fillersPerMin = elapsedMs? (totalFillers / (elapsedMs/60000)) : 0;
+        const totalFillers = log.reduce((a, b) => a + (b.userFillerCount || 0), 0);
+        const fillersPerMin = elapsedMs ? (totalFillers / (elapsedMs / 60000)) : 0;
         const longThreshold = 60;
-        const longQuestionRatio = log.filter(r=> (r.userMessage||'').length>longThreshold).length / log.length;
+        const longQuestionRatio = log.filter(r => (r.userMessage || '').length > longThreshold).length / log.length;
         // simple repetition score: repeated bigrams ratio
         const bigramCount = new Map();
-        log.forEach(r=>{ const t=(r.userMessage||'').replace(/\s+/g,' ').trim().split(' '); for(let i=0;i<t.length-1;i++){ const bg=t[i]+"|"+t[i+1]; bigramCount.set(bg,(bigramCount.get(bg)||0)+1);} });
-        let repeatPairs=0,totalPairs=0; bigramCount.forEach(v=>{ if(v>1) repeatPairs+=v; totalPairs+=v; });
-        const repetitionScore = totalPairs? repeatPairs/totalPairs : 0;
+        log.forEach(r => { const t = (r.userMessage || '').replace(/\s+/g, ' ').trim().split(' '); for (let i = 0; i < t.length - 1; i++) { const bg = t[i] + "|" + t[i + 1]; bigramCount.set(bg, (bigramCount.get(bg) || 0) + 1); } });
+        let repeatPairs = 0, totalPairs = 0; bigramCount.forEach(v => { if (v > 1) repeatPairs += v; totalPairs += v; });
+        const repetitionScore = totalPairs ? repeatPairs / totalPairs : 0;
         // emotion placeholder
-        const emotionDist = {}; const emotionKeys=['neutral','joy','sadness','anger','fear','surprise','disgust','other']; emotionKeys.forEach(k=>emotionDist[k]=0);
-        log.forEach(r=>{ const e=r.userEmotion||'neutral'; if(emotionDist[e]!==undefined) emotionDist[e]+=1; });
-        const totalEmotion = Object.values(emotionDist).reduce((a,b)=>a+b,0)||1; Object.keys(emotionDist).forEach(k=>emotionDist[k]=emotionDist[k]/totalEmotion);
+        const emotionDist = {}; const emotionKeys = ['neutral', 'joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'other']; emotionKeys.forEach(k => emotionDist[k] = 0);
+        log.forEach(r => { const e = r.userEmotion || 'neutral'; if (emotionDist[e] !== undefined) emotionDist[e] += 1; });
+        const totalEmotion = Object.values(emotionDist).reduce((a, b) => a + b, 0) || 1; Object.keys(emotionDist).forEach(k => emotionDist[k] = emotionDist[k] / totalEmotion);
         const responded = 0; // placeholder until emotion response eval implemented
         const keywords = extractTopKeywords(log);
         return {
-            meta:{ elapsedMs, targetMs, progress01: targetMs? elapsedMs/targetMs:0, turns },
+            meta: { elapsedMs, targetMs, progress01: targetMs ? elapsedMs / targetMs : 0, turns },
             perQuestion,
             keywords, // top-N 키워드
-            strategy:{ additionalRatio: addedCount/totalQ, followups: followups.filter(f=>f.count>0) },
-            interaction:{ turnTaking: turns, speakingRatio:{ user: userSec/speakingTotal, bot: botSec/speakingTotal }, wpm:{ user: elapsedMs? (totalUserChars/ (elapsedMs/60000) /2.5):0, bot: elapsedMs? (totalBotChars/(elapsedMs/60000)/2.5):0 } },
-            emotion:{ userDist: emotionDist, responded },
-            languageHabits:{ fillersPerMin, longQuestionRatio, repetitionScore }
+            strategy: { additionalRatio: addedCount / totalQ, followups: followups.filter(f => f.count > 0) },
+            interaction: { turnTaking: turns, speakingRatio: { user: userSec / speakingTotal, bot: botSec / speakingTotal }, wpm: { user: elapsedMs ? (totalUserChars / (elapsedMs / 60000) / 2.5) : 0, bot: elapsedMs ? (totalBotChars / (elapsedMs / 60000) / 2.5) : 0 } },
+            emotion: { userDist: emotionDist, responded },
+            languageHabits: { fillersPerMin, longQuestionRatio, repetitionScore }
         };
     }
     let latestAnalysis = null;
 
-    function extractTopKeywords(logs, topN = 12){
-        if(!Array.isArray(logs) || !logs.length) return [];
-        const txt = logs.map(r => `${r.userMessage||''} ${r.botAnswer||''}`).join(' ');
+    function extractTopKeywords(logs, topN = 12) {
+        if (!Array.isArray(logs) || !logs.length) return [];
+        const txt = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
         const tokens = simpleTokenizeKorean(txt);
         const map = new Map();
-        for (const t of tokens) map.set(t,(map.get(t)||0)+1);
-        return [...map.entries()].sort((a,b)=>b[1]-a[1]).slice(0, topN).map(([text,count])=>({ text, weight: count }));
+        for (const t of tokens) map.set(t, (map.get(t) || 0) + 1);
+        return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
     }
 
     //로딩스피너
@@ -1083,70 +1083,70 @@ document.addEventListener("DOMContentLoaded", () => {
         appendMessage(userMessage, 'user');
         if (!isVoice) userInput.value = '';
 
-                    // 4) phase 감지
-                    const interviewTitle = interviewTitleInput.value.trim();
-                    const turnCount = (interviewLog||[]).length + 1; // 이번 턴 포함 카운트 근사
-                    const phase = detectPhase({ lastIndex: lastIndex, turnCount, userText: userMessage });
+        // 4) phase 감지
+        const interviewTitle = interviewTitleInput.value.trim();
+        const turnCount = (interviewLog || []).length + 1; // 이번 턴 포함 카운트 근사
+        const phase = detectPhase({ lastIndex: lastIndex, turnCount, userText: userMessage });
 
-                    // === (신규) 스타일 힌트 생성: 저렴한 모델 ===
-                    sendStartTime = Date.now();
-                    isPending = true; updateMicStatus('GPT 응답 대기');
-                    try {
-                        const styleHints = await getStyleHintsLLM(apiKey, {
-                            personaState, userMessage, phase, predictedIndex: predicted.index, questions
-                        });
+        // === (신규) 스타일 힌트 생성: 저렴한 모델 ===
+        sendStartTime = Date.now();
+        isPending = true; updateMicStatus('GPT 응답 대기');
+        try {
+            const styleHints = await getStyleHintsLLM(apiKey, {
+                personaState, userMessage, phase, predictedIndex: predicted.index, questions
+            });
 
-                        // === (신규) systemPrompt 생성: 힌트 주입, 강제 접붙이기 없음 ===
-                        const systemPrompt = buildSystemPrompt(
-                            interviewTitle, questions, predicted.index, phase, personaState, styleHints
-                        );
+            // === (신규) systemPrompt 생성: 힌트 주입, 강제 접붙이기 없음 ===
+            const systemPrompt = buildSystemPrompt(
+                interviewTitle, questions, predicted.index, phase, personaState, styleHints
+            );
 
-                        // === (신규) 파인튜닝 모델로 최종 답변 생성 ===
-                        const coreAnswer = await generateCoreAnswer(apiKey, systemPrompt, userMessage, { phase });
+            // === (신규) 파인튜닝 모델로 최종 답변 생성 ===
+            const coreAnswer = await generateCoreAnswer(apiKey, systemPrompt, userMessage, { phase });
 
-                        // 출력: 더 이상 클라이언트에서 버퍼/에피소드/역질문을 붙이지 않음
-                        const finalAnswer = coreAnswer;
-                        highlightCurrentQuestion(lastIndex);
-                        appendMessage(finalAnswer, 'bot');
-                        messages.push({ role:'assistant', content: finalAnswer });
-                        const endTime = Date.now();
-                        const userChars = userMessage.length;
-                        const botChars = finalAnswer.length;
-                        const userFillerCount = countFillers(userMessage);
-                        interviewLog.push({
-                            questionIndex: lastIndex,
-                            question: (questions && questions[lastIndex-1]) ? questions[lastIndex-1] : "(파생 질문)",
-                            userMessage,
-                            botAnswer: finalAnswer,
-                            timestampStart: sendStartTime,
-                            timestampEnd: endTime,
-                            userChars,
-                            botChars,
-                            userTokens: approxTokenCount(userMessage),
-                            botTokens: approxTokenCount(finalAnswer),
-                            userFillerCount,
-                            userEmotion: null,
-                            botAcknowledged: null
-                        });
+            // 출력: 더 이상 클라이언트에서 버퍼/에피소드/역질문을 붙이지 않음
+            const finalAnswer = coreAnswer;
+            highlightCurrentQuestion(lastIndex);
+            appendMessage(finalAnswer, 'bot');
+            messages.push({ role: 'assistant', content: finalAnswer });
+            const endTime = Date.now();
+            const userChars = userMessage.length;
+            const botChars = finalAnswer.length;
+            const userFillerCount = countFillers(userMessage);
+            interviewLog.push({
+                questionIndex: lastIndex,
+                question: (questions && questions[lastIndex - 1]) ? questions[lastIndex - 1] : "(파생 질문)",
+                userMessage,
+                botAnswer: finalAnswer,
+                timestampStart: sendStartTime,
+                timestampEnd: endTime,
+                userChars,
+                botChars,
+                userTokens: approxTokenCount(userMessage),
+                botTokens: approxTokenCount(finalAnswer),
+                userFillerCount,
+                userEmotion: null,
+                botAcknowledged: null
+            });
 
-                        // followup state 업데이트 (여전히 로컬 카운트만 유지)
-                        if (interviewLog.length >= 2 && interviewLog[interviewLog.length-2].questionIndex === lastIndex) {
-                            personaState.followupsOnCurrent += 1;
-                        } else {
-                            personaState.followupsOnCurrent = 0;
-                        }
-                        personaState.lastTopic = extractTopicHint(userMessage) || personaState.lastTopic;
+            // followup state 업데이트 (여전히 로컬 카운트만 유지)
+            if (interviewLog.length >= 2 && interviewLog[interviewLog.length - 2].questionIndex === lastIndex) {
+                personaState.followupsOnCurrent += 1;
+            } else {
+                personaState.followupsOnCurrent = 0;
+            }
+            personaState.lastTopic = extractTopicHint(userMessage) || personaState.lastTopic;
 
-                        // 음성합성 & 소켓
-                        await speakTextPersona(finalAnswer, selectedPersona);
-                        if (socket && socket.readyState === WebSocket.OPEN) {
-                            socket.send(JSON.stringify({ apiKey, gptResponse: finalAnswer }));
-                        }
-                        isPending = false; updateMicStatus('듣는 중');
-                    } catch (error) {
-                        appendMessage(`Error: ${error.message}`, 'bot');
-                        isPending = false; updateMicStatus('대기');
-                    }
+            // 음성합성 & 소켓
+            await speakTextPersona(finalAnswer, selectedPersona);
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ apiKey, gptResponse: finalAnswer }));
+            }
+            isPending = false; updateMicStatus('듣는 중');
+        } catch (error) {
+            appendMessage(`Error: ${error.message}`, 'bot');
+            isPending = false; updateMicStatus('대기');
+        }
     }
 
 
