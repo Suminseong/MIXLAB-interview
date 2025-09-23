@@ -145,10 +145,11 @@
                 </div>
                 
 
-                <div id="analyze-page" class="page" style="display: none;"> <!--분석 페이지 추가하는 곳-->
+                <div id="analyze-page" class="page" style="display: none;"> <!--분석 페이지 메인 프레임-->
                     <h2>인터뷰 분석</h2>
                     <div class="analyze-dashboard">
                         <div class="analyze-main">
+                            <!-- 상단: 퍼소나 요약 영역 -->
                             <div class="analyze-profile-bar">
                                 <div class="analyze-profile-info">
                                     <!-- dynamic: profile fields will be injected here -->
@@ -157,37 +158,68 @@
                                     <span class="profile-gender"></span>
                                     <span class="profile-type"></span>
                                 </div>
-                                <div class="analyze-profile-tags">
-                                    <!-- dynamic tags -->
+                                <div class="analyze-profile-tags"><!-- dynamic tags --></div>
+                            </div>
+                            <div class="analyze-persona-tabs"><!-- persona tabs injected dynamically --></div>
+
+                            <!-- 상단 메인 행: 시간관리 도넛 + 시간 분포 차트 -->
+                            <div class="analyze-top-row" style="display:flex; gap:24px; align-items:stretch; margin-top:24px;">
+                                <div class="donut-card main-donut" style="flex:0 0 260px; background:#fff; border-radius:16px; padding:20px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); position:relative;">
+                                    <div class="widget-title">시간 관리 | Time Management</div>
+                                    <div style="position:relative; display:flex; justify-content:center; align-items:center; margin:8px 0 4px 0;">
+                                        <canvas id="donutChart" width="180" height="180"></canvas>
+                                        <div class="donut-center-text" style="position:absolute; text-align:center;">
+                                            <span id="donutPercent">80%</span>
+                                            <span id="donutTime"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="analyze-chart-section" style="flex:1; background:#fff; border-radius:16px; padding:20px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                    <div class="analyze-title">Time table</div>
+                                    <canvas id="barChart" width="600" height="220"></canvas>
                                 </div>
                             </div>
-                            <div class="analyze-persona-tabs">
-                                <!-- persona tabs injected dynamically -->
-                            </div>
-                            <!-- KPI card placeholders -->
-                            <div class="analyze-kpi-cards" style="display: flex; gap: 16px; margin: 32px 0 24px 0;">
-                                <div class="kpi-card">
-                                    <div id="kpiTalkPercent" class="kpi-value"></div>
-                                    <div id="kpiTalkMsg" class="kpi-desc">발화 비율</div>
+
+                            <!-- 상호작용 지표: 발화/추가질문/팔로업 탭 그룹 -->
+                            <div class="kpi-tab-group" style="margin: 32px 0 24px 0;">
+                                <div class="analyze-title" style="margin-bottom:12px;">상호작용 역동성 | Interaction Dynamics</div>
+                                <div class="kpi-labels">
+                                    <span class="kpi-label">| 말하기 경청 비율</span>
+                                    <span class="kpi-label">| 추가 질문 비율</span>
+                                    <span class="kpi-label">| 팔로업 횟수</span>
                                 </div>
-                                <div class="kpi-card">
-                                    <div id="kpiAdHocPercent" class="kpi-value"></div>
-                                    <div class="kpi-desc">추가 질문 비율</div>
-                                </div>
-                                <div class="kpi-card">
-                                    <div id="kpiFollowupCount" class="kpi-value"></div>
-                                    <div class="kpi-desc">팔로업 횟수</div>
+                                <div class="analyze-kpi-cards">
+                                    <div class="kpi-card">
+                                        <div class="kpi-icon kpi-icon--talk"><img src="img/ico_mic.png" alt="talk"></div>
+                                        <div class="kpi-texts">
+                                            <div id="kpiTalkPercent" class="kpi-value">0%</div>
+                                            <div id="kpiTalkMsg" class="kpi-desc">발화 비율</div>
+                                        </div>
+                                    </div>
+                                    <div class="kpi-card">
+                                        <div class="kpi-icon kpi-icon--adhoc"><img src="img/ico_thunder.png" alt="adhoc"></div>
+                                        <div class="kpi-texts">
+                                            <div id="kpiAdHocPercent" class="kpi-value">0%</div>
+                                            <div class="kpi-desc">즉흥 파생 질문</div>
+                                        </div>
+                                    </div>
+                                    <div class="kpi-card">
+                                        <div class="kpi-icon kpi-icon--follow"><img src="img/ico_talk.png" alt="followup"></div>
+                                        <div class="kpi-texts">
+                                            <div id="kpiFollowupCount" class="kpi-value">0회</div>
+                                            <div class="kpi-desc">심층 추가 질문</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="analyze-chart-section">
-                                <div class="analyze-title">Time table</div>
-                                <canvas id="barChart" width="600" height="220"></canvas>
-                            </div>
+
                             <!-- 타임라인 -->
                             <div style="margin: 32px 0 24px 0;">
                                 <div class="analyze-title">발화 패턴 그래프 <span class="info-tooltip" title="인터뷰어와 인터뷰이의 발화 패턴을 시각화합니다.">?</span></div>
                                 <div id="utteranceTimeline" style="height: 36px; background: #f8f9fb; border-radius: 12px;"></div>
                             </div>
+
+                            <!-- 핵심 키워드 + 요약/정서 -->
                             <div class="analyze-keywords-summary">
                                 <div class="analyze-keywords">
                                     <div class="keywords-title">핵심 키워드</div>
@@ -197,10 +229,6 @@
                                     <div class="summary-panel">
                                         <div class="summary-title">인터뷰 요약</div>
                                         <div id="summaryText" class="summary-text"></div>
-                                    </div>
-                                    <div class="feedback-panel">
-                                        <div class="feedback-title">정서적 대응</div>
-                                        <ul id="emotionList" class="feedback-list"></ul>
                                     </div>
                                 </div>
                             </div>
@@ -296,29 +324,25 @@
                 <!--인터뷰 사이드 영역-->
                 <div class="container-children sub-analysis sub-inactive">
                     <div class="analyze-side">
-                            <div class="side-widget donut-widget">
-                                <div class="widget-title">인터뷰 종합 시간</div>
-                                <canvas id="donutChart" width="160" height="160"></canvas>
-                                <div class="donut-center-text">
-                                    <span id="donutPercent">80%</span>
-                                    <span id="donutTime"></span>
-                                </div>
-                            </div>
                             <div class="side-widget affinity-widget">
-                                <div class="widget-title">퍼소나 친밀도 <span class="info-tooltip" title="이 그래프는 인터뷰 초기 아이스브레이킹 단계에서 퍼소나와의 친화 형성 정도로 시각화한 것으로...">?</span></div>
-                                <div class="affinity-stepper">
-                                    <div class="affinity-step active">1</div>
-                                    <div class="affinity-step">2</div>
-                                    <div class="affinity-step">3</div>
+                                <div class="widget-title">퍼소나 친밀도 <span class="info-tooltip" title="이 그래프는 인터뷰 초기 아이스브레이킹 단계에서 퍼소나와의 친화 형성 정도로 시각화한 것으로, 오고간 대화의 횟수와 그 내용에 따라 결정됩니다.">?</span></div>
+                                <div class="affinity-stepper" tabindex="0">
+                                    <div class="affinity-step active" data-label="탐색 단계">1</div>
+                                    <div class="affinity-step" data-label="대화 적응">2</div>
+                                    <div class="affinity-step" data-label="신뢰 형성">3</div>
                                 </div>
-                                <div class="affinity-desc">이 그래프는 인터뷰 초기 아이스브레이킹 단계에서 퍼소나와의 친화 형성 정도로 시각화한 것으로...</div>
+                                <div class="affinity-desc">이 그래프는 인터뷰 초기 아이스브레이킹 단계에서 퍼소나와의 친화 형성 정도로 시각화한 것으로, 오고간 대화의 횟수와 그 내용에 따라 결정됩니다.</div>
                             </div>
-                            <div class="side-widget speed-widget">
+                            <div class="side-widget speed-widget" style="display: none;">
                                 <div class="widget-title">말의 속도</div>
                                 <div class="speed-bar-bg">
                                     <div class="speed-bar" id="speedBar" style="width: 85%"></div>
                                 </div>
                                 <div class="speed-label">85% 조금 빨랐어요</div>
+                            </div>
+                            <div class="side-widget emotion-widget">
+                                <div class="widget-title">정서적 대응 | Emotional Responsiveness</div>
+                                <ul id="emotionList" class="feedback-list emotion-list"><!-- dynamically filled --></ul>
                             </div>
                             <div class="side-widget lang-widget">
                                 <div class="widget-title">언어습관 피드백</div>

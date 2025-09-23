@@ -92,15 +92,30 @@ async function renderAnalysisDashboard(opts = {}) {
         console.warn('donut render failed', e);
     }
 
-    // 4) 핵심 키워드 (기존 extractTopKeywords 유틸 사용)
+    // 4) 핵심 키워드 (extractTopKeywords가 전역에 없을 수 있어 폴백 사용)
     try {
-        const kw = extractTopKeywords(logs, 12); // [{text, weight}]
+        // 안전하게 전역 함수가 있으면 사용하고, 없으면 로컬 폴백으로 대체
+        const kw = (typeof extractTopKeywords === 'function')
+            ? extractTopKeywords(logs, 12)
+            : (function fallbackExtractTopKeywords(logs, topN = 12) {
+                // 간단한 한국어 토크나이저 + 빈도 기반 상위 N개 추출
+                if (!Array.isArray(logs) || !logs.length) return [];
+                const KO_STOPWORDS_LOCAL = new Set(['그리고','그러나','하지만','그러면','그래서','또','또는','즉','혹은','이것','저것','그것','거기','여기','저기','좀','아주','매우','너무','정말','진짜','거의','약간','등','등등','같은','것','수','때','점','및','는','은','이','가','을','를','에','의','로','으로','와','과','도','만','에게','한','하다','했습니다','했어요','하는','되다','됐다']);
+                const text = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
+                // 한글/영문/숫자 외 문자 제거, 공백으로 분리
+                const tokens = (text || '').replace(/[^\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
+                const freq = new Map();
+                for (const t of tokens) freq.set(t, (freq.get(t) || 0) + 1);
+                const arr = [...freq.entries()].sort((a,b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
+                return arr;
+            })(logs, 12);
+
         const cloudEl = document.getElementById('keywordCloud');
         if (cloudEl) {
             cloudEl.innerHTML = '';
             const w = Math.min(360, cloudEl.clientWidth || 360), h = 120;
             const svg = d3.select(cloudEl).append('svg').attr('width', w).attr('height', h);
-            const words = (kw && kw.length) ? kw.map((k, i) => ({ text: k.text, size: 12 + (k.weight * 3) })) : [{text:'-', size:14}];
+            const words = (kw && kw.length) ? kw.map((k, i) => ({ text: k.text, size: 12 + (k.weight * 3) })) : [{ text: '-', size: 14 }];
             d3.layout.cloud().size([w, h])
                 .words(words)
                 .padding(2)
@@ -132,7 +147,19 @@ async function renderAnalysisDashboard(opts = {}) {
             if (!hasLogs) summaryEl.textContent = '인터뷰 로그가 없어 요약을 생성할 수 없습니다.';
             else {
                 // 간단 추출 요약: 상위 키워드 나열 + 간단 통계
-                const topKW = extractTopKeywords(logs, 5).map(k => k.text).join(', ');
+                const topKWarr = (typeof extractTopKeywords === 'function')
+                    ? extractTopKeywords(logs, 5)
+                    : (function fallbackExtractTopKeywords(logs, topN = 5) {
+                        if (!Array.isArray(logs) || !logs.length) return [];
+                        const KO_STOPWORDS_LOCAL = new Set(['그리고','그러나','하지만','그러면','그래서','또','또는','즉','혹은','이것','저것','그것','거기','여기','저기','좀','아주','매우','너무','정말','진짜','거의','약간','등','등등','같은','것','수','때','점','및','는','은','이','가','을','를','에','의','로','으로','와','과','도','만','에게','한','하다','했습니다','했어요','하는','되다','됐다']);
+                        const text = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
+                        const tokens = (text || '').replace(/[^\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
+                        const freq = new Map();
+                        for (const t of tokens) freq.set(t, (freq.get(t) || 0) + 1);
+                        const arr = [...freq.entries()].sort((a,b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
+                        return arr;
+                    })(logs, 5);
+                const topKW = topKWarr.map(k => k.text).join(', ');
                 summaryEl.textContent = `주요 키워드: ${topKW}. 총 질의응답 수: ${logs.length}. 평균 응답시간: ${Math.round((avgSecs.reduce((a,b)=>a+b,0)/(qCount||1))*10)/10}초(질문당).`;
             }
         }
@@ -1384,7 +1411,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                 } catch (e) { console.warn('renderAnalysisDashboard failed:', e); }
             } else if (typeof window.renderAnalysis === 'function') {
-                try { window.renderAnalysis(); } catch (e) { console.warn('renderAnalysis fallback failed:', e); }
+                try { window.renderAnalysis(); } catch (e) { console.warn('renderAnalysis fallback failed', e); }
             } else if (window.AnalyticsKit?.Render) {
                 try {
                     window.AnalyticsKit.Render.renderKPIs();
@@ -1677,7 +1704,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ===== 통합 레이어 추가: 상수/유틸/임베딩/페이즈/스타일/생성 =====
     const ACK_REGEX = /^(네|넵|예|응|어|음|아|맞[아요]|그렇[죠|습니다]?|좋[아요]|오케이|ok)\s*$/i;
-    const KO_STOPWORDS = new Set(['그리고', '그러나', '하지만', '그러면', '그래서', '또', '또는', '즉', '혹은', '이것', '저것', '그것', '거기', '여기', '저기', '좀', '아주', '매우', '너무', '정말', '진짜', '거의', '약간', '등', '등등', '같은', '것', '수', '때', '점', '및', '는', '은', '이', '가', '을', '를', '에', '의', '로', '으로', '와', '과', '도', '만', '에게', '한', '하다', '했습니다', '했어요', '하는', '되다', '됐다', '됐다가']);
+    const KO_STOPWORDS = new Set(['그리고', '그러나', '하지만', '그러면', '그래서', '또', '또는', '즉', '혹은', '이것', '저것', '그것', '거기', '여기', '저기', '좀', '아주', '매우', '너무', '정말', '진짜', '거의', '약간', '등', '등등', '같은', '것', '수', '때', '점', '및', '는', '은', '이', '가', '을', '를', '에', '의', '로', '으로', '와', '과', '도', '만', '에게', '한', '하다', '했습니다', '했어요', '하는', '되다', '됐다']);
     const sum = arr => arr.reduce((a, b) => a + b, 0);
     const msToMinSec = (ms) => { 
         const s = Math.max(0, Math.floor(ms / 1000)), m = Math.floor(s / 60); 
@@ -2133,5 +2160,3 @@ if (goPersonaBtn) {
         document.querySelector(".btn-persona").click();  // 탭 전환 효과 동일하게
     });
 }
-
-// ...기존 코드...

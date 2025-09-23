@@ -882,6 +882,46 @@ body::-webkit-scrollbar {
 
 /*sub-lower 부�?--------->html코드?�서 변경된 �?같음(.side-box / #gen-?�당?�이지)*/
 
+/* ===== Analysis: KPI cards (Interaction Dynamics) ===== */
+.kpi-labels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 10px;
+  color: #8F949B;
+  font-size: 14px;
+}
+.analyze-kpi-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.kpi-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.kpi-icon img { width: 28px; height: 28px; }
+.kpi-icon--talk { background: #FFE6E6; }
+.kpi-icon--adhoc { background: #EAF5E6; }
+.kpi-icon--follow { background: #ECEBFF; }
+.kpi-texts { display: flex; flex-direction: column; }
+.kpi-value { font-weight: 700; font-size: 20px; color: #363A3D; }
+.kpi-desc { font-size: 13px; color: #8F949B; }
+
+
 /* .sub-lower {
     background: white;
     border-radius: clamp(16px, 1.8vw, 30px);
@@ -1637,6 +1677,163 @@ body::-webkit-scrollbar {
 }
 
 /* ?�트�??�니메이??*/
+
+/* ================= Persona Rapport (Affinity) – redesign ================= */
+.affinity-widget {
+  position: relative;
+}
+
+.affinity-widget .widget-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.affinity-stepper {
+  position: relative;
+  display: flex;
+  gap: 36px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 6px 16px 6px;
+}
+
+/* base track */
+.affinity-stepper::before {
+  content: "";
+  position: absolute;
+  left: 26px;
+  right: 26px;
+  top: 26px;
+  height: 2px;
+  background: #E9EEF7;
+}
+
+.affinity-step {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #E6EAF0;
+  color: #9AA1A9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(18, 24, 40, 0.06);
+  z-index: 1;
+  transition: transform 160ms ease, background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.affinity-step:hover {
+  transform: translateY(-1px) scale(1.02);
+  border-color: #CFE0FF;
+}
+
+.affinity-step.active {
+  background: #5B8CFF;
+  color: #fff;
+  border-color: #5B8CFF;
+  box-shadow: 0 6px 16px rgba(91, 140, 255, 0.25);
+}
+
+/* labels under each step, from data-attribute */
+.affinity-step::after {
+  content: attr(data-label);
+  position: absolute;
+  top: 46px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 12px;
+  color: #8F949B;
+  font-weight: 500;
+}
+
+.affinity-desc {
+  position: relative;
+  margin-top: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #F8F9FB;
+  color: #67707A;
+  font-size: 12px;
+  line-height: 1.5;
+  border: 1px solid #ECF1F6;
+  box-shadow: 0 2px 8px rgba(18,24,40,0.04);
+  /* hidden by default (show on hover) */
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transform: translateY(-4px);
+  transition: opacity 160ms ease, max-height 160ms ease, transform 160ms ease;
+  pointer-events: none;
+}
+
+.affinity-widget:hover .affinity-desc,
+.affinity-stepper:hover + .affinity-desc,
+.affinity-stepper:focus-within + .affinity-desc {
+  opacity: 1;
+  max-height: 200px;
+  transform: translateY(0);
+  margin-top: 8px;
+  pointer-events: auto;
+}
+
+/* ================= Emotion (sidebar) ================= */
+.emotion-widget .widget-title {
+  margin-bottom: 12px;
+  font-weight: 700;
+  color: #363A3D;
+}
+
+.emotion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.emotion-list li {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: start;
+  gap: 10px;
+  background: #FFFFFF;
+  border: 1px solid #F0F3F8;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03), 0 8px 24px rgba(16, 24, 40, 0.04);
+  font-size: 13px;
+  color: #4A4F55;
+}
+
+/* small colored circle at left; classes will be added in JS or server data */
+.emotion-list li::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-top: 2px;
+  box-shadow: inset 0 0 0 4px #EAF6EE; /* default soft green ring */
+  background: #4CCB7F; /* default green */
+  display: inline-block;
+}
+
+/* variants */
+.emotion-list li.neutral::before { background: #C9D3E0; box-shadow: inset 0 0 0 4px #EEF2F7; }
+.emotion-list li.positive::before { background: #4CCB7F; box-shadow: inset 0 0 0 4px #EAF6EE; }
+.emotion-list li.negative::before { background: #FF7A7A; box-shadow: inset 0 0 0 4px #FFE9E9; }
+
+/* optional small tone tag inside card header */
+.emotion-list .tone {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 12px;
+  color: #8F949B;
+}
+
 #intro {
   position: fixed;
   top: 0;
