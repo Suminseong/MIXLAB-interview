@@ -1,3 +1,16 @@
+// ripple-input에 마우스 올릴 때 딱 한 번만 애니메이션
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.ripple-input').forEach(function(input) {
+    input.addEventListener('mouseenter', function() {
+      if (!input.classList.contains('ripple-animate')) {
+        input.classList.add('ripple-animate');
+      }
+    });
+    input.addEventListener('animationend', function() {
+      input.classList.remove('ripple-animate');
+    });
+  });
+});
 document.addEventListener("DOMContentLoaded", () => {
     const navItems = Array.from(document.querySelectorAll("#nav-bar > div"));
     const subItems = document.querySelectorAll(".sub-upper .container-children");
@@ -110,6 +123,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // 기본적으로 'Preset'이 활성화되어 있다고 가정
         genQuestionBox.style.display = "flex";  // 질문 생성 버튼 표시
         genPersonaBox.style.display = "none";  // 퍼소나 생성 버튼 숨김
+        
+        // 토글이 checked 상태(자동생성 ON)이면 퍼소나 박스 숨김
+        if (toggleInput.checked) {
+            personaBox.style.display = "none";
+        }
 
         subItems.forEach((subItem, index) => {
             if (subItem.classList.contains("sub-activate")) {
@@ -244,4 +262,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 페이지 로드 시 초기 상태 설정
     initializePage();
+});
+
+// 마우스 커서 관련
+// 클릭 가능한 요소들 지정
+const interactiveTags = ["a", "button", "input", "textarea", "select"];
+const cursor = document.querySelector(".custom-cursor");
+
+document.addEventListener("mousemove", (e) => {
+  cursor.style.left = `${e.clientX}px`;
+  cursor.style.top = `${e.clientY}px`;
+
+  const target = e.target;
+
+  // 드래그/클릭 가능한 요소 위인지 확인
+  const isHovering =
+    interactiveTags.includes(target.tagName.toLowerCase()) ||
+    target.closest("button, a, input, textarea, select, .clickable");
+
+  if (isHovering) {
+    cursor.classList.add("hovering");
+  } else {
+    cursor.classList.remove("hovering");
+  }
+
+  // 인트로 위인지 확인 (기존 로직 유지)
+  const intro = document.getElementById("intro");
+  const introRect = intro.getBoundingClientRect();
+  const isInIntro =
+    e.clientY >= introRect.top &&
+    e.clientY <= introRect.bottom &&
+    e.clientX >= introRect.left &&
+    e.clientX <= introRect.right;
+
+  if (isInIntro) {
+    cursor.classList.remove("main-active");
+  } else {
+    cursor.classList.add("main-active");
+  }
+});
+
+document.addEventListener("mousedown", () => {
+  cursor.classList.add("click");
+});
+document.addEventListener("mouseup", () => {
+  cursor.classList.remove("click");
+});
+
+
+// ----드래그 커서 숨기기
+document.addEventListener("dragstart", (e) => {
+  // 브라우저의 드래그 썸네일 제거
+  e.dataTransfer.setDragImage(new Image(), 0, 0);
 });

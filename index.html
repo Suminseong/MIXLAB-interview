@@ -1,27 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko-KR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>PRETALK</title>
+    <link rel="shortcut icon" href="img/logo.png">
+
     <link rel="stylesheet" href="main.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.5/d3.layout.cloud.min.js"></script>
+
+    <!-- 인트로 애니메이션 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+
 </head>
 
 <body>
     <div id="loadingSpinner" style="display:none;">
         <div class="spinner-overlay">
-          <div class="spinner"></div>
+            <div class="dot-spinner">
+                <div class="dot dot1"></div>
+                <div class="dot dot2"></div>
+                <div class="dot dot3"></div>
+                <div class="dot dot4"></div>
+            </div>
         </div>
     </div>
 
-    <div id="apiKeyModal"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);">
-        <div style="background: white; padding: 20px; margin: 20% auto; width: 300px; text-align: center;">
-            <h3>API Key 입력</h3>
+    <!-- 인트로 애니메이션 -->
+    <div id="intro">
+        <!-- 글자 span태그로 하나씩 나눠준 거임 -->
+    <h1 id="intro-logo"> 
+        <span>P</span><span>R</span><span>E</span><span>T</span><span>A</span><span>L</span><span>K</span>
+    </h1>
+
+    <div class="svg-wrapper">
+        <svg width="145" height="70" viewBox="0 0 145 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path id="motion-path"
+            d="M10,58 
+            Q50,20 90,58
+            Q115,45 130,58" />
+        </svg>
+
+
+
+        <defs>
+            <linearGradient id="paint0_linear_701_5" x1="17.5" y1="35.0982" x2="127" y2="35.0982" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#6BA4FF"/>
+            <stop offset="0.495192" stop-color="#5F85FF"/>
+            <stop offset="1" stop-color="#5872FF"/>
+            </linearGradient>
+        </defs>
+        </svg>
+    </div>
+    </div>
+
+
+    <div id="apiKeyModal">
+        <div class="api-key-modal-content" style="position:relative;">
+            <button id="closeApiKeyModal" class="close-button api-key-modal-x">X</button>
+            <h3 class="apikey_text">API Key</h3>
+            <p class="apikey_text">사용할 API Key를 입력해주세요.</p>
             <input type="text" id="apiKeyInput" placeholder="OpenAI API Key 입력" style="width: 100%; padding: 8px;">
             <button id="saveApiKey" style="margin-top: 10px;">저장</button>
         </div>
@@ -33,28 +75,30 @@
                     <p class="logo-text">UwU</p>
                 </div>
                 <div id="nav-bar">
-                    <div class="btn-preset nav-active">
-                        <div class="nav-img"><img src="./img/preset.svg" alt="preset"></div>
-                        <p class="nav-text">Preset</p>
+                    <div class="btn-preset nav-active" id="nav-item">
+                        <div class="nav-img"><img src="./img/preset.svg" alt="setup"></div>
+                        <p class="nav-text" data-label="질문지생성">Setup　</p>
                     </div>
-                    <div class="btn-persona">
+                    <div class="btn-persona" id="nav-item">
                         <div class="nav-img"><img src="./img/persona.svg" alt="persona"></div>
-                        <p class="nav-text">Persona</p>
+                        <p class="nav-text" data-label="퍼소나생성">Persona</p>
                     </div>
-                    <div class="btn-interview">
+                    <div class="btn-interview" id="nav-item">
                         <div class="nav-img"><img src="./img/interview.svg" alt="interview"></div>
-                        <p class="nav-text">Interview</p>
+                        <p class="nav-text" data-label="인터뷰진행">Interview</p>
                     </div>
-                    <div class="btn-analysis">
+                    <div class="btn-analysis" id="nav-item">
                         <div class="nav-img"><img src="./img/analysis.svg" alt="analysis"></div>
-                        <p class="nav-text">Analysis</p>
+                        <p class="nav-text" data-label="인터뷰분석">Analysis</p>
                     </div>
-                    <div class="btn-revision">
-                        <div class="nav-img"><img src="./img/revision.svg" alt="revision"></div>
-                        <p class="nav-text">Revision</p>
+                    <div class="btn-revision" id="nav-item">
+                        <div class="nav-img"><img src="./img/revision.svg" alt="refine"></div>
+                        <p class="nav-text" data-label="질문지보완">Refine　</p>
                     </div>
                 </div>
-                <button id="changeApiKey">API 키 변경</button>
+                <button id="changeApiKey">
+                    <img src="img/icon_key.svg" alt="API Key">
+                </button>
             </div>
         </div>
         <!--중앙 큰 영역-->
@@ -63,22 +107,40 @@
                 <div id="question-page" class="page">
                     <h2>인터뷰 질문</h2>
                     <div class="question-box" id="question-container"></div>
+                    <button id="goToPersonaBtn" class="nextBtn">다음</button>
                 </div>
             
                 <div id="persona-page" class="page" style="display: none;">
-                    <h2>퍼소나 생성</h2>
-                    <div class="persona-box" id="persona-container"></div>
+    <h2></h2>
+    <div class="persona-navigation-con" style="position: relative; width: 100%;">
+      <button class="persona-nav-btn" id="personaLeftBtn"><img src="img/btn_left.svg" alt=""></button>
+      <div class="persona-container-box" id="persona-container"></div>
+      <button class="persona-nav-btn" id="personaRightBtn"><img src="img/btn_right.svg" alt=""></button>
+    </div>
+    <button id="goToInterviewBtn" class="nextBtn" style="display: block;">다음</button>
                 </div>
 
                 <div id="interview-page" class="page" style="display: none;">
                     <!-- <h2>인터뷰 진행</h2> -->
                     <div class="interview-box" id="interview-container">
+                        <div class="chatbox-persona">
+                            <!-- JS에서 퍼소나 정보가 들어감 -->
+                        </div>
                         <div id="chatbox">
                             <!-- 대화 내용이 여기에 기록됨 -->
                         </div>
-                        <input type="text" id="userInput" placeholder="질문을 입력하거나 마이크 버튼을 누르세요." style="width: 80%; padding: 8px;">
-                        <button id="sendButton">전송</button>
-                        <button id="micButton">🎤</button>
+                        <div id="chating">
+                            <div id="chating-left">
+                                <img id="chating-left-img" src="img/woman-2-talk.gif">
+                                <div id="chating-left-box"></div>
+                            </div>
+                            <div id="chating-right-box"></div>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="userInput" placeholder="질문을 입력하거나 마이크 버튼을 누르세요." style="width: 80%; padding: 8px;">
+                            <button id="sendButton">↑</button>
+                            <button id="micButton">🎤</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -142,13 +204,27 @@
                 <div class="container-children sub-preset sub-activate">
                     <div class="side-box">
                         <label for="interviewTitle">인터뷰 주제</label>
-                        <input type="text" id="interviewTitle" placeholder="인터뷰 주제를 입력해주세요.">
+                        <input
+                        type="text"
+                        id="interviewTitle"
+                        class="ripple-input"
+                        placeholder="인터뷰 주제를 입력해주세요."
+                        >
                     </div>
+
                     <div class="side-box">
                         <label for="interviewFor">인터뷰 목적</label>
-                        <input type="text" id="interviewFor" placeholder="ex) 서비스 피드백, 사용자 요구사항 조사 등등">
+                        <div class="ripple-wrapper">
+                        <input
+                            type="text"
+                            id="interviewFor"
+                            class="ripple-input"
+                            placeholder="인터뷰 목적을 입력해주세요."
+                        >
+                        </div>
                     </div>
                 </div>
+
                 <div class="container-children sub-persona sub-inactive">
                     <div class="side-box">
                         <label for="interviewTitle">인터뷰 주제</label>
@@ -158,7 +234,7 @@
                         <div class="label-box">
                             <label for="interviewFor">퍼소나 간편 생성</label>
                             <div class="toggle-container">
-                                <input type="checkbox" id="toggle" class="toggle-input">
+                                <input type="checkbox" id="toggle" class="toggle-input" checked>
                                 <label for="toggle" class="toggle-label"></label>
                             </div>                            
                         </div>
@@ -181,21 +257,26 @@
                 <div class="container-children sub-interview sub-inactive">
                     <div class="interview-meta">
                       <div class="interview-time">
-                            <div class="interview-start">
-                                <p>발화 시간</p>
-                                <p id="start-time">19:02</p>
+                            <div class="interview-left">
+                                <p class="time_subtitle">남은 시간</p>
+                                <p id="left-time"></p>
                             </div>
-                            <div class="interview-end">
-                                <p>종료 시간</p>
-                                <p id="end-time">20:00</p>
+                            <div class="time-separator">
+                                <img src="./img/time_dot.svg" alt="time separator">
+                            </div>
+                            <div class="interview-set">
+                                <p class="time_subtitle">설정 시간</p>
+                                <p id="set-time"></p>
                             </div>
                       </div>
                     </div>
-                    <div class="interview-questions">
-                      <h4>인터뷰 질문지</h4>
-                      <ul id="questionList"></ul>
+                    <div class="interview-questions-container">
+                        <div class="interview-questions">
+                          <h4>인터뷰 질문지</h4>
+                          <ul id="questionList"></ul>
+                        </div>
+                        <button id="endInterviewBtn">인터뷰 종료</button>
                     </div>
-                    <button id="endInterviewBtn">인터뷰 종료</button>
                 </div>
                 <!--인터뷰 사이드 영역-->
                 <div class="container-children sub-analysis sub-inactive">
@@ -263,6 +344,32 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <div class="custom-cursor"></div>
+
+    <button id="global-question-add-btn" type="button" title="질문 추가">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2"/>
+            <rect x="15.25" y="10" width="1.5" height="12" rx="0.75" fill="#8F949B"/>
+            <rect x="10" y="15.25" width="12" height="1.5" rx="0.75" fill="#8F949B"/>
+        </svg>
+    </button>
+
+    <!-- 인터뷰 시간 설정 팝업 모달 -->
+    <div id="interviewTimeModal">
+        <div class="interview-time-modal-content">
+            <h3>인터뷰 진행 시간을 설정해주세요</h3>
+            <button class="time-option" data-time="5">5분</button>
+            <button class="time-option" data-time="10">10분</button>
+            <button class="time-option" data-time="15">15분</button>
+            <button class="time-option" data-time="20">20분</button>
+            <button class="time-option" data-time="30">30분</button>
+            <div class="time-buttons">
+                <button class="time-btn cancel" id="timeModalCancel">취소</button>
+                <button class="time-btn confirm" id="timeModalConfirm">확인</button>
+            </div>
+        </div>
     </div>
 </body>
 <script src="script.js"></script>
