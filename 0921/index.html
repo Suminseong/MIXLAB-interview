@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.5/d3.layout.cloud.min.js"></script>
+</head>
+
+<body>
+    <div id="loadingSpinner" style="display:none;">
+        <div class="spinner-overlay">
+          <div class="spinner"></div>
+        </div>
+    </div>
+
+    <div id="apiKeyModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);">
+        <div style="background: white; padding: 20px; margin: 20% auto; width: 300px; text-align: center;">
+            <h3>API Key 입력</h3>
+            <input type="text" id="apiKeyInput" placeholder="OpenAI API Key 입력" style="width: 100%; padding: 8px;">
+            <button id="saveApiKey" style="margin-top: 10px;">저장</button>
+        </div>
+    </div>
+    <div class="base-container">
+        <div class="aside-left">
+            <div id="aside-bar">
+                <div id="logo">
+                    <p class="logo-text">UwU</p>
+                </div>
+                <div id="nav-bar">
+                    <div class="btn-preset nav-active">
+                        <div class="nav-img"><img src="./img/preset.svg" alt="preset"></div>
+                        <p class="nav-text">Preset</p>
+                    </div>
+                    <div class="btn-persona">
+                        <div class="nav-img"><img src="./img/persona.svg" alt="persona"></div>
+                        <p class="nav-text">Persona</p>
+                    </div>
+                    <div class="btn-interview">
+                        <div class="nav-img"><img src="./img/interview.svg" alt="interview"></div>
+                        <p class="nav-text">Interview</p>
+                    </div>
+                    <div class="btn-analysis">
+                        <div class="nav-img"><img src="./img/analysis.svg" alt="analysis"></div>
+                        <p class="nav-text">Analysis</p>
+                    </div>
+                    <div class="btn-revision">
+                        <div class="nav-img"><img src="./img/revision.svg" alt="revision"></div>
+                        <p class="nav-text">Revision</p>
+                    </div>
+                </div>
+                <button id="changeApiKey">API 키 변경</button>
+            </div>
+        </div>
+        <!--중앙 큰 영역-->
+        <div class="main-container">
+            <div id="result">
+                <div id="question-page" class="page">
+                    <h2>인터뷰 질문</h2>
+                    <div class="question-box" id="question-container"></div>
+                </div>
+            
+                <div id="persona-page" class="page" style="display: none;">
+                    <h2>퍼소나 생성</h2>
+                    <div class="persona-box" id="persona-container"></div>
+                </div>
+
+                <div id="interview-page" class="page" style="display: none;">
+                    <!-- <h2>인터뷰 진행</h2> -->
+                    <div class="interview-box" id="interview-container">
+                        <div id="chatbox">
+                            <!-- 대화 내용이 여기에 기록됨 -->
+                        </div>
+                        <input type="text" id="userInput" placeholder="질문을 입력하거나 마이크 버튼을 누르세요." style="width: 80%; padding: 8px;">
+                        <button id="sendButton">전송</button>
+                        <button id="micButton">🎤</button>
+                    </div>
+                </div>
+                
+
+                <div id="analyze-page" class="page" style="display: none;"> <!--분석 페이지 추가하는 곳-->
+                    <h2>인터뷰 분석</h2>
+                    <div class="analyze-dashboard">
+                        <div class="analyze-main">
+                            <div class="analyze-profile-bar">
+                                <div class="analyze-profile-info">
+                                    <span class="profile-name">유지연</span>
+                                    <span class="profile-age">27세</span>
+                                    <span class="profile-gender">여성</span>
+                                    <span class="profile-type">ENFP</span>
+                                </div>
+                                <div class="analyze-profile-tags">
+                                    <span>서울</span>
+                                    <span>디자이너</span>
+                                    <span>독서</span>
+                                    <span>활발하고 적극적</span>
+                                </div>
+                            </div>
+                            <div class="analyze-persona-tabs">
+                                <button class="persona-tab active">퍼소나1</button>
+                                <button class="persona-tab">퍼소나2</button>
+                                <button class="persona-tab">퍼소나3</button>
+                            </div>
+                            <div class="analyze-chart-section">
+                                <div class="analyze-title">Time table</div>
+                                <canvas id="barChart" width="600" height="220"></canvas>
+                            </div>
+                            <div class="analyze-keywords-summary">
+                                <div class="analyze-keywords">
+                                    <div class="keywords-title">핵심 키워드</div>
+                                    <div id="keywordCloud" class="keyword-cloud"></div>
+                                </div>
+                                <div class="analyze-summary-panels">
+                                    <div class="summary-panel">
+                                        <div class="summary-title">인터뷰 요약</div>
+                                        <div id="summaryText" class="summary-text"></div>
+                                    </div>
+                                    <div class="feedback-panel">
+                                        <div class="feedback-title">-</div>
+                                        <ul id="feedbackList" class="feedback-list"></ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+
+                <div id="revision-page" class="page" style="display: none;">
+                    <h2>인터뷰 수정</h2>
+                    <div class="revision-box" id="revision-container"></div>
+                </div>
+            </div>
+        </div>
+        <div class="sub-container">
+            <div class="sub-upper">
+                <div class="container-children sub-preset sub-activate">
+                    <div class="side-box">
+                        <label for="interviewTitle">인터뷰 주제</label>
+                        <input type="text" id="interviewTitle" placeholder="인터뷰 주제를 입력해주세요.">
+                    </div>
+                    <div class="side-box">
+                        <label for="interviewFor">인터뷰 목적</label>
+                        <input type="text" id="interviewFor" placeholder="ex) 서비스 피드백, 사용자 요구사항 조사 등등">
+                    </div>
+                </div>
+                <div class="container-children sub-persona sub-inactive">
+                    <div class="side-box">
+                        <label for="interviewTitle">인터뷰 주제</label>
+                        <p id="personaTitle"></p>
+                    </div>
+                    <div class="side-box" id="persona-easecreate">
+                        <div class="label-box">
+                            <label for="interviewFor">퍼소나 간편 생성</label>
+                            <div class="toggle-container">
+                                <input type="checkbox" id="toggle" class="toggle-input">
+                                <label for="toggle" class="toggle-label"></label>
+                            </div>                            
+                        </div>
+                    </div>
+                    <div class="side-box" id="persona-side">
+                        <div class="persona-prompt-box">
+                            <label for="promptForPersona1">퍼소나1</label>
+                            <input type="text" id="promptForPersona1" placeholder="원하는 설정을 상세히 적어주세요">
+                        </div>
+                        <div class="persona-prompt-box">
+                            <label for="promptForPersona2">퍼소나2</label>
+                            <input type="text" id="promptForPersona2" placeholder="원하는 설정을 상세히 적어주세요">
+                        </div>
+                        <div class="persona-prompt-box">
+                            <label for="promptForPersona3">퍼소나3</label>
+                            <input type="text" id="promptForPersona3" placeholder="원하는 설정을 상세히 적어주세요">
+                        </div>
+                    </div>
+                </div>
+                <div class="container-children sub-interview sub-inactive">
+                    <div class="interview-meta">
+                      <div class="interview-time">
+                            <div class="interview-start">
+                                <p>발화 시간</p>
+                                <p id="start-time">19:02</p>
+                            </div>
+                            <div class="interview-end">
+                                <p>종료 시간</p>
+                                <p id="end-time">20:00</p>
+                            </div>
+                      </div>
+                    </div>
+                    <div class="interview-questions">
+                      <h4>인터뷰 질문지</h4>
+                      <ul id="questionList"></ul>
+                    </div>
+                    <button id="endInterviewBtn">인터뷰 종료</button>
+                </div>
+                <!--인터뷰 사이드 영역-->
+                <div class="container-children sub-analysis sub-inactive">
+                    <div class="analyze-side">
+                            <div class="side-widget donut-widget">
+                                <div class="widget-title">인터뷰 종합 시간</div>
+                                <canvas id="donutChart" width="160" height="160"></canvas>
+                                <div class="donut-center-text">
+                                    <span id="donutPercent">80%</span>
+                                    <span id="donutTime"></span>
+                                </div>
+                            </div>
+                            <div class="side-widget affinity-widget">
+                                <div class="widget-title">퍼소나 친밀도 <span class="info-tooltip" title="이 그래프는 인터뷰 초기 아이스브레이킹 단계에서 퍼소나와의 친화 형성 정도로 시각화한 것으로...">?</span></div>
+                                <div class="affinity-stepper">
+                                    <div class="affinity-step active">1</div>
+                                    <div class="affinity-step">2</div>
+                                    <div class="affinity-step">3</div>
+                                </div>
+                                <div class="affinity-desc">이 그래프는 인터뷰 초기 아이스브레이킹 단계에서 퍼소나와의 친화 형성 정도로 시각화한 것으로...</div>
+                            </div>
+                            <div class="side-widget speed-widget">
+                                <div class="widget-title">말의 속도</div>
+                                <div class="speed-bar-bg">
+                                    <div class="speed-bar" id="speedBar" style="width: 85%"></div>
+                                </div>
+                                <div class="speed-label">85% 조금 빨랐어요</div>
+                            </div>
+                            <div class="side-widget lang-widget">
+                                <div class="widget-title">언어습관 피드백</div>
+                                <ul class="lang-feedback-list" id="langFeedbackList">
+                                    <li>문장을 읽는 중간에 말을 더듬는 습관이 있어요.</li>
+                                    <li>인터뷰 질문지를 미리 읽는 연습을 통해 말 더듬는 습관을 개선해 보세요!</li>
+                                </ul>
+                            </div>
+                        </div>
+                </div> <!--분석 페이지 추가하는 곳-->
+                <div class="container-children sub-revision sub-inactive"></div>
+            </div>
+            <div class="side-box" id="gen-question"> 
+                <div class="container-children">
+                    <div class="counter-section">
+                        <span>질문 생성 개수</span>
+                        <div class="counter">
+                            <button id="decrease-btn">−</button>
+                            <span id="count">8</span>
+                            <button id="increase-btn">+</button>
+                        </div>
+                    </div>
+                    <button class="create-btn-style" id="generate-btn">인터뷰 질문지 생성</button> <!--class 추가(1)-->
+                </div>
+            </div>
+            <div class="side-box" id="gen-persona">
+                <div class="container-children">
+                    <div class="counter-section">
+                        <span>퍼소나 생성 개수</span>
+                        <div class="counter">
+                            <button id="persona-decrease-btn">−</button>
+                            <span id="persona-count">3</span>
+                            <button id="persona-increase-btn">+</button>
+                        </div>
+                    </div>
+                    <button class="create-btn-style" id="persona-generate-btn">퍼소나 생성</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+<script src="script.js"></script>
+<script src="activeStyle.js"></script>
+
+</html>
