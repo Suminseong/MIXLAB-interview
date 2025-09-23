@@ -151,42 +151,26 @@
                         <div class="analyze-main">
                             <div class="analyze-profile-bar">
                                 <div class="analyze-profile-info">
-                                    <!-- dynamic: profile fields will be injected here -->
-                                    <span class="profile-name"></span>
-                                    <span class="profile-age"></span>
-                                    <span class="profile-gender"></span>
-                                    <span class="profile-type"></span>
+                                    <span class="profile-name">유지연</span>
+                                    <span class="profile-age">27세</span>
+                                    <span class="profile-gender">여성</span>
+                                    <span class="profile-type">ENFP</span>
                                 </div>
                                 <div class="analyze-profile-tags">
-                                    <!-- dynamic tags -->
+                                    <span>서울</span>
+                                    <span>디자이너</span>
+                                    <span>독서</span>
+                                    <span>활발하고 적극적</span>
                                 </div>
                             </div>
                             <div class="analyze-persona-tabs">
-                                <!-- persona tabs injected dynamically -->
-                            </div>
-                            <!-- KPI card placeholders -->
-                            <div class="analyze-kpi-cards" style="display: flex; gap: 16px; margin: 32px 0 24px 0;">
-                                <div class="kpi-card">
-                                    <div id="kpiTalkPercent" class="kpi-value"></div>
-                                    <div id="kpiTalkMsg" class="kpi-desc">발화 비율</div>
-                                </div>
-                                <div class="kpi-card">
-                                    <div id="kpiAdHocPercent" class="kpi-value"></div>
-                                    <div class="kpi-desc">추가 질문 비율</div>
-                                </div>
-                                <div class="kpi-card">
-                                    <div id="kpiFollowupCount" class="kpi-value"></div>
-                                    <div class="kpi-desc">팔로업 횟수</div>
-                                </div>
+                                <button class="persona-tab active">퍼소나1</button>
+                                <button class="persona-tab">퍼소나2</button>
+                                <button class="persona-tab">퍼소나3</button>
                             </div>
                             <div class="analyze-chart-section">
                                 <div class="analyze-title">Time table</div>
                                 <canvas id="barChart" width="600" height="220"></canvas>
-                            </div>
-                            <!-- 타임라인 -->
-                            <div style="margin: 32px 0 24px 0;">
-                                <div class="analyze-title">발화 패턴 그래프 <span class="info-tooltip" title="인터뷰어와 인터뷰이의 발화 패턴을 시각화합니다.">?</span></div>
-                                <div id="utteranceTimeline" style="height: 36px; background: #f8f9fb; border-radius: 12px;"></div>
                             </div>
                             <div class="analyze-keywords-summary">
                                 <div class="analyze-keywords">
@@ -199,12 +183,13 @@
                                         <div id="summaryText" class="summary-text"></div>
                                     </div>
                                     <div class="feedback-panel">
-                                        <div class="feedback-title">정서적 대응</div>
-                                        <ul id="emotionList" class="feedback-list"></ul>
+                                        <div class="feedback-title">-</div>
+                                        <ul id="feedbackList" class="feedback-list"></ul>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        
                     </div>
                 </div>
 

@@ -1,198 +1,5 @@
-// ---------- 실사용 renderAnalysisDashboard 대체 함수 ----------
-async function renderAnalysisDashboard(opts = {}) {
-    const targetMinutes = opts.targetMinutes || (window.interviewDuration || 20);
-    const highlightQuestionIndex = opts.highlightQuestionIndex || null;
-
-    const logs = Array.isArray(window.interviewLog) ? window.interviewLog.slice() : [];
-    // 안전: 로그가 없으면 가벼운 안내 메시지만 보여주고 AnalyticsKit 렌더라도 호출
-    const hasLogs = logs.length > 0;
-
-    // 1) 질문별 평균 응답시간 계산 (질문 개수는 8 고정 또는 questions.length)
-    const qCount = (window.questions && window.questions.length) ? window.questions.length : 8;
-    const sumSecs = new Array(qCount).fill(0);
-    const cnts = new Array(qCount).fill(0);
-
-    logs.forEach(entry => {
-        const qi = (entry.questionIndex || 1) - 1;
-        if (qi >= 0 && qi < qCount && entry.timestampStart && entry.timestampEnd) {
-            const s = Math.max(0, (entry.timestampEnd - entry.timestampStart) / 1000);
-            sumSecs[qi] += s;
-            cnts[qi] += 1;
-        }
-    });
-
-    const avgSecs = sumSecs.map((s, i) => cnts[i] ? Math.round((s / cnts[i]) * 10) / 10 : 0);
-
-    // 2) Bar chart (Chart.js)
-    try {
-        const barCtx = document.getElementById('barChart') && document.getElementById('barChart').getContext('2d');
-        if (barCtx) {
-            if (window.barChartInstance) window.barChartInstance.destroy();
-            const labels = Array.from({length: qCount}, (_, i) => `Q${i+1}`);
-            window.barChartInstance = new Chart(barCtx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: '응답 시간(초)',
-                        data: avgSecs,
-                        backgroundColor: avgSecs.map((v,i) => i === (highlightQuestionIndex ? highlightQuestionIndex-1 : 1) ? '#5872FF' : '#DDE2EB'),
-                        borderRadius: 12,
-                        barPercentage: 0.6
-                    }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            min: 0,
-                            max: Math.max(30, Math.ceil(Math.max(...avgSecs) / 10) * 10),
-                            ticks: { stepSize: 10, color: '#B0B4BC', font: { size: 13 } },
-                            grid: { color: '#F2F3F5' }
-                        },
-                        x: {
-                            ticks: { color: '#B0B4BC', font: { size: 13 } },
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
-        }
-    } catch (e) {
-        console.warn('bar chart render failed', e);
-    }
-
-    // 3) Donut: 총 경과 시간 기반 % (elapsedMinutes / targetMinutes)
-    try {
-        let elapsedMinutes = 0;
-        if (hasLogs) {
-            const start = logs[0].timestampStart || logs[0].timestamp || Date.now();
-            const end = logs[logs.length - 1].timestampEnd || logs[logs.length - 1].timestamp || Date.now();
-            elapsedMinutes = Math.max(0, (end - start) / 60000);
-        } else {
-            elapsedMinutes = 0;
-        }
-        const percent = Math.min(100, Math.round((elapsedMinutes / Math.max(1, targetMinutes)) * 100));
-        // donut chart instance
-        const donutCtxEl = document.getElementById('donutChart');
-        if (donutCtxEl) {
-            const donutCtx = donutCtxEl.getContext('2d');
-            if (window.donutChartInstance) window.donutChartInstance.destroy();
-            window.donutChartInstance = new Chart(donutCtx, {
-                type: 'doughnut',
-                data: { labels: ['진행','남음'], datasets: [{ data: [percent, 100 - percent], backgroundColor: ['#5872FF','#F2F3F5'], borderWidth: 0 }] },
-                options: { cutout: '75%', plugins: { legend: { display: false } }, responsive: false }
-            });
-        }
-        const donutPercentEl = document.getElementById('donutPercent');
-        const donutTimeEl = document.getElementById('donutTime');
-        if (donutPercentEl) donutPercentEl.textContent = `${percent}%`;
-        if (donutTimeEl) donutTimeEl.textContent = `${Math.round(elapsedMinutes)}m / ${targetMinutes}m`;
-    } catch (e) {
-        console.warn('donut render failed', e);
-    }
-
-    // 4) 핵심 키워드 (기존 extractTopKeywords 유틸 사용)
-    try {
-        const kw = extractTopKeywords(logs, 12); // [{text, weight}]
-        const cloudEl = document.getElementById('keywordCloud');
-        if (cloudEl) {
-            cloudEl.innerHTML = '';
-            const w = Math.min(360, cloudEl.clientWidth || 360), h = 120;
-            const svg = d3.select(cloudEl).append('svg').attr('width', w).attr('height', h);
-            const words = (kw && kw.length) ? kw.map((k, i) => ({ text: k.text, size: 12 + (k.weight * 3) })) : [{text:'-', size:14}];
-            d3.layout.cloud().size([w, h])
-                .words(words)
-                .padding(2)
-                .rotate(() => 0)
-                .font('Pretendard Variable')
-                .fontSize(d => d.size)
-                .on('end', function (words) {
-                    svg.append('g').attr('transform', `translate(${w/2},${h/2})`)
-                        .selectAll('text')
-                        .data(words)
-                        .enter().append('text')
-                        .style('font-size', d => d.size + 'px')
-                        .style('fill', (d,i) => i===0 ? '#5872FF' : '#B0B4BC')
-                        .style('font-family','Pretendard Variable')
-                        .attr('text-anchor','middle')
-                        .attr('transform', d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
-                        .text(d => d.text);
-                })
-                .start();
-        }
-    } catch (e) {
-        console.warn('keyword cloud failed', e);
-    }
-
-    // 5) 요약/정서적 대응
-    try {
-        const summaryEl = document.getElementById('summaryText');
-        if (summaryEl) {
-            if (!hasLogs) summaryEl.textContent = '인터뷰 로그가 없어 요약을 생성할 수 없습니다.';
-            else {
-                // 간단 추출 요약: 상위 키워드 나열 + 간단 통계
-                const topKW = extractTopKeywords(logs, 5).map(k => k.text).join(', ');
-                summaryEl.textContent = `주요 키워드: ${topKW}. 총 질의응답 수: ${logs.length}. 평균 응답시간: ${Math.round((avgSecs.reduce((a,b)=>a+b,0)/(qCount||1))*10)/10}초(질문당).`;
-            }
-        }
-
-        // 정서적 카드: AnalyticsKit Emotions 사용 권장
-        if (window.AnalyticsKit && window.AnalyticsKit.Emotions && typeof window.AnalyticsKit.Emotions.renderEmotionalCards === 'function') {
-            // 마크업은 #emotionList (index.html) 있으므로 명시
-            await window.AnalyticsKit.Emotions.renderEmotionalCards('#emotionList');
-        } else {
-            // 폴백: 간단 가이드 메시지 삽입
-            const em = document.getElementById('emotionList');
-            if (em) em.innerHTML = hasLogs ? `<li>정서적 대응 분석을 위해 모델 호출이 필요합니다.</li>` : `<li>인터뷰 로그가 없습니다.</li>`;
-        }
-    } catch (e) {
-        console.warn('summary/emotion render failed', e);
-    }
-
-    // 6) KPI / 발화 타임라인은 AnalyticsKit.Render에 위임 (스토어 기반)
-    try {
-        if (window.AnalyticsKit && window.AnalyticsKit.Render) {
-            window.AnalyticsKit.Render.renderKPIs();
-            window.AnalyticsKit.Render.renderTimeline();
-            // rapport stage: 임시로 1~3 중 1단계 기본
-            window.AnalyticsKit.Render.setRapportStage(1);
-        } else {
-            // 간단 대체: KPI 카드 직접 채우기 (로그 기반)
-            const kpiTalk = document.getElementById('kpiTalkPercent');
-            const kpiMsg = document.getElementById('kpiTalkMsg');
-            if (kpiTalk) kpiTalk.textContent = hasLogs ? `${Math.min(99, Math.round((logs.length / (logs.length + 1)) * 100))}%` : '0%';
-            if (kpiMsg) kpiMsg.textContent = hasLogs ? '발화를 많이 했어요!' : '분석없음';
-        }
-    } catch (e) {
-        console.warn('KPI render fallback failed', e);
-    }
-
-    // 7) 말의 속도/언어습관(간단 통계)
-    try {
-        // 말의 속도: 사용자 발화 문자수 / 분 (평균)
-        const userMsgs = logs.map(l => (l.userMessage || '')).filter(Boolean);
-        let speedPct = 0;
-        if (userMsgs.length && hasLogs) {
-            const totalChars = userMsgs.reduce((a,b) => a + b.length, 0);
-            const totalMinutes = Math.max(0.1, (logs[logs.length-1].timestampEnd - logs[0].timestampStart)/60000);
-            const charsPerMin = totalChars / totalMinutes;
-            // 기준: 200cpm -> 50% (arbitrary mapping), clamp
-            speedPct = Math.round(Math.min(100, (charsPerMin / 300) * 100));
-        }
-        const speedBar = document.getElementById('speedBar');
-        if (speedBar) speedBar.style.width = `${speedPct}%`;
-        const speedLabel = document.querySelector('.speed-label');
-        if (speedLabel) speedLabel.textContent = speedPct ? `${speedPct}% 말 속도` : (hasLogs ? '측정 불가' : '데이터 없음');
-    } catch (e) {
-        console.warn('speed calc failed', e);
-    }
-}
-// ---------- 대체 함수 끝 ----------
 document.addEventListener("DOMContentLoaded", () => {
-
     // 음성 인식 기능 (Web Speech API) - 상단 recognition 블록 제거, 아래 SR 자동 루프만 사용
-
     // 퍼소나 슬라이드 관련
     let personaPageIndex = 0;
     const personaSlideContainer = document.getElementById("persona-container");
@@ -202,12 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function getPersonaCount() {
         return personaSlideContainer ? personaSlideContainer.children.length : 0;
     }
-
     function getGridSize() {
         // 한 번에 보여줄 개수 (슬라이딩 윈도우)
         return 2;
     }
-
     function updatePersonaSlide() {
         if (personaSlideContainer) {
             const personas = personaSlideContainer.children;
@@ -251,7 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 200);
         }
     }
-
     if (personaLeftBtn) {
         personaLeftBtn.addEventListener("click", () => {
             console.log('Left button clicked, current page:', personaPageIndex);
@@ -264,7 +68,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
-
     if (personaRightBtn) {
         personaRightBtn.addEventListener("click", () => {
             const totalPersonas = getPersonaCount();
@@ -280,7 +83,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
-
     // 모달 X버튼 클릭 시 닫기 (TDZ 방지: 선언 뒤에서 안전하게 참조)
     const apiKeyModalClose = document.querySelector('.api-key-modal-close');
     if (apiKeyModalClose) {
@@ -289,7 +91,6 @@ document.addEventListener("DOMContentLoaded", () => {
             apiKeyModalClose.addEventListener('click', () => modal.classList.remove('active'));
         }
     }
-
     const questionNumSpan = document.getElementById("count");
     const decreaseBtn = document.getElementById("decrease-btn");
     const increaseBtn = document.getElementById("increase-btn");
@@ -319,14 +120,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ===== 이미지 프리로드/경로 유틸 (전역 스코프) =====
     const __preloadedImgs = new Set();
-
     function preloadImage(url) {
         if (!url || __preloadedImgs.has(url)) return;
         const im = new Image();
         im.onload = () => __preloadedImgs.add(url);
         im.src = url;
     }
-
     function deriveTalkGifPath(imgPath) {
         if (!imgPath || typeof imgPath !== 'string') return '';
         const m = imgPath.match(/^(.*)(\.[a-zA-Z0-9]+)$/);
@@ -680,14 +479,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 // 질문이 생성되면 다음 버튼 보여주기
                 document.getElementById("goToPersonaBtn").style.display = "block";
                 // 임베딩 준비(분류 정확도 향상)
-                try {
-                    // populate AnalyticsKit Store and embeddings when module available
-                    if (window.AnalyticsKit && window.AnalyticsKit.NLP && typeof window.AnalyticsKit.NLP.ensurePreparedEmbeddings === 'function') {
-                        await window.AnalyticsKit.NLP.ensurePreparedEmbeddings(questions);
-                    } else if (typeof ensureQuestionEmbeddings === 'function') {
-                        await ensureQuestionEmbeddings(apiKey, questions);
-                    }
-                } catch (e) { console.error('❌ ensureQuestionEmbeddings failed:', e); }
+                try { await ensureQuestionEmbeddings(apiKey, questions); }
+                catch (e) { console.error('❌ ensureQuestionEmbeddings failed:', e); }
             } else {
                 resultContainer.innerHTML = "<p>질문 생성 실패</p>";
             }
@@ -980,8 +773,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 this.classList.add('selected');
                 interviewDuration = parseInt(this.getAttribute('data-time'));
                 console.log('선택된 시간:', interviewDuration); // 디버깅용
-                // 전역 접근 가능하도록 노출
-                try { window.interviewDuration = interviewDuration; } catch (_) {}
             });
         });
 
@@ -1022,17 +813,12 @@ document.addEventListener("DOMContentLoaded", () => {
             alert('먼저 질문을 생성해주세요.');
             return;
         }
-        // Accept embeddings prepared either in the local _qEmbeddings or in AnalyticsKit.Store.qEmbeddings
         const akStoreEmb = window.AnalyticsKit && window.AnalyticsKit.Store ? window.AnalyticsKit.Store.qEmbeddings : null;
         const localEmb = _qEmbeddings;
         const embeddingsReady = (Array.isArray(localEmb) && localEmb.length > 0) || (Array.isArray(akStoreEmb) && akStoreEmb.length > 0);
         if (!embeddingsReady) {
             alert('질문 임베딩을 준비 중입니다. 잠시 후 다시 시도해주세요.');
             console.log('embeddings check -> _qEmbeddings:', _qEmbeddings, 'AnalyticsKit.Store.qEmbeddings:', akStoreEmb);
-            // 질문 임베딩 생성 함수가 존재하는지 로그로 안내
-            if (typeof ensureQuestionEmbeddings !== 'function' && !(window.AnalyticsKit && window.AnalyticsKit.NLP && typeof window.AnalyticsKit.NLP.ensurePreparedEmbeddings === 'function')) {
-                console.error('❌ 질문 임베딩이 준비되지 않았습니다. ensureQuestionEmbeddings 또는 AnalyticsKit.NLP.ensurePreparedEmbeddings가 정의되어 있어야 합니다.');
-            }
             return;
         }
         // 선택된 퍼소나를 인터뷰용 변수에 할당
@@ -1385,12 +1171,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 } catch (e) { console.warn('renderAnalysisDashboard failed:', e); }
             } else if (typeof window.renderAnalysis === 'function') {
                 try { window.renderAnalysis(); } catch (e) { console.warn('renderAnalysis fallback failed:', e); }
-            } else if (window.AnalyticsKit?.Render) {
-                try {
-                    window.AnalyticsKit.Render.renderKPIs();
-                    window.AnalyticsKit.Render.renderTimeline();
-                    window.AnalyticsKit.Emotions?.renderEmotionalCards?.('#feedbackList');
-                } catch (e) { console.warn('AnalyticsKit fallback render failed:', e); }
             }
         });
     }
@@ -1404,19 +1184,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const chatbox = document.getElementById('chatbox');
 
-    // "종료" 버튼 클릭 시 인터뷰 종료 모달 표시
-    const endBtn = document.getElementById('endInterviewBtn');
-    if (endBtn) {
-        endBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            // 이미 떠 있으면 중복 생성 방지
-            if (!document.getElementById('interviewEndModal')) {
-                showInterviewEndModal();
-            }
-        });
-    }
-
-    // 채팅창 하단 고정: 변화가 있을 때마다 자동 스크롤 (페이지 전체가 아닌 컨테이너 내부에서만 스크롤)
+    // 채팅창 하단 고정: 변화가 있을 때마다 자동 스크롤
     function __scrollChatToBottom() {
         if (!chatbox) return;
         try {
@@ -1425,10 +1193,13 @@ document.addEventListener("DOMContentLoaded", () => {
             // 마지막 메시지를 기준으로 보이도록 보장
             const last = chatbox.lastElementChild;
             if (last && typeof last.scrollIntoView === 'function') {
-                // 가장 가까운 스크롤 가능한 조상(=chatbox) 기준으로만 이동
-                last.scrollIntoView({ block: 'end', inline: 'nearest' });
+                last.scrollIntoView({ block: 'end' });
             }
-            // 페이지 전체 스크롤은 더 이상 수행하지 않음
+            // 컨테이너가 스크롤 불가한 레이아웃인 경우 페이지 스크롤로 폴백
+            const notScrollable = chatbox.scrollHeight <= (chatbox.clientHeight + 2);
+            if (notScrollable) {
+                window.scrollTo({ top: document.documentElement.scrollHeight });
+            }
         } catch (_) {}
     }
     function __scheduleChatAutoScroll() {
@@ -1491,7 +1262,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             isSpeaking = true;
             setMicStatus('말하는 중');
-            try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakStart === 'function') window.AnalyticsKit.Timeline.personaSpeakStart(); } catch(_){}
             // 좌측 아바타 이미지를 talk GIF로 전환
             try { syncChatingLeftImage(persona || selectedPersona, true); } catch(_) {}
 
@@ -1546,7 +1316,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 function cleanup(silent=false) {
                     isSpeaking = false;
                     setMicStatus('듣는 중');
-                    try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(); } catch(_){}
                     // 말하기 종료 시 정적 이미지로 복귀
                     try { syncChatingLeftImage(persona || selectedPersona, false); } catch(_) {}
                     try { URL.revokeObjectURL(audioUrl); } catch (_){ }
@@ -1555,7 +1324,6 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (e) {
                 isSpeaking = false;
                 setMicStatus('듣는 중');
-                try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(); } catch(_){}
                 try { syncChatingLeftImage(persona || selectedPersona, false); } catch(_) {}
                 if (!isListening && !isPending) { try { safeStart(); } catch (_){ } }
             }
@@ -1671,8 +1439,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     let interviewLog = []; // 인터뷰 Q&A 기록용
-    // 외부 가드/호출을 위해 전역에 노출 (초기 자동 렌더 차단용 등)
-    window.interviewLog = interviewLog;
     let sendStartTime = null;
 
     // ===== 통합 레이어 추가: 상수/유틸/임베딩/페이즈/스타일/생성 =====
@@ -1702,9 +1468,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (best.s < 0.24) idx = Math.max(1, lastIdx);
         if (/(다음|이제|넘어가|본론|그럼)/.test(userText) && lastIdx >= 0) idx = Math.min(qs?.length || idx, Math.max(1, lastIdx + 1));
         return { index: idx, score: best.s, reason: `best=${best.s.toFixed(3)}` };
-        // qEmbeddings 값 console로 확인
     }
-    
 
     const GREET_REGEX = /(안녕|안녕하세요|처음|반갑|만나서)/i; const SMALLTALK_REGEX = /(날씨|주말|요즘|점심|커피|출근|취미|취향|근황)/i;
     function detectPhase({ lastIndex, turnCount, userText }) { if (turnCount <= 2 || GREET_REGEX.test(userText)) return 0; if (lastIndex === 0 || SMALLTALK_REGEX.test(userText)) return 1; return 2; }
@@ -1746,18 +1510,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!key) { alert('API 키가 필요합니다.'); return; }
         if (!userText) { alert('메시지를 입력해주세요.'); return; }
         if (!selectedPersona) { alert('퍼소나를 먼저 선택해주세요.'); return; }
-
-        // Analytics hooks: mark user turn start and run counters (async, non-blocking)
-        let userTurn = null;
-        try {
-            if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.markStart === 'function') {
-                userTurn = window.AnalyticsKit.Timeline.markStart('user');
-            }
-            if (window.AnalyticsKit && window.AnalyticsKit.Counters && typeof window.AnalyticsKit.Counters.onUserUtter === 'function') {
-                // fire-and-forget to avoid blocking UI; it will update counters/timeline internally
-                window.AnalyticsKit.Counters.onUserUtter(userText).catch(e => console.warn('Counters.onUserUtter failed', e));
-            }
-        } catch (e) { console.warn('AnalyticsKit pre-send hooks error', e); }
 
         // 보강: 임베딩 보장 (최후 방어)
         if (!_qEmbeddings && Array.isArray(questions) && questions.length) {
@@ -1807,12 +1559,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 userEmotion: null,
                 botAcknowledged: null
             });
-            // Analytics: mark user turn end
-            try {
-                if (userTurn && window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.markEnd === 'function') {
-                    window.AnalyticsKit.Timeline.markEnd(userTurn, userText);
-                }
-            } catch (e) { console.warn('AnalyticsKit markEnd error', e); }
             // WS/Python server: disabled, but legacy send is no-op
             __legacySocketSendSilently__({ gptResponse: answer });
             isPending = false; setMicStatus('듣는 중');
@@ -1822,12 +1568,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } catch (e) {
             appendMessage(`Error: ${e.message}`, 'bot');
-            // ensure analytics marks turn end on error as well
-            try {
-                if (userTurn && window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.markEnd === 'function') {
-                    window.AnalyticsKit.Timeline.markEnd(userTurn, userText);
-                }
-            } catch (err) { console.warn('AnalyticsKit markEnd on error failed', err); }
             isPending = false; setMicStatus('대기');
             // 에러 시에도 자동 재시작 시도
             if (typeof SR !== 'undefined' && SR && !isListening && !isSpeaking) {
@@ -1837,281 +1577,253 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ================== AnalyticsKit 통합 모듈 ==================
-
-    // 0) 공통 네임스페이스
-    window.AnalyticsKit = window.AnalyticsKit || {};
-
-    // 1) 상태/스토어 모듈 (store)
-    (function (NS) {
-      const Store = {
-        sessionStart: performance.now(),
-        turns: [],
-        timeline: [],
-        questionsPrepared: [],
-        qEmbeddings: null,
-        isPersonaSpeaking: false,
-        counters: {
-          backchannelsByUser: 0,
-          adHocQuestions: 0,
-          followupChains: 0,
-          interruptions: 0,
-          disfluencies: 0
-        },
-        followupDepth: 0,
-        lastUserQuestionText: "",
-        apiKey() { return localStorage.getItem("openai_api_key") || ""; }
-      };
-      NS.Store = Store;
-    })(window.AnalyticsKit);
-
-    // 2) 타임라인/훅 모듈 (timeline)
-    (function (NS) {
-      const S = NS.Store;
-      function markStart(speaker) {
-        return { t: Date.now(), speaker, msStart: performance.now(), text: "" };
-      }
-      function markEnd(turn, text) {
-        turn.msEnd = performance.now();
-        turn.text = (text || "").trim();
-        S.turns.push(turn);
-        S.timeline.push({
-          start: turn.msStart - S.sessionStart,
-          end: turn.msEnd - S.sessionStart,
-          speaker: turn.speaker
-        });
-      }
-      function personaSpeakStart() { S.isPersonaSpeaking = true; }
-      function personaSpeakEnd()   { S.isPersonaSpeaking = false; }
-      NS.Timeline = { markStart, markEnd, personaSpeakStart, personaSpeakEnd };
-    })(window.AnalyticsKit);
-
-    // 3) 임베딩/질문·유사도/NLP 유틸 (nlp)
-    (function (NS) {
-      const S = NS.Store;
-      function cosineSim(a, b) {
-        let dot = 0, na = 0, nb = 0;
-        for (let i = 0; i < Math.min(a.length, b.length); i++) {
-          dot += a[i]*b[i]; na += a[i]*a[i]; nb += b[i]*b[i];
+    // 분석 결과 렌더링 함수
+    window.renderAnalysis = function renderAnalysis() {
+        const container = document.getElementById("analyze-container");
+        if (!container) return;
+        if (interviewLog.length === 0) {
+            container.innerHTML = "<p>분석할 인터뷰 기록이 없습니다.</p>";
+            return;
         }
-        return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-9);
-      }
-      async function embedText(text) {
-        const apiKey = S.apiKey();
-        const res = await fetch("https://api.openai.com/v1/embeddings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-          body: JSON.stringify({ model: "text-embedding-3-small", input: text })
+        const avgDurations = interviewLog.map(log => ({
+            index: log.questionIndex,
+            durationSec: ((log.timestampEnd - log.timestampStart) / 1000).toFixed(1),
+        }));
+        const totalTime = avgDurations.reduce((acc, d) => acc + parseFloat(d.durationSec), 0);
+        const avgTime = (totalTime / avgDurations.length).toFixed(1);
+        container.innerHTML = `
+            <h3>인터뷰 분석 요약</h3>
+            <ul style="font-size:14px; line-height:1.6;">
+                <li><strong>총 질문 수:</strong> ${interviewLog.length}개</li>
+                <li><strong>평균 소요 시간:</strong> ${avgTime}초</li>
+            </ul>
+            <h4>질문별 응답 시간</h4>
+            <canvas id="barChart" width="400" height="200"></canvas>
+            <ul>
+                ${avgDurations.map(d => `<li>Q${d.index}: ${d.durationSec}초</li>`).join("")}
+            </ul>
+        `;
+
+        // barChart 캔버스가 DOM에 추가된 후 getContext 호출
+        const ctx = document.getElementById('barChart').getContext('2d');
+        const labels = avgDurations.map(d => `Q${d.index}`);
+        const data = avgDurations.map(d => d.durationSec);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '질문별 응답 시간(초)',
+                    data: data,
+                    backgroundColor: '#4F8CFF'
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error?.message || "Embeddings API error");
-        return data.data[0].embedding;
-      }
-      async function ensurePreparedEmbeddings(questions) {
-        if (window.ensureQuestionEmbeddings) {
-          S.qEmbeddings = await window.ensureQuestionEmbeddings(S.apiKey(), questions);
-          S.questionsPrepared = questions.slice();
-          return S.qEmbeddings;
-        }
-        S.questionsPrepared = questions.slice();
-        S.qEmbeddings = [];
-        for (const q of questions) S.qEmbeddings.push(await embedText(q));
-        return S.qEmbeddings;
-      }
-      async function maxSimToPrepared(questionText) {
-        if (!S.qEmbeddings || !S.qEmbeddings.length) return 0;
-        const qv = await embedText(questionText);
-        let maxSim = -1;
-        for (const pv of S.qEmbeddings) maxSim = Math.max(maxSim, cosineSim(qv, pv));
-        return maxSim;
-      }
-      const reBackchannel = /(네|넵|예|맞[아요]*|음+|으응|아[ ]?네|좋아요|오케이|okay|yeah|uh-?huh|got it|right)/i;
-      function isBackchannel(s) {
-        const t = (s||"").trim();
-        if (!t) return false;
-        if (t.length > 20) return false;
-        if (/\?/.test(t)) return false;
-        return reBackchannel.test(t) || t.length <= 6;
-      }
-      function isQuestion(s) {
-        const t = (s||"").trim();
-        return /\?$/.test(t) || /(왜|어떻게|무엇|어느|가능할까요|가능해|가능합니까|설명|자세히|구체적으로)/.test(t);
-      }
-      const reDisfl = /(음+|어+|에에|그[\,\.\s]|저기[\,\.\s])/gi;
-      function countDisfluencies(s) {
-        const m = (s || "").match(reDisfl);
-        return m ? m.length : 0;
-      }
-      NS.NLP = {
-        cosineSim, embedText, ensurePreparedEmbeddings, maxSimToPrepared,
-        isBackchannel, isQuestion, countDisfluencies
-      };
-    })(window.AnalyticsKit);
+    }
 
-    // 4) 카운터/판정 모듈 (counters)
-    (function (NS) {
-      const S = NS.Store;
-      const { isBackchannel, isQuestion, maxSimToPrepared, cosineSim, countDisfluencies } = NS.NLP;
-      async function onUserUtter(text) {
-        if (isBackchannel(text)) S.counters.backchannelsByUser++;
-        S.counters.disfluencies += countDisfluencies(text);
-        if (S.isPersonaSpeaking) S.counters.interruptions++;
-        if (isQuestion(text)) {
-          let isFollowup = false;
-          if (S.lastUserQuestionText) {
-            const v1 = await NS.NLP.embedText(text);
-            const v2 = await NS.NLP.embedText(S.lastUserQuestionText);
-            if (cosineSim(v1, v2) > 0.85) isFollowup = true;
-          }
-          if (isFollowup) {
-            S.followupDepth++;
-            if (S.followupDepth >= 3) { S.counters.followupChains++; S.followupDepth = 0; }
-          } else {
-            S.followupDepth = 0;
-            const simPrep = await maxSimToPrepared(text);
-            if (simPrep < 0.82) S.counters.adHocQuestions++;
-          }
-          S.lastUserQuestionText = text;
-        }
-      }
-      NS.Counters = { onUserUtter };
-    })(window.AnalyticsKit);
+    // 분석 버튼 이벤트 리스너 예시 (분석 버튼/컨테이너가 없다면 HTML에 추가 필요)
 
-    // 5) KPI/타임라인 렌더 모듈 (render)
-    (function (NS) {
-      const S = NS.Store;
-      function computeKPIs() {
-        const userTurns = S.turns.filter(t => t.speaker === "user");
-        const qCount = userTurns.filter(t => NS.NLP.isQuestion(t.text)).length;
-        const talkCount = userTurns.length;
-        const listenAck = S.counters.backchannelsByUser;
-        const talkPercent = Math.round((talkCount / Math.max(1, talkCount + listenAck)) * 100);
-        const adHocPercent = Math.round((S.counters.adHocQuestions / Math.max(1, qCount)) * 100);
-        const followupCount = S.counters.followupChains;
-        return { talkPercent, adHocPercent, followupCount };
-      }
-      function talkMsg(p) {
-        if (p >= 65) return "발화를 많이 했어요!";
-        if (p >= 40) return "균형 잡힌 대화였어요.";
-        return "경청이 돋보였어요.";
-      }
-      function renderKPIs() {
-        const { talkPercent, adHocPercent, followupCount } = computeKPIs();
-        const elTalk = document.querySelector("#kpiTalkPercent");
-        const elTalkMsg = document.querySelector("#kpiTalkMsg");
-        const elAdhoc = document.querySelector("#kpiAdHocPercent");
-        const elFollow = document.querySelector("#kpiFollowupCount");
-        if (elTalk)    elTalk.textContent = `${talkPercent}%`;
-        if (elTalkMsg) elTalkMsg.textContent = talkMsg(talkPercent);
-        if (elAdhoc)   elAdhoc.textContent = `${adHocPercent}%`;
-        if (elFollow)  elFollow.textContent = `${followupCount}회`;
-      }
-      function renderTimeline() {
-        const wrap = document.getElementById("utteranceTimeline");
-        if (!wrap) return;
-        const total = (S.timeline.at(-1)?.end || 1);
-        wrap.innerHTML = "";
-        S.timeline.forEach(seg => {
-          const w = ((seg.end - seg.start) / total) * 100;
-          const bar = document.createElement("div");
-          bar.className = `utt-bar ${seg.speaker === "user" ? "bar--user" : "bar--persona"}`;
-          bar.style.width = `${Math.max(0.5, w)}%`;
-          wrap.appendChild(bar);
-        });
-      }
-      function setRapportStage(stage) {
-        const steps = document.querySelectorAll(".affinity-step");
-        steps.forEach((s, i) => s.classList.toggle("active", i === stage - 1));
-      }
-      NS.Render = { renderKPIs, renderTimeline, setRapportStage };
-    })(window.AnalyticsKit);
+    // document.getElementById("endInterviewBtn").addEventListener("click", () => {
+    //     document.getElementById("interview-page").style.display = "none";
+    //     document.getElementById("analyze-page").style.display = "block";
 
-    // 6) 정서적 대응 3건 생성 모듈 (emotions)
-    (function (NS) {
-      const S = NS.Store;
-      async function generateEmotionalFeedback() {
-        const apiKey = S.apiKey();
-        const recentText = S.turns.slice(-40).map(t => `[${t.speaker}] ${t.text}`).join("\n").slice(-3000);
-        const payload = {
-          model: "gpt-4o",
-          messages: [{
-            role: "user",
-            content: [{
-              type: "text",
-              text:
-`다음은 인터뷰 대화 로그 일부입니다.
-- 망설임/침묵 대응
-- 긍정 정서(웃음/농담) 반응
-- 부정/거절/불편 신호에 대한 추가 확인/공감
-이 3가지를 간결히 평가해 주세요. 아래 JSON만 출력:
+    //     document.querySelector(".sub-interview").classList.add("sub-inactive");
+    //     document.querySelector(".sub-analysis").classList.remove("sub-inactive");
 
-[
-  {"title":"망설임(침묵, 주저) 상황","note":"..."},
-  {"title":"웃음(긍정적 정서) 상황","note":"..."},
-  {"title":"부정적 반응(불만, 거부, 불편) 상황","note":"..."}
-]
+    //     // 수정사항 ->인터뷰 종료 버튼 누르면 다음 페이지로 이동하게
+    //     if (typeof switchMainPage === "function") {
+    //         switchMainPage(3); // Analysis 탭의 index가 3
+    //     }
 
-대화:
-${recentText}`
-            }]
-          }],
-          temperature: 0.4, max_tokens: 300
-        };
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
+    //     if (typeof window.renderAnalysis === "function") {
+    //         window.renderAnalysis();
+    //     } else {
+    //         console.warn("renderAnalysis 함수가 정의되어 있지 않습니다. script.js를 확인하세요.");
+    //     }
+    // });
+
+    // endInterviewBtn은 파일 하단에서 module_cham.js 패턴으로 직접 처리
+
+    // ===================== 분석 대시보드 렌더링 =====================
+    function deriveInterviewMetrics(log, totalQuestionsHint = null) {
+        if (!Array.isArray(log) || !log.length) return { perQuestion: [], labels: [], durationsSec: [], totalMs: 0, firstTs: null, lastTs: null, answeredSet: new Set(), totalQuestions: totalQuestionsHint || 0 };
+        const map = new Map(); let first = Infinity, last = -Infinity;
+        for (const row of log) { const idx = Number(row.questionIndex ?? 0); const dur = Math.max(0, (row.timestampEnd || 0) - (row.timestampStart || 0)); if (!map.has(idx)) map.set(idx, { index: idx, durations: [] }); map.get(idx).durations.push(dur); if (row.timestampStart) first = Math.min(first, row.timestampStart); if (row.timestampEnd) last = Math.max(last, row.timestampEnd); }
+        const perQuestion = [...map.values()].sort((a, b) => a.index - b.index).map(q => ({ index: q.index, meanMs: q.durations.length ? sum(q.durations) / q.durations.length : 0, count: q.durations.length }));
+        const labels = perQuestion.map(q => q.index === 0 ? 'Ice' : `Q${q.index}`); const durationsSec = perQuestion.map(q => (q.meanMs / 1000).toFixed(1));
+        const totalMs = (isFinite(first) && isFinite(last) && last >= first) ? (last - first) : 0; const answeredSet = new Set(perQuestion.filter(q => q.index > 0).map(q => q.index));
+        return { perQuestion, labels, durationsSec, totalMs, firstTs: isFinite(first) ? first : null, lastTs: isFinite(last) ? last : null, answeredSet, totalQuestions: totalQuestionsHint || Math.max(...[...answeredSet, 0]) };
+    }
+    function buildBarChart(ctx, labels, dataSec, highlightIndex = null) {
+        if (window.barChartInstance) window.barChartInstance.destroy();
+        const bg = dataSec.map((_, i) => (i === highlightIndex ? '#5872FF' : '#DDE2EB'));
+        window.barChartInstance = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label: '응답 시간(초)', data: dataSec, backgroundColor: bg, borderRadius: 12, barPercentage: 0.6 }] }, options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 10, color: '#B0B4BC', font: { size: 13 } }, grid: { color: '#F2F3F5' } }, x: { ticks: { color: '#B0B4BC', font: { size: 13 } }, grid: { display: false } } } } });
+    }
+    function buildDonutChart(ctx, progress01) {
+        if (window.donutChartInstance) window.donutChartInstance.destroy();
+        const pct = Math.max(0, Math.min(1, progress01));
+        window.donutChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: ['진행', '남은'], datasets: [{ data: [Math.round(pct * 100), Math.round((1 - pct) * 100)], backgroundColor: ['#5872FF', '#F2F3F5'], borderWidth: 0 }] }, options: { cutout: '75%', plugins: { legend: { display: false } }, responsive: false } });
+    }
+    function buildKeywordCloud(el, log, maxWords = 20) {
+        el.innerHTML = ''; const text = log.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
+        const tokens = simpleTokenizeKorean(text); const cnt = new Map(); for (const t of tokens) cnt.set(t, (cnt.get(t) || 0) + 1);
+        const words = [...cnt].sort((a, b) => b[1] - a[1]).slice(0, maxWords).map(([text, count]) => ({ text, size: Math.max(10, 10 + count * 2) }));
+        const w = 180, h = 80; const svg = d3.select(el).append('svg').attr('width', w).attr('height', h);
+        d3.layout.cloud().size([w, h]).words(words).padding(1).rotate(() => 0).font('Pretendard Variable').fontSize(d => d.size).on('end', (draw) => { svg.append('g').attr('transform', `translate(${w / 2},${h / 2})`).selectAll('text').data(draw).enter().append('text').style('font-size', d => d.size + 'px').style('fill', (d, i) => i === 0 ? '#5872FF' : '#B0B4BC').style('font-family', 'Pretendard Variable').attr('text-anchor', 'middle').attr('transform', d => `translate(${d.x},${d.y})rotate(${d.rotate})`).text(d => d.text); }).start();
+    }
+    function renderAnalysisDashboard({ targetMinutes = 20, highlightQuestionIndex = null } = {}) {
+        const analyzeRoot = document.getElementById('analyze-page'); if (!analyzeRoot) return;
+        const M = deriveInterviewMetrics(interviewLog || [], (questions?.length || null));
+        const bar = document.getElementById('barChart'); if (bar) { buildBarChart(bar.getContext('2d'), M.labels.length ? M.labels : ['-'], M.durationsSec.length ? M.durationsSec : [0], (highlightQuestionIndex == null ? null : M.labels.findIndex(l => l === `Q${highlightQuestionIndex}`))); }
+        const donut = document.getElementById('donutChart'); const pEl = document.getElementById('donutPercent'); const tEl = document.getElementById('donutTime');
+        const elapsed = M.totalMs, targetMs = Math.max(1, targetMinutes * 60 * 1000), prog = elapsed / targetMs;
+        if (donut) { buildDonutChart(donut.getContext('2d'), prog); }
+        if (pEl) pEl.textContent = `${Math.min(100, Math.round(prog * 100))}%`;
+        if (tEl) tEl.textContent = `${msToMinSec(elapsed)} / ${msToMinSec(targetMs)}`;
+        const cloud = document.getElementById('keywordCloud'); if (cloud) { buildKeywordCloud(cloud, interviewLog || []); }
+        // 속도/언어습관 간단 반영
+        const avgChars = (interviewLog || []).length ? sum((interviewLog || []).map(r => (r.botAnswer || '').length)) / (interviewLog || []).length : 0;
+        const speedPct = Math.max(20, Math.min(120, Math.round(avgChars / 80 * 100)));
+        const speedBar = document.getElementById('speedBar'); const speedLabel = document.querySelector('.speed-label'); if (speedBar) speedBar.style.width = `${speedPct}%`; if (speedLabel) speedLabel.textContent = `${speedPct}% ${speedPct > 90 ? '조금 빨랐어요' : (speedPct < 50 ? '다소 느렸어요' : '적당했어요')}`;
+        const langFeedbackList = document.getElementById('langFeedbackList'); if (langFeedbackList) { const ums = (interviewLog || []).filter(r => (r.userMessage || '').includes('음') || (r.userMessage || '').includes('어')).length; const longQ = (interviewLog || []).filter(r => (r.userMessage || '').length > 60).length; const tips = []; if (ums > 2) tips.push('발화 중 군더더기(음/어) 사용 빈도가 높습니다. 질문 전에 한 박자 쉬고 말해보세요.'); if (longQ > 1) tips.push('질문이 너무 길어졌습니다. 한 문장 안에서 핵심을 먼저 던지고, 후속 질문으로 쪼개세요.'); if (!tips.length) tips.push('전체적으로 안정적인 톤이었습니다. 후속 질문을 통해 더 깊이 파고드는 연습을 해보세요.'); langFeedbackList.innerHTML = tips.map(t => `<li>${t}</li>`).join(''); }
+    }
+
+    // 분석페이지 진입 시 자동 렌더링 가드: 실제 인터뷰 로그가 있을 때만 렌더
+    if (document.getElementById('analyze-page') && Array.isArray(interviewLog) && interviewLog.length > 0) {
         try {
-          return JSON.parse(data.choices?.[0]?.message?.content || "[]");
-        } catch { return []; }
-      }
-                    async function renderEmotionalCards(targetId="#feedbackList") {
-                        const items = await generateEmotionalFeedback();
-                        let box = document.querySelector(targetId);
-                        // 호환성: 기존 마크업이 #emotionList 인 경우 폴백
-                        if (!box) box = document.querySelector('#emotionList');
-                        if (!box) return;
-        box.innerHTML = items.map(it => `
-          <li class="emotion-card">
-            <div class="emotion-title">${it.title}</div>
-            <div class="emotion-note">${it.note}</div>
-          </li>
-        `).join("");
-      }
-      NS.Emotions = { renderEmotionalCards };
-    })(window.AnalyticsKit);
-
-    // 7) 초기화/와이어링 모듈 (init)
-    (function (NS) {
-      function init() {
-        if (window.questions && window.questions.length) {
-          NS.NLP.ensurePreparedEmbeddings(window.questions).catch(console.warn);
+            renderAnalysisDashboard({
+                targetMinutes: interviewDuration || 20,
+                highlightQuestionIndex: lastIndex || null
+            });
+        } catch (e) {
+            console.warn('auto renderAnalysisDashboard failed, fallback to window.renderAnalysis:', e);
+            if (typeof window.renderAnalysis === 'function') {
+                try { window.renderAnalysis(); } catch (err) { console.warn('window.renderAnalysis fallback failed:', err); }
+            }
         }
-                const analysisBtn = document.querySelector(".btn-analysis");
-        if (analysisBtn) {
-          analysisBtn.addEventListener("click", () => {
-            NS.Render.renderKPIs();
-            NS.Render.renderTimeline();
-                        NS.Emotions.renderEmotionalCards("#feedbackList");
-          });
+    }
+
+    document.getElementById("sendButton").addEventListener("click", sendMessage);
+    document.getElementById("userInput").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // Enter 키의 기본 동작 방지
+            sendMessage();
         }
-      }
-      NS.init = init;
-    })(window.AnalyticsKit);
+    });
+    // mic 버튼은 음성 인식 재시작 용도로 사용
+    if (document.getElementById('micButton')) {
+        document.getElementById('micButton').addEventListener('click', () => {
+            if (SR && !isListening) { safeStart(); }
+        });
+    }
 
-    // 페이지 로드 후 한 번 호출
-    window.AnalyticsKit.init();
+    const globalAddBtn = document.getElementById("global-question-add-btn");
+    let currentHoverIndex = null;
 
-    // wire send button and Enter key for user input
-    const sendBtn = document.getElementById('sendButton');
-    const userInputEl = document.getElementById('userInput');
-    if (sendBtn) sendBtn.addEventListener('click', (e) => { e.preventDefault(); sendMessage(null, false); });
-    if (userInputEl) userInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(null, false); } });
 
-    // ================== AnalyticsKit 통합 모듈 끝 ==================
+    document.addEventListener("mouseover", (e) => {
+        const wrapper = e.target.closest(".question-edit-wrapper");
+        if (!wrapper) return;
+
+        const wrappers = [...document.querySelectorAll(".question-edit-wrapper")];
+        const currentIndex = wrappers.indexOf(wrapper);
+
+        // 이전 hover 제거
+        wrappers.forEach(w => w.classList.remove("hover-next"));
+
+        const nextWrapper = wrappers[currentIndex + 1];
+        if (nextWrapper) {
+            nextWrapper.classList.add("hover-next");
+        }
+
+        // 플러스 버튼 이동
+        wrapper.appendChild(globalAddBtn);
+        globalAddBtn.style.opacity = 1;
+        globalAddBtn.style.pointerEvents = "auto";
+    });
+
+    document.addEventListener("mouseout", (e) => {
+        if (!e.relatedTarget?.closest(".question-edit-wrapper")) {
+            globalAddBtn.style.opacity = 0;
+            globalAddBtn.style.pointerEvents = "none";
+
+            // 다음에 있던 클래스 제거
+            document.querySelectorAll(".question-edit-wrapper").forEach(w => {
+                w.classList.remove("hover-next");
+            });
+        }
+    });
+
+    globalAddBtn.addEventListener("click", () => {
+        if (typeof questions === 'undefined') return;
+        // 현재 마우스가 올라간 row 인덱스 새로 계산 (혹시 currentHoverIndex가 null이거나 잘못된 경우)
+        let wrappers = Array.from(document.querySelectorAll('.question-edit-wrapper'));
+        let hoverIdx = wrappers.findIndex(w => w.contains(globalAddBtn));
+        if (hoverIdx === -1) hoverIdx = currentHoverIndex;
+        if (hoverIdx == null || hoverIdx < -1) hoverIdx = wrappers.length - 1;
+
+        // 현재 입력값 저장
+        const inputs = document.querySelectorAll('.question-edit-input');
+        inputs.forEach(input => {
+            const idx = parseInt(input.dataset.index);
+            if (!isNaN(idx) && idx < questions.length) {
+                questions[idx] = input.value;
+            }
+        });
+
+        // 새 질문 추가
+        questions.splice(hoverIdx + 1, 0, "");
+        questionNum = questions.length;
+        const questionNumSpan = document.getElementById('count');
+        if (questionNumSpan) questionNumSpan.textContent = questionNum;
+        renderQuestions();
+        // 새로 추가된 질문 input에 자동 포커스
+        setTimeout(() => {
+            const wrappers = document.querySelectorAll('.question-edit-wrapper');
+            const newWrapper = wrappers[hoverIdx + 1];
+            if (newWrapper) {
+                const input = newWrapper.querySelector('input.question-edit-input');
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }
+        }, 0);
+    });
+
+    // 질문 입력 변경 시 임베딩 갱신 및 리스트 동기화
+    document.addEventListener('change', async (e) => {
+        const t = e.target;
+        if (!t || !t.classList || !t.classList.contains('question-edit-input')) return;
+        const idx = Number(t.dataset.index);
+        if (Number.isNaN(idx) || !Array.isArray(questions)) return;
+        questions[idx] = (t.value || '').trim();
+        try { await ensureQuestionEmbeddings(apiKey, questions); }
+        catch (err) { console.warn('embedding refresh on change failed:', err); }
+        const questionListEl = document.getElementById('questionList');
+        if (questionListEl) {
+            questionListEl.innerHTML = questions.map((q, i) => `<li>${i + 1}. ${q}</li>`).join("");
+        }
+    });
+
+    // #closeApiKeyModal 버튼 누르면 #apiKeyModal의 active class 제거
+    const closeApiKeyModalBtn = document.getElementById("closeApiKeyModal");
+    if (closeApiKeyModalBtn) {
+        const modal = document.getElementById("apiKeyModal");
+        if (modal) {
+            closeApiKeyModalBtn.addEventListener('click', function () {
+                modal.classList.remove('active');
+            });
+        }
+    }
 });
+
 const goPersonaBtn = document.getElementById("goToPersonaBtn");
 if (goPersonaBtn) {
     goPersonaBtn.addEventListener("click", () => {
@@ -2134,4 +1846,24 @@ if (goPersonaBtn) {
     });
 }
 
-// ...기존 코드...
+const endBtn = document.getElementById('endInterviewBtn');
+if (endBtn) {
+    endBtn.addEventListener('click', () => {
+        // 인터뷰 -> 분석 페이지로 즉시 전환 (module_cham.js 패턴)
+        const interviewPage = document.getElementById('interview-page');
+        const analyzePage = document.getElementById('analyze-page');
+        if (interviewPage) interviewPage.style.display = 'none';
+        if (analyzePage) analyzePage.style.display = 'block';
+        const subInterview = document.querySelector('.sub-interview');
+        const subAnalysis = document.querySelector('.sub-analysis');
+        subInterview?.classList.add('sub-inactive');
+        subAnalysis?.classList.remove('sub-inactive');
+
+        // 대시보드 렌더 보장
+        if (typeof renderAnalysisDashboard === 'function') {
+            try { renderAnalysisDashboard({ targetMinutes: interviewDuration || 20, highlightQuestionIndex: lastIndex || null }); } catch (e) { console.warn('renderAnalysisDashboard (endBtn) failed:', e); }
+        } else if (typeof window.renderAnalysis === 'function') {
+            try { window.renderAnalysis(); } catch (e) { console.warn('renderAnalysis fallback (endBtn) failed:', e); }
+        }
+    });
+}

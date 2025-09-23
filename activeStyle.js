@@ -63,6 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function toggleGenerationBoxes(index) {
+        if (!genQuestionBox || !genPersonaBox) return; // Prevent error if elements are missing
+
         if (index === 0) { // sub-preset 활성화 (질문 생성 버튼 보이기)
 
             genQuestionBox.style.opacity = "0";
@@ -121,20 +123,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function initializePage() {
         // 기본적으로 'Preset'이 활성화되어 있다고 가정
-        genQuestionBox.style.display = "flex";  // 질문 생성 버튼 표시
-        genPersonaBox.style.display = "none";  // 퍼소나 생성 버튼 숨김
+        if (genQuestionBox) genQuestionBox.style.display = "flex";  // 질문 생성 버튼 표시
+        if (genPersonaBox) genPersonaBox.style.display = "none";  // 퍼소나 생성 버튼 숨김
         
         // 토글이 checked 상태(자동생성 ON)이면 퍼소나 박스 숨김
-        if (toggleInput.checked) {
+        if (toggleInput && toggleInput.checked && personaBox) {
             personaBox.style.display = "none";
         }
 
-        subItems.forEach((subItem, index) => {
-            if (subItem.classList.contains("sub-activate")) {
-                showSideBoxes(subItem);
-                toggleGenerationBoxes(index);
-            }
-        });
+        if (subItems && subItems.forEach) {
+            subItems.forEach((subItem, index) => {
+                if (subItem.classList.contains("sub-activate")) {
+                    showSideBoxes(subItem);
+                    toggleGenerationBoxes(index);
+                }
+            });
+        }
     }
 
     function switchMainPage(activeIndex) {

@@ -1550,7 +1550,7 @@ function showInterviewEndModal() {
                 responsive: false
             }
         });
-        document.getElementById('donutPercent').textContent = '80%';
+    document.getElementById('donutPercent').textContent = '80%';
 
         // 3. 키워드 클라우드 (d3-cloud)
         const keywords = [
@@ -1594,7 +1594,9 @@ function showInterviewEndModal() {
         // 4. 요약/피드백
         document.getElementById('summaryText').textContent =
             '유지연씨는 환경보호에 관심이 많지만 본인의 편리함을 위해 일회용품을 사용하는 경우가 많습니다.';
-        document.getElementById('feedbackList').innerHTML = `
+        // 호환: #feedbackList 우선, 없으면 #emotionList로 대체
+        const feedbackListEl = document.getElementById('feedbackList') || document.getElementById('emotionList');
+        if (feedbackListEl) feedbackListEl.innerHTML = `
             <li>놓친 질문 포인트<br>인터뷰 목적에 따라 추가했으면 좋았던 질문</li>
             <li>AI 기반 질문 리비전<br>인터뷰 전체를 기반으로 AI가 추천하는 리비전 질문 목록</li>
             <li>퍼소나 친밀도 추이 그래프<br>시간 경과에 따라 친밀도가 어떻게 변했는지 (선 그래프)</li>
@@ -1614,9 +1616,9 @@ function showInterviewEndModal() {
         `;
     }
 
-    // 분석페이지 진입 시 자동 렌더링 (탭 연동 시 아래 코드 위치 조정)
-    if (document.getElementById('analyze-page')) {
-        renderAnalysisDashboard();
+    // 분석페이지 진입 시 자동 렌더링 가드: 실제 인터뷰 로그가 있을 때만 렌더
+    if (document.getElementById('analyze-page') && Array.isArray(interviewLog) && interviewLog.length > 0) {
+        try { renderAnalysisDashboard(); } catch (e) { console.warn('auto renderAnalysisDashboard failed:', e); }
     }
 
     document.getElementById("sendButton").addEventListener("click", sendMessage);
