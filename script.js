@@ -2205,25 +2205,83 @@ ${recentText}`
     if (userInputEl) userInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(null, false); } });
 
     // ================== AnalyticsKit 통합 모듈 끝 ==================
-});
-const goPersonaBtn = document.getElementById("goToPersonaBtn");
-if (goPersonaBtn) {
-    goPersonaBtn.addEventListener("click", () => {
-        // 모든 질문 input이 비어있는지 체크
-        const questionInputs = document.querySelectorAll('.question-edit-input');
-        let hasEmpty = false;
-        questionInputs.forEach(input => {
-            if (!input.value.trim()) {
-                hasEmpty = true;
-            }
-        });
-        if (hasEmpty) {
-            alert('질문지 내용을 입력해주세요.');
-            return;
+
+    // ===== 질문 추가 플러스(+) 버튼 복원 =====
+    const globalAddBtn = document.getElementById("global-question-add-btn");
+    let currentHoverIndex = null;
+
+    document.addEventListener("mouseover", (e) => {
+        const wrapper = e.target.closest(".question-edit-wrapper");
+        if (!wrapper) return;
+
+        const wrappers = [...document.querySelectorAll(".question-edit-wrapper")];
+        const currentIndex = wrappers.indexOf(wrapper);
+
+        // 이전 hover 제거
+        wrappers.forEach(w => w.classList.remove("hover-next"));
+
+        const nextWrapper = wrappers[currentIndex + 1];
+        if (nextWrapper) {
+            nextWrapper.classList.add("hover-next");
         }
-        // 유효성 검사 통과 시 페이지 전환
-        document.getElementById("question-page").style.display = "none";
-        document.getElementById("persona-page").style.display = "block";
-        document.querySelector(".btn-persona").click();  // 탭 전환 효과 동일하게
+
+        // 플러스 버튼 이동
+        wrapper.appendChild(globalAddBtn);
+        globalAddBtn.style.opacity = 1;
+        globalAddBtn.style.pointerEvents = "auto";
+        currentHoverIndex = currentIndex;
     });
-}
+
+    document.addEventListener("mouseout", (e) => {
+        if (!e.relatedTarget?.closest(".question-edit-wrapper")) {
+            globalAddBtn.style.opacity = 0;
+            globalAddBtn.style.pointerEvents = "none";
+
+            // 다음에 있던 클래스 제거
+            document.querySelectorAll(".question-edit-wrapper").forEach(w => {
+                w.classList.remove("hover-next");
+            });
+        }
+    });
+
+    if (globalAddBtn) {
+        globalAddBtn.addEventListener("click", () => {
+            if (typeof questions === 'undefined' || !Array.isArray(questions)) return;
+            // 현재 마우스가 올라간 row 인덱스 새로 계산 (혹시 currentHoverIndex가 null이거나 잘못된 경우)
+            let wrappers = Array.from(document.querySelectorAll('.question-edit-wrapper'));
+            let hoverIdx = wrappers.findIndex(w => w.contains(globalAddBtn));
+            if (hoverIdx === -1) hoverIdx = currentHoverIndex;
+            if (hoverIdx == null || hoverIdx < -1) hoverIdx = wrappers.length - 1;
+
+            // 현재 입력값 저장
+            const inputs = document.querySelectorAll('.question-edit-input');
+            inputs.forEach(input => {
+                const idx = parseInt(input.dataset.index);
+                if (!isNaN(idx) && idx < questions.length) {
+                    questions[idx] = input.value;
+                }
+            });
+
+            // 새 질문 추가
+            questions.splice(hoverIdx + 1, 0, "");
+            questionNum = questions.length;
+            const questionNumSpan = document.getElementById('count');
+            if (questionNumSpan) questionNumSpan.textContent = questionNum;
+            if (typeof window.renderQuestions === 'function') {
+                window.renderQuestions();
+            }
+            // 새로 추가된 질문 input에 자동 포커스
+            setTimeout(() => {
+                const wrappers = document.querySelectorAll('.question-edit-wrapper');
+                const newWrapper = wrappers[hoverIdx + 1];
+                if (newWrapper) {
+                    const input = newWrapper.querySelector('input.question-edit-input');
+                    if (input) {
+                        input.focus();
+                        input.select();
+                    }
+                }
+            }, 0);
+        });
+    }
+});
