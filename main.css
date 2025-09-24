@@ -1427,6 +1427,8 @@ body::-webkit-scrollbar {
   border-radius: 16px;
   padding: 4px 14px;
   font-size: 13px;
+  overflow-x: hidden;
+  overflow-y: auto;
   margin-right: 6px;
 }
 
@@ -1785,8 +1787,6 @@ body::-webkit-scrollbar {
 /* ================= Emotion (sidebar) ================= */
 .emotion-widget .widget-title {
   margin-bottom: 12px;
-  font-weight: 700;
-  color: #363A3D;
 }
 
 .emotion-list {

@@ -1,3 +1,65 @@
+// ---------- Emotion cards: simple local renderer (fallback) ----------
+function renderEmotionalCardsLocal(selector = '#emotionList', logs = []) {
+    const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
+    if (!el) return;
+
+    // Heuristics from logs
+    const textAll = Array.isArray(logs) ? logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ') : '';
+    const hasLaugh = /웃|하하|호호|하핫|헤헤|^\s*\)|\(:/gm.test(textAll);
+    const hasDiscomfort = /(불편|싫|짜증|불만|거부|불쾌|꺼려|곤란|기분 나쁘)/gm.test(textAll);
+
+    // pause detection between turns (>= 15s)
+    let longPauseCount = 0;
+    if (Array.isArray(logs) && logs.length > 1) {
+        for (let i = 1; i < logs.length; i++) {
+            const prevEnd = logs[i-1].timestampEnd || logs[i-1].timestamp || 0;
+            const curStart = logs[i].timestampStart || logs[i].timestamp || 0;
+            const gap = curStart && prevEnd ? (curStart - prevEnd) / 1000 : 0; // seconds
+            if (gap >= 15) longPauseCount++;
+        }
+    }
+
+    const items = [];
+    if (longPauseCount > 0) {
+        items.push({
+            tone: 'neutral',
+            title: '망설임(침묵, 주저) 상황',
+            desc: '긴 침묵 구간이 감지되었어요. 침묵 뒤에는 개방형 질문이나 공감형 코멘트로 부드럽게 이어가 보세요.'
+        });
+    }
+    if (hasLaugh) {
+        items.push({
+            tone: 'positive',
+            title: '웃음(긍정적 정서) 상황',
+            desc: '웃음/긍정 신호가 발견되었어요. 분위기를 확장할 수 있는 팔로업 질문을 시도해 보세요.'
+        });
+    }
+    if (hasDiscomfort) {
+        items.push({
+            tone: 'negative',
+            title: '부정적 반응(불만, 거부, 불편) 상황',
+            desc: '불편/거부감 신호가 감지되었어요. 추가 확인 질문과 공감 표현으로 신뢰를 회복해 보세요.'
+        });
+    }
+
+    if (items.length === 0) {
+        items.push({
+            tone: 'neutral',
+            title: '정서적 신호 없음',
+            desc: '뚜렷한 정서 신호를 찾기 어려웠어요. 더 다양한 유도 질문으로 감정 표현을 이끌어 보세요.'
+        });
+    }
+
+    el.innerHTML = items.map(({ tone, title, desc }) => `
+        <li class="${tone}">
+            <div>
+                <strong>${title}<span class="tone">${tone === 'positive' ? '긍정' : tone === 'negative' ? '부정' : '중립'}</span></strong>
+                <div>${desc}</div>
+            </div>
+        </li>
+    `).join('');
+}
+
 // ---------- 실사용 renderAnalysisDashboard 대체 함수 ----------
 async function renderAnalysisDashboard(opts = {}) {
     const targetMinutes = opts.targetMinutes || (window.interviewDuration || 20);
@@ -144,23 +206,29 @@ async function renderAnalysisDashboard(opts = {}) {
     try {
         const summaryEl = document.getElementById('summaryText');
         if (summaryEl) {
-            if (!hasLogs) summaryEl.textContent = '인터뷰 로그가 없어 요약을 생성할 수 없습니다.';
-            else {
-                // 간단 추출 요약: 상위 키워드 나열 + 간단 통계
-                const topKWarr = (typeof extractTopKeywords === 'function')
-                    ? extractTopKeywords(logs, 5)
-                    : (function fallbackExtractTopKeywords(logs, topN = 5) {
-                        if (!Array.isArray(logs) || !logs.length) return [];
-                        const KO_STOPWORDS_LOCAL = new Set(['그리고','그러나','하지만','그러면','그래서','또','또는','즉','혹은','이것','저것','그것','거기','여기','저기','좀','아주','매우','너무','정말','진짜','거의','약간','등','등등','같은','것','수','때','점','및','는','은','이','가','을','를','에','의','로','으로','와','과','도','만','에게','한','하다','했습니다','했어요','하는','되다','됐다']);
-                        const text = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
-                        const tokens = (text || '').replace(/[^\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
-                        const freq = new Map();
-                        for (const t of tokens) freq.set(t, (freq.get(t) || 0) + 1);
-                        const arr = [...freq.entries()].sort((a,b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
-                        return arr;
-                    })(logs, 5);
-                const topKW = topKWarr.map(k => k.text).join(', ');
-                summaryEl.textContent = `주요 키워드: ${topKW}. 총 질의응답 수: ${logs.length}. 평균 응답시간: ${Math.round((avgSecs.reduce((a,b)=>a+b,0)/(qCount||1))*10)/10}초(질문당).`;
+            summaryEl.textContent = '생성중...';
+            if (!hasLogs) {
+                summaryEl.textContent = '인터뷰 로그가 없어 요약을 생성할 수 없습니다.';
+            } else {
+                try {
+                    // 간단 추출 요약: 상위 키워드 나열 + 간단 통계
+                    const topKWarr = (typeof extractTopKeywords === 'function')
+                        ? extractTopKeywords(logs, 5)
+                        : (function fallbackExtractTopKeywords(logs, topN = 5) {
+                            if (!Array.isArray(logs) || !logs.length) return [];
+                            const KO_STOPWORDS_LOCAL = new Set(['그리고','그러나','하지만','그러면','그래서','또','또는','즉','혹은','이것','저것','그것','거기','여기','저기','좀','아주','매우','너무','정말','진짜','거의','약간','등','등등','같은','것','수','때','점','및','는','은','이','가','을','를','에','의','로','으로','와','과','도','만','에게','한','하다','했습니다','했어요','하는','되다','됐다']);
+                            const text = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
+                            const tokens = (text || '').replace(/[^\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
+                            const freq = new Map();
+                            for (const t of tokens) freq.set(t, (freq.get(t) || 0) + 1);
+                            const arr = [...freq.entries()].sort((a,b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
+                            return arr;
+                        })(logs, 5);
+                    const topKW = topKWarr.map(k => k.text).join(', ');
+                    summaryEl.textContent = `주요 키워드: ${topKW}. 총 질의응답 수: ${logs.length}. 평균 응답시간: ${Math.round((avgSecs.reduce((a,b)=>a+b,0)/(qCount||1))*10)/10}초(질문당).`;
+                } catch (err) {
+                    summaryEl.textContent = '인터뷰 요약에 실패했습니다';
+                }
             }
         }
 
@@ -169,9 +237,8 @@ async function renderAnalysisDashboard(opts = {}) {
             // 마크업은 #emotionList (index.html) 있으므로 명시
             await window.AnalyticsKit.Emotions.renderEmotionalCards('#emotionList');
         } else {
-            // 폴백: 간단 가이드 메시지 삽입
-            const em = document.getElementById('emotionList');
-            if (em) em.innerHTML = hasLogs ? `<li>정서적 대응 분석을 위해 모델 호출이 필요합니다.</li>` : `<li>인터뷰 로그가 없습니다.</li>`;
+            // 폴백: 로컬 휴리스틱 렌더러
+            renderEmotionalCardsLocal('#emotionList', logs);
         }
     } catch (e) {
         console.warn('summary/emotion render failed', e);
