@@ -12,7 +12,7 @@ function renderEmotionalCardsLocal(selector = '#emotionList', logs = []) {
     let longPauseCount = 0;
     if (Array.isArray(logs) && logs.length > 1) {
         for (let i = 1; i < logs.length; i++) {
-            const prevEnd = logs[i-1].timestampEnd || logs[i-1].timestamp || 0;
+            const prevEnd = logs[i - 1].timestampEnd || logs[i - 1].timestamp || 0;
             const curStart = logs[i].timestampStart || logs[i].timestamp || 0;
             const gap = curStart && prevEnd ? (curStart - prevEnd) / 1000 : 0; // seconds
             if (gap >= 15) longPauseCount++;
@@ -90,7 +90,7 @@ async function renderAnalysisDashboard(opts = {}) {
         const barCtx = document.getElementById('barChart') && document.getElementById('barChart').getContext('2d');
         if (barCtx) {
             if (window.barChartInstance) window.barChartInstance.destroy();
-            const labels = Array.from({length: qCount}, (_, i) => `Q${i+1}`);
+            const labels = Array.from({ length: qCount }, (_, i) => `Q${i + 1}`);
             window.barChartInstance = new Chart(barCtx, {
                 type: 'bar',
                 data: {
@@ -98,7 +98,7 @@ async function renderAnalysisDashboard(opts = {}) {
                     datasets: [{
                         label: '응답 시간(초)',
                         data: avgSecs,
-                        backgroundColor: avgSecs.map((v,i) => i === (highlightQuestionIndex ? highlightQuestionIndex-1 : 1) ? '#5872FF' : '#DDE2EB'),
+                        backgroundColor: avgSecs.map((v, i) => i === (highlightQuestionIndex ? highlightQuestionIndex - 1 : 1) ? '#5872FF' : '#DDE2EB'),
                         borderRadius: 12,
                         barPercentage: 0.6
                     }]
@@ -142,7 +142,7 @@ async function renderAnalysisDashboard(opts = {}) {
             if (window.donutChartInstance) window.donutChartInstance.destroy();
             window.donutChartInstance = new Chart(donutCtx, {
                 type: 'doughnut',
-                data: { labels: ['진행','남음'], datasets: [{ data: [percent, 100 - percent], backgroundColor: ['#5872FF','#F2F3F5'], borderWidth: 0 }] },
+                data: { labels: ['진행', '남음'], datasets: [{ data: [percent, 100 - percent], backgroundColor: ['#5872FF', '#F2F3F5'], borderWidth: 0 }] },
                 options: { cutout: '75%', plugins: { legend: { display: false } }, responsive: false }
             });
         }
@@ -162,13 +162,13 @@ async function renderAnalysisDashboard(opts = {}) {
             : (function fallbackExtractTopKeywords(logs, topN = 12) {
                 // 간단한 한국어 토크나이저 + 빈도 기반 상위 N개 추출
                 if (!Array.isArray(logs) || !logs.length) return [];
-                const KO_STOPWORDS_LOCAL = new Set(['그리고','그러나','하지만','그러면','그래서','또','또는','즉','혹은','이것','저것','그것','거기','여기','저기','좀','아주','매우','너무','정말','진짜','거의','약간','등','등등','같은','것','수','때','점','및','는','은','이','가','을','를','에','의','로','으로','와','과','도','만','에게','한','하다','했습니다','했어요','하는','되다','됐다']);
+                const KO_STOPWORDS_LOCAL = new Set(['그리고', '그러나', '하지만', '그러면', '그래서', '또', '또는', '즉', '혹은', '이것', '저것', '그것', '거기', '여기', '저기', '좀', '아주', '매우', '너무', '정말', '진짜', '거의', '약간', '등', '등등', '같은', '것', '수', '때', '점', '및', '는', '은', '이', '가', '을', '를', '에', '의', '로', '으로', '와', '과', '도', '만', '에게', '한', '하다', '했습니다', '했어요', '하는', '되다', '됐다']);
                 const text = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
                 // 한글/영문/숫자 외 문자 제거, 공백으로 분리
                 const tokens = (text || '').replace(/[^\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
                 const freq = new Map();
                 for (const t of tokens) freq.set(t, (freq.get(t) || 0) + 1);
-                const arr = [...freq.entries()].sort((a,b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
+                const arr = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
                 return arr;
             })(logs, 12);
 
@@ -185,14 +185,14 @@ async function renderAnalysisDashboard(opts = {}) {
                 .font('Pretendard Variable')
                 .fontSize(d => d.size)
                 .on('end', function (words) {
-                    svg.append('g').attr('transform', `translate(${w/2},${h/2})`)
+                    svg.append('g').attr('transform', `translate(${w / 2},${h / 2})`)
                         .selectAll('text')
                         .data(words)
                         .enter().append('text')
                         .style('font-size', d => d.size + 'px')
-                        .style('fill', (d,i) => i===0 ? '#5872FF' : '#B0B4BC')
-                        .style('font-family','Pretendard Variable')
-                        .attr('text-anchor','middle')
+                        .style('fill', (d, i) => i === 0 ? '#5872FF' : '#B0B4BC')
+                        .style('font-family', 'Pretendard Variable')
+                        .attr('text-anchor', 'middle')
                         .attr('transform', d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
                         .text(d => d.text);
                 })
@@ -216,16 +216,16 @@ async function renderAnalysisDashboard(opts = {}) {
                         ? extractTopKeywords(logs, 5)
                         : (function fallbackExtractTopKeywords(logs, topN = 5) {
                             if (!Array.isArray(logs) || !logs.length) return [];
-                            const KO_STOPWORDS_LOCAL = new Set(['그리고','그러나','하지만','그러면','그래서','또','또는','즉','혹은','이것','저것','그것','거기','여기','저기','좀','아주','매우','너무','정말','진짜','거의','약간','등','등등','같은','것','수','때','점','및','는','은','이','가','을','를','에','의','로','으로','와','과','도','만','에게','한','하다','했습니다','했어요','하는','되다','됐다']);
+                            const KO_STOPWORDS_LOCAL = new Set(['그리고', '그러나', '하지만', '그러면', '그래서', '또', '또는', '즉', '혹은', '이것', '저것', '그것', '거기', '여기', '저기', '좀', '아주', '매우', '너무', '정말', '진짜', '거의', '약간', '등', '등등', '같은', '것', '수', '때', '점', '및', '는', '은', '이', '가', '을', '를', '에', '의', '로', '으로', '와', '과', '도', '만', '에게', '한', '하다', '했습니다', '했어요', '하는', '되다', '됐다']);
                             const text = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
                             const tokens = (text || '').replace(/[^\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
                             const freq = new Map();
                             for (const t of tokens) freq.set(t, (freq.get(t) || 0) + 1);
-                            const arr = [...freq.entries()].sort((a,b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
+                            const arr = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
                             return arr;
                         })(logs, 5);
                     const topKW = topKWarr.map(k => k.text).join(', ');
-                    summaryEl.textContent = `주요 키워드: ${topKW}. 총 질의응답 수: ${logs.length}. 평균 응답시간: ${Math.round((avgSecs.reduce((a,b)=>a+b,0)/(qCount||1))*10)/10}초(질문당).`;
+                    summaryEl.textContent = `주요 키워드: ${topKW}. 총 질의응답 수: ${logs.length}. 평균 응답시간: ${Math.round((avgSecs.reduce((a, b) => a + b, 0) / (qCount || 1)) * 10) / 10}초(질문당).`;
                 } catch (err) {
                     summaryEl.textContent = '인터뷰 요약에 실패했습니다';
                 }
@@ -268,8 +268,8 @@ async function renderAnalysisDashboard(opts = {}) {
         const userMsgs = logs.map(l => (l.userMessage || '')).filter(Boolean);
         let speedPct = 0;
         if (userMsgs.length && hasLogs) {
-            const totalChars = userMsgs.reduce((a,b) => a + b.length, 0);
-            const totalMinutes = Math.max(0.1, (logs[logs.length-1].timestampEnd - logs[0].timestampStart)/60000);
+            const totalChars = userMsgs.reduce((a, b) => a + b.length, 0);
+            const totalMinutes = Math.max(0.1, (logs[logs.length - 1].timestampEnd - logs[0].timestampStart) / 60000);
             const charsPerMin = totalChars / totalMinutes;
             // 기준: 200cpm -> 50% (arbitrary mapping), clamp
             speedPct = Math.round(Math.min(100, (charsPerMin / 300) * 100));
@@ -971,9 +971,9 @@ document.addEventListener("DOMContentLoaded", () => {
         el.dataset.base = base;
         el.dataset.talk = talk;
         // 미리 로드 시도
-        try { preloadImage(talk); } catch(_) {}
+        try { preloadImage(talk); } catch (_) { }
         // speaking 상태에 따라 경로 적용, 실패시 base로 폴백
-        el.onerror = function() { if (speaking) el.src = base; };
+        el.onerror = function () { if (speaking) el.src = base; };
         el.src = speaking ? talk : base;
     }
 
@@ -1075,7 +1075,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 interviewDuration = parseInt(this.getAttribute('data-time'));
                 console.log('선택된 시간:', interviewDuration); // 디버깅용
                 // 전역 접근 가능하도록 노출
-                try { window.interviewDuration = interviewDuration; } catch (_) {}
+                try { window.interviewDuration = interviewDuration; } catch (_) { }
             });
         });
 
@@ -1216,8 +1216,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 인터뷰 시작 시 chatbox에 퍼소나 정보 출력 (div 구조)
         renderChatboxPersona(selectedPersonaGlobal, interviewDuration);
-    // 선택된 퍼소나의 talk GIF를 한 번 더 예열
-    if (selectedPersonaGlobal?.talkImage) { try { preloadImage(selectedPersonaGlobal.talkImage); } catch(_) {} }
+        // 선택된 퍼소나의 talk GIF를 한 번 더 예열
+        if (selectedPersonaGlobal?.talkImage) { try { preloadImage(selectedPersonaGlobal.talkImage); } catch (_) { } }
 
         // 사이드바 강제 전환 함수
         function forceSidebarSwitch() {
@@ -1523,7 +1523,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 last.scrollIntoView({ block: 'end', inline: 'nearest' });
             }
             // 페이지 전체 스크롤은 더 이상 수행하지 않음
-        } catch (_) {}
+        } catch (_) { }
     }
     function __scheduleChatAutoScroll() {
         if (!chatbox) return;
@@ -1545,115 +1545,115 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const audioElement = new Audio(); // 오디오 재생을 위한 HTMLAudioElement
 
-        // ====== TTS (OpenAI /v1/audio/speech) ======
+    // ====== TTS (OpenAI /v1/audio/speech) ======
     let ttsUnlocked = false;
 
-        // 사용자 제스처 한 번으로 오디오 정책 해제
-        function unlockAudioOnce() {
-            if (ttsUnlocked) return;
-            try {
-                const AC = window.AudioContext || window.webkitAudioContext;
-                if (!AC) { ttsUnlocked = true; return; }
-                const ctx = new AC();
-                const buf = ctx.createBuffer(1, 1, 22050);
-                const src = ctx.createBufferSource();
-                src.buffer = buf;
-                src.connect(ctx.destination);
-                if (ctx.state === 'suspended') ctx.resume();
-                src.start(0);
-                ttsUnlocked = true;
-            } catch (_) {
-                ttsUnlocked = true;
-            }
+    // 사용자 제스처 한 번으로 오디오 정책 해제
+    function unlockAudioOnce() {
+        if (ttsUnlocked) return;
+        try {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) { ttsUnlocked = true; return; }
+            const ctx = new AC();
+            const buf = ctx.createBuffer(1, 1, 22050);
+            const src = ctx.createBufferSource();
+            src.buffer = buf;
+            src.connect(ctx.destination);
+            if (ctx.state === 'suspended') ctx.resume();
+            src.start(0);
+            ttsUnlocked = true;
+        } catch (_) {
+            ttsUnlocked = true;
+        }
+    }
+
+    // 주요 버튼에 1회 바인딩(이미 존재하는 요소 id 기준)
+    ;['micButton', 'sendButton', 'generate-btn', 'persona-generate-btn', 'goToInterviewBtn']
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('click', unlockAudioOnce, { once: true });
+        });
+
+    // 퍼소나 기반 음성 합성
+    async function speakTextPersona(text, persona) {
+        if (!text) return;
+        const key = (typeof apiKey === 'string' && apiKey) ? apiKey : (apiKeyInput?.value?.trim() || '');
+        if (!key) return;
+
+        // 인식 중단(자기 음성 캡처 방지)
+        try { if (SR && isListening) SR.stop(); } catch (_) { }
+
+        isSpeaking = true;
+        setMicStatus('말하는 중');
+        try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakStart === 'function') window.AnalyticsKit.Timeline.personaSpeakStart(); } catch (_) { }
+        // 좌측 아바타 이미지를 talk GIF로 전환
+        try { syncChatingLeftImage(persona || selectedPersona, true); } catch (_) { }
+
+        // 성별에 따른 예시 보이스 매핑(필요시 수정)
+        let voice = 'coral';  // 기본
+        const g = String(persona?.gender || '').trim();
+        if (/(여자|여성|female|woman)/i.test(g)) voice = 'alloy';
+        if (/(남자|남성|male|man)/i.test(g)) voice = 'echo';
+
+        // 스타일 지시문
+        let instructions = '자연스럽고 친근한 톤으로 말해주세요.';
+        if (persona?.speech) instructions += ` ${persona.speech}`;
+        const ageNum = Number(persona?.age);
+        if (!Number.isNaN(ageNum)) {
+            if (ageNum < 30) instructions += ' 젊은 목소리.';
+            else if (ageNum < 50) instructions += ' 중년 목소리.';
+            else instructions += ' 노년 목소리.';
         }
 
-        // 주요 버튼에 1회 바인딩(이미 존재하는 요소 id 기준)
-        ;['micButton','sendButton','generate-btn','persona-generate-btn','goToInterviewBtn']
-            .forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.addEventListener('click', unlockAudioOnce, { once: true });
+        const body = {
+            model: 'gpt-4o-mini-tts',
+            input: text,
+            voice,
+            instructions,
+            response_format: 'wav',
+            speed: 1.0
+        };
+
+        try {
+            const res = await fetch('https://api.openai.com/v1/audio/speech', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+                body: JSON.stringify(body)
             });
+            if (!res.ok) throw new Error(`TTS API 오류: ${res.status}`);
 
-        // 퍼소나 기반 음성 합성
-        async function speakTextPersona(text, persona) {
-            if (!text) return;
-            const key = (typeof apiKey === 'string' && apiKey) ? apiKey : (apiKeyInput?.value?.trim() || '');
-            if (!key) return;
+            const audioBlob = await res.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
 
-            // 인식 중단(자기 음성 캡처 방지)
-            try { if (SR && isListening) SR.stop(); } catch (_) {}
+            // 재생 전에 한 번 unlock
+            unlockAudioOnce();
 
-            isSpeaking = true;
-            setMicStatus('말하는 중');
-            try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakStart === 'function') window.AnalyticsKit.Timeline.personaSpeakStart(); } catch(_){}
-            // 좌측 아바타 이미지를 talk GIF로 전환
-            try { syncChatingLeftImage(persona || selectedPersona, true); } catch(_) {}
+            audioElement.preload = 'auto';
+            audioElement.src = audioUrl;
 
-            // 성별에 따른 예시 보이스 매핑(필요시 수정)
-            let voice = 'coral';  // 기본
-            const g = String(persona?.gender || '').trim();
-            if (/(여자|여성|female|woman)/i.test(g)) voice = 'alloy';
-            if (/(남자|남성|male|man)/i.test(g))    voice = 'echo';
+            audioElement.onended = () => { cleanup(); };
+            audioElement.onerror = () => { cleanup(); };
 
-            // 스타일 지시문
-            let instructions = '자연스럽고 친근한 톤으로 말해주세요.';
-            if (persona?.speech) instructions += ` ${persona.speech}`;
-            const ageNum = Number(persona?.age);
-            if (!Number.isNaN(ageNum)) {
-                if (ageNum < 30) instructions += ' 젊은 목소리.';
-                else if (ageNum < 50) instructions += ' 중년 목소리.';
-                else instructions += ' 노년 목소리.';
-            }
+            try { await audioElement.play(); }
+            catch (e) { cleanup(/*silent=*/true); }
 
-            const body = {
-                model: 'gpt-4o-mini-tts',
-                input: text,
-                voice,
-                instructions,
-                response_format: 'wav',
-                speed: 1.0
-            };
-
-            try {
-                const res = await fetch('https://api.openai.com/v1/audio/speech', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-                    body: JSON.stringify(body)
-                });
-                if (!res.ok) throw new Error(`TTS API 오류: ${res.status}`);
-
-                const audioBlob = await res.blob();
-                const audioUrl = URL.createObjectURL(audioBlob);
-
-                // 재생 전에 한 번 unlock
-                unlockAudioOnce();
-
-                audioElement.preload = 'auto';
-                audioElement.src = audioUrl;
-
-                audioElement.onended = () => { cleanup(); };
-                audioElement.onerror = () => { cleanup(); };
-
-                try { await audioElement.play(); }
-                catch (e) { cleanup(/*silent=*/true); }
-
-                function cleanup(silent=false) {
-                    isSpeaking = false;
-                    setMicStatus('듣는 중');
-                    try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(); } catch(_){}
-                    // 말하기 종료 시 정적 이미지로 복귀
-                    try { syncChatingLeftImage(persona || selectedPersona, false); } catch(_) {}
-                    try { URL.revokeObjectURL(audioUrl); } catch (_){ }
-                    if (!silent && !isListening && !isPending) { try { safeStart(); } catch (_){ } }
-                }
-            } catch (e) {
+            function cleanup(silent = false) {
                 isSpeaking = false;
                 setMicStatus('듣는 중');
-                try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(); } catch(_){}
-                try { syncChatingLeftImage(persona || selectedPersona, false); } catch(_) {}
-                if (!isListening && !isPending) { try { safeStart(); } catch (_){ } }
+                try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(); } catch (_) { }
+                // 말하기 종료 시 정적 이미지로 복귀
+                try { syncChatingLeftImage(persona || selectedPersona, false); } catch (_) { }
+                try { URL.revokeObjectURL(audioUrl); } catch (_) { }
+                if (!silent && !isListening && !isPending) { try { safeStart(); } catch (_) { } }
             }
+        } catch (e) {
+            isSpeaking = false;
+            setMicStatus('듣는 중');
+            try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(); } catch (_) { }
+            try { syncChatingLeftImage(persona || selectedPersona, false); } catch (_) { }
+            if (!isListening && !isPending) { try { safeStart(); } catch (_) { } }
         }
+    }
 
     // function extractCurlyBracesContent(text) {
     //     const match = text.match(/\{.*?\}/);
@@ -1760,8 +1760,8 @@ document.addEventListener("DOMContentLoaded", () => {
         divider.style.color = "#999";
         divider.style.fontSize = "14px";
         divider.style.margin = "16px 0";
-    chatbox.appendChild(divider);
-    __scheduleChatAutoScroll();
+        chatbox.appendChild(divider);
+        __scheduleChatAutoScroll();
     }
 
     let interviewLog = []; // 인터뷰 Q&A 기록용
@@ -1773,9 +1773,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const ACK_REGEX = /^(네|넵|예|응|어|음|아|맞[아요]|그렇[죠|습니다]?|좋[아요]|오케이|ok)\s*$/i;
     const KO_STOPWORDS = new Set(['그리고', '그러나', '하지만', '그러면', '그래서', '또', '또는', '즉', '혹은', '이것', '저것', '그것', '거기', '여기', '저기', '좀', '아주', '매우', '너무', '정말', '진짜', '거의', '약간', '등', '등등', '같은', '것', '수', '때', '점', '및', '는', '은', '이', '가', '을', '를', '에', '의', '로', '으로', '와', '과', '도', '만', '에게', '한', '하다', '했습니다', '했어요', '하는', '되다', '됐다']);
     const sum = arr => arr.reduce((a, b) => a + b, 0);
-    const msToMinSec = (ms) => { 
-        const s = Math.max(0, Math.floor(ms / 1000)), m = Math.floor(s / 60); 
-        return `${m}m ${String(s % 60).padStart(2, '0')}s`; 
+    const msToMinSec = (ms) => {
+        const s = Math.max(0, Math.floor(ms / 1000)), m = Math.floor(s / 60);
+        return `${m}m ${String(s % 60).padStart(2, '0')}s`;
     };
     const byCountDesc = (a, b) => b.count - a.count;
     function simpleTokenizeKorean(text) { return (text || "").replace(/[^\p{Script=Hangul}\w\s]/gu, " ").toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS.has(t)); }
@@ -1798,7 +1798,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return { index: idx, score: best.s, reason: `best=${best.s.toFixed(3)}` };
         // qEmbeddings 값 console로 확인
     }
-    
+
 
     const GREET_REGEX = /(안녕|안녕하세요|처음|반갑|만나서)/i; const SMALLTALK_REGEX = /(날씨|주말|요즘|점심|커피|출근|취미|취향|근황)/i;
     function detectPhase({ lastIndex, turnCount, userText }) { if (turnCount <= 2 || GREET_REGEX.test(userText)) return 0; if (lastIndex === 0 || SMALLTALK_REGEX.test(userText)) return 1; return 2; }
@@ -1831,7 +1831,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let isListening = false, isSpeaking = false, isPending = false;
     function setMicStatus(t) { const s = document.getElementById('micStatus'); const b = document.getElementById('micButton'); if (s) s.textContent = t; if (b) { if (t === '듣는 중') b.classList.add('active'); else b.classList.remove('active'); } }
     function safeStart() { try { SR && SR.start(); } catch (e) { } }
-    if (SR) { SR.lang = 'ko-KR'; SR.interimResults = false; SR.continuous = false; SR.onstart = () => { try { audioElement.pause(); } catch (_) {} isListening = true; setMicStatus('듣는 중'); try { syncChatingLeftImage(selectedPersona, false); } catch(_) {} }; SR.onend = () => { isListening = false; setMicStatus('대기'); if (!isSpeaking && !isPending) setTimeout(safeStart, 250); }; SR.onerror = (e) => { isListening = false; setMicStatus('에러'); const nonFatal = ['no-speech', 'audio-capture', 'not-allowed', 'aborted']; if (!isSpeaking && !isPending && !nonFatal.includes(e.error)) setTimeout(safeStart, 600); }; SR.onresult = (ev) => { let txt = ''; for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) txt += r[0].transcript; } if (txt) sendMessage(txt, true); }; setTimeout(safeStart, 500); }
+    if (SR) { SR.lang = 'ko-KR'; SR.interimResults = false; SR.continuous = false; SR.onstart = () => { try { audioElement.pause(); } catch (_) { } isListening = true; setMicStatus('듣는 중'); try { syncChatingLeftImage(selectedPersona, false); } catch (_) { } }; SR.onend = () => { isListening = false; setMicStatus('대기'); if (!isSpeaking && !isPending) setTimeout(safeStart, 250); }; SR.onerror = (e) => { isListening = false; setMicStatus('에러'); const nonFatal = ['no-speech', 'audio-capture', 'not-allowed', 'aborted']; if (!isSpeaking && !isPending && !nonFatal.includes(e.error)) setTimeout(safeStart, 600); }; SR.onresult = (ev) => { let txt = ''; for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) txt += r[0].transcript; } if (txt) sendMessage(txt, true); }; setTimeout(safeStart, 500); }
     const micBtnEl = document.getElementById('micButton'); if (micBtnEl) { micBtnEl.addEventListener('click', () => { if (!isListening) safeStart(); }); }
 
     async function sendMessage(voiceInput, isVoice) {
@@ -1883,7 +1883,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             appendMessage(answer, 'bot');
             // OpenAI TTS로 바로 읽어주기
-            try { await speakTextPersona(answer, selectedPersona); } catch (_) {}
+            try { await speakTextPersona(answer, selectedPersona); } catch (_) { }
 
             const t1 = Date.now();
             interviewLog.push({
@@ -1938,261 +1938,337 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 1) 상태/스토어 모듈 (store)
     (function (NS) {
-      const Store = {
-        sessionStart: performance.now(),
-        turns: [],
-        timeline: [],
-        questionsPrepared: [],
-        qEmbeddings: null,
-        isPersonaSpeaking: false,
-        counters: {
-          backchannelsByUser: 0,
-          adHocQuestions: 0,
-          followupChains: 0,
-          interruptions: 0,
-          disfluencies: 0
-        },
-        followupDepth: 0,
-        lastUserQuestionText: "",
-        apiKey() { return localStorage.getItem("openai_api_key") || ""; }
-      };
-      NS.Store = Store;
+        const Store = {
+            sessionStart: performance.now(),
+            turns: [],
+            timeline: [],
+            questionsPrepared: [],
+            qEmbeddings: null,
+            isPersonaSpeaking: false,
+            counters: {
+                backchannelsByUser: 0,
+                adHocQuestions: 0,
+                followupChains: 0,
+                interruptions: 0,
+                disfluencies: 0
+            },
+            followupDepth: 0,
+            lastUserQuestionText: "",
+            apiKey() { return localStorage.getItem("openai_api_key") || ""; }
+        };
+        NS.Store = Store;
     })(window.AnalyticsKit);
 
     // 2) 타임라인/훅 모듈 (timeline)
     (function (NS) {
-      const S = NS.Store;
-      function markStart(speaker) {
-        return { t: Date.now(), speaker, msStart: performance.now(), text: "" };
-      }
-      function markEnd(turn, text) {
-        turn.msEnd = performance.now();
-        turn.text = (text || "").trim();
-        S.turns.push(turn);
-        S.timeline.push({
-          start: turn.msStart - S.sessionStart,
-          end: turn.msEnd - S.sessionStart,
-          speaker: turn.speaker
-        });
-      }
-      function personaSpeakStart() { S.isPersonaSpeaking = true; }
-      function personaSpeakEnd()   { S.isPersonaSpeaking = false; }
-      NS.Timeline = { markStart, markEnd, personaSpeakStart, personaSpeakEnd };
+        const S = NS.Store;
+        function markStart(speaker) {
+            return { t: Date.now(), speaker, msStart: performance.now(), text: "" };
+        }
+        function markEnd(turn, text) {
+            turn.msEnd = performance.now();
+            turn.text = (text || "").trim();
+            S.turns.push(turn);
+            S.timeline.push({
+                start: turn.msStart - S.sessionStart,
+                end: turn.msEnd - S.sessionStart,
+                speaker: turn.speaker
+            });
+        }
+        function personaSpeakStart() { S.isPersonaSpeaking = true; }
+        function personaSpeakEnd() { S.isPersonaSpeaking = false; }
+        NS.Timeline = { markStart, markEnd, personaSpeakStart, personaSpeakEnd };
     })(window.AnalyticsKit);
 
     // 3) 임베딩/질문·유사도/NLP 유틸 (nlp)
     (function (NS) {
-      const S = NS.Store;
-      function cosineSim(a, b) {
-        let dot = 0, na = 0, nb = 0;
-        for (let i = 0; i < Math.min(a.length, b.length); i++) {
-          dot += a[i]*b[i]; na += a[i]*a[i]; nb += b[i]*b[i];
+        const S = NS.Store;
+        function cosineSim(a, b) {
+            let dot = 0, na = 0, nb = 0;
+            for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i];
+            }
+            return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-9);
         }
-        return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-9);
-      }
-      async function embedText(text) {
-        const apiKey = S.apiKey();
-        const res = await fetch("https://api.openai.com/v1/embeddings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-          body: JSON.stringify({ model: "text-embedding-3-small", input: text })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error?.message || "Embeddings API error");
-        return data.data[0].embedding;
-      }
-      async function ensurePreparedEmbeddings(questions) {
-        if (window.ensureQuestionEmbeddings) {
-          S.qEmbeddings = await window.ensureQuestionEmbeddings(S.apiKey(), questions);
-          S.questionsPrepared = questions.slice();
-          return S.qEmbeddings;
+        async function embedText(text) {
+            const apiKey = S.apiKey();
+            const res = await fetch("https://api.openai.com/v1/embeddings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+                body: JSON.stringify({ model: "text-embedding-3-small", input: text })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error?.message || "Embeddings API error");
+            return data.data[0].embedding;
         }
-        S.questionsPrepared = questions.slice();
-        S.qEmbeddings = [];
-        for (const q of questions) S.qEmbeddings.push(await embedText(q));
-        return S.qEmbeddings;
-      }
-      async function maxSimToPrepared(questionText) {
-        if (!S.qEmbeddings || !S.qEmbeddings.length) return 0;
-        const qv = await embedText(questionText);
-        let maxSim = -1;
-        for (const pv of S.qEmbeddings) maxSim = Math.max(maxSim, cosineSim(qv, pv));
-        return maxSim;
-      }
-      const reBackchannel = /(네|넵|예|맞[아요]*|음+|으응|아[ ]?네|좋아요|오케이|okay|yeah|uh-?huh|got it|right)/i;
-      function isBackchannel(s) {
-        const t = (s||"").trim();
-        if (!t) return false;
-        if (t.length > 20) return false;
-        if (/\?/.test(t)) return false;
-        return reBackchannel.test(t) || t.length <= 6;
-      }
-      function isQuestion(s) {
-        const t = (s||"").trim();
-        return /\?$/.test(t) || /(왜|어떻게|무엇|어느|가능할까요|가능해|가능합니까|설명|자세히|구체적으로)/.test(t);
-      }
-      const reDisfl = /(음+|어+|에에|그[\,\.\s]|저기[\,\.\s])/gi;
-      function countDisfluencies(s) {
-        const m = (s || "").match(reDisfl);
-        return m ? m.length : 0;
-      }
-      NS.NLP = {
-        cosineSim, embedText, ensurePreparedEmbeddings, maxSimToPrepared,
-        isBackchannel, isQuestion, countDisfluencies
-      };
+        async function ensurePreparedEmbeddings(questions) {
+            if (window.ensureQuestionEmbeddings) {
+                S.qEmbeddings = await window.ensureQuestionEmbeddings(S.apiKey(), questions);
+                S.questionsPrepared = questions.slice();
+                return S.qEmbeddings;
+            }
+            S.questionsPrepared = questions.slice();
+            S.qEmbeddings = [];
+            for (const q of questions) S.qEmbeddings.push(await embedText(q));
+            return S.qEmbeddings;
+        }
+        async function maxSimToPrepared(questionText) {
+            if (!S.qEmbeddings || !S.qEmbeddings.length) return 0;
+            const qv = await embedText(questionText);
+            let maxSim = -1;
+            for (const pv of S.qEmbeddings) maxSim = Math.max(maxSim, cosineSim(qv, pv));
+            return maxSim;
+        }
+        const reBackchannel = /(네|넵|예|맞[아요]*|음+|으응|아[ ]?네|좋아요|오케이|okay|yeah|uh-?huh|got it|right)/i;
+        function isBackchannel(s) {
+            const t = (s || "").trim();
+            if (!t) return false;
+            if (t.length > 20) return false;
+            if (/\?/.test(t)) return false;
+            return reBackchannel.test(t) || t.length <= 6;
+        }
+        function isQuestion(s) {
+            const t = (s || "").trim();
+            return /\?$/.test(t) || /(왜|어떻게|무엇|어느|가능할까요|가능해|가능합니까|설명|자세히|구체적으로)/.test(t);
+        }
+        const reDisfl = /(음+|어+|에에|그[\,\.\s]|저기[\,\.\s])/gi;
+        function countDisfluencies(s) {
+            const m = (s || "").match(reDisfl);
+            return m ? m.length : 0;
+        }
+        NS.NLP = {
+            cosineSim, embedText, ensurePreparedEmbeddings, maxSimToPrepared,
+            isBackchannel, isQuestion, countDisfluencies
+        };
     })(window.AnalyticsKit);
 
     // 4) 카운터/판정 모듈 (counters)
     (function (NS) {
-      const S = NS.Store;
-      const { isBackchannel, isQuestion, maxSimToPrepared, cosineSim, countDisfluencies } = NS.NLP;
-      async function onUserUtter(text) {
-        if (isBackchannel(text)) S.counters.backchannelsByUser++;
-        S.counters.disfluencies += countDisfluencies(text);
-        if (S.isPersonaSpeaking) S.counters.interruptions++;
-        if (isQuestion(text)) {
-          let isFollowup = false;
-          if (S.lastUserQuestionText) {
-            const v1 = await NS.NLP.embedText(text);
-            const v2 = await NS.NLP.embedText(S.lastUserQuestionText);
-            if (cosineSim(v1, v2) > 0.85) isFollowup = true;
-          }
-          if (isFollowup) {
-            S.followupDepth++;
-            if (S.followupDepth >= 3) { S.counters.followupChains++; S.followupDepth = 0; }
-          } else {
-            S.followupDepth = 0;
-            const simPrep = await maxSimToPrepared(text);
-            if (simPrep < 0.82) S.counters.adHocQuestions++;
-          }
-          S.lastUserQuestionText = text;
+        const S = NS.Store;
+        const { isBackchannel, isQuestion, maxSimToPrepared, cosineSim, countDisfluencies } = NS.NLP;
+        async function onUserUtter(text) {
+            if (isBackchannel(text)) S.counters.backchannelsByUser++;
+            S.counters.disfluencies += countDisfluencies(text);
+            if (S.isPersonaSpeaking) S.counters.interruptions++;
+            if (isQuestion(text)) {
+                let isFollowup = false;
+                if (S.lastUserQuestionText) {
+                    const v1 = await NS.NLP.embedText(text);
+                    const v2 = await NS.NLP.embedText(S.lastUserQuestionText);
+                    if (cosineSim(v1, v2) > 0.85) isFollowup = true;
+                }
+                if (isFollowup) {
+                    S.followupDepth++;
+                    if (S.followupDepth >= 3) { S.counters.followupChains++; S.followupDepth = 0; }
+                } else {
+                    S.followupDepth = 0;
+                    const simPrep = await maxSimToPrepared(text);
+                    if (simPrep < 0.82) S.counters.adHocQuestions++;
+                }
+                S.lastUserQuestionText = text;
+            }
         }
-      }
-      NS.Counters = { onUserUtter };
+        NS.Counters = { onUserUtter };
     })(window.AnalyticsKit);
 
     // 5) KPI/타임라인 렌더 모듈 (render)
     (function (NS) {
-      const S = NS.Store;
-      function computeKPIs() {
-        const userTurns = S.turns.filter(t => t.speaker === "user");
-        const qCount = userTurns.filter(t => NS.NLP.isQuestion(t.text)).length;
-        const talkCount = userTurns.length;
-        const listenAck = S.counters.backchannelsByUser;
-        const talkPercent = Math.round((talkCount / Math.max(1, talkCount + listenAck)) * 100);
-        const adHocPercent = Math.round((S.counters.adHocQuestions / Math.max(1, qCount)) * 100);
-        const followupCount = S.counters.followupChains;
-        return { talkPercent, adHocPercent, followupCount };
-      }
-      function talkMsg(p) {
-        if (p >= 65) return "발화를 많이 했어요!";
-        if (p >= 40) return "균형 잡힌 대화였어요.";
-        return "경청이 돋보였어요.";
-      }
-      function renderKPIs() {
-        const { talkPercent, adHocPercent, followupCount } = computeKPIs();
-        const elTalk = document.querySelector("#kpiTalkPercent");
-        const elTalkMsg = document.querySelector("#kpiTalkMsg");
-        const elAdhoc = document.querySelector("#kpiAdHocPercent");
-        const elFollow = document.querySelector("#kpiFollowupCount");
-        if (elTalk)    elTalk.textContent = `${talkPercent}%`;
-        if (elTalkMsg) elTalkMsg.textContent = talkMsg(talkPercent);
-        if (elAdhoc)   elAdhoc.textContent = `${adHocPercent}%`;
-        if (elFollow)  elFollow.textContent = `${followupCount}회`;
-      }
-      function renderTimeline() {
-        const wrap = document.getElementById("utteranceTimeline");
-        if (!wrap) return;
-        const total = (S.timeline.at(-1)?.end || 1);
-        wrap.innerHTML = "";
-        S.timeline.forEach(seg => {
-          const w = ((seg.end - seg.start) / total) * 100;
-          const bar = document.createElement("div");
-          bar.className = `utt-bar ${seg.speaker === "user" ? "bar--user" : "bar--persona"}`;
-          bar.style.width = `${Math.max(0.5, w)}%`;
-          wrap.appendChild(bar);
-        });
-      }
-      function setRapportStage(stage) {
-        const steps = document.querySelectorAll(".affinity-step");
-        steps.forEach((s, i) => s.classList.toggle("active", i === stage - 1));
-      }
-      NS.Render = { renderKPIs, renderTimeline, setRapportStage };
+        const S = NS.Store;
+        function computeKPIs() {
+            const userTurns = S.turns.filter(t => t.speaker === "user");
+            const qCount = userTurns.filter(t => NS.NLP.isQuestion(t.text)).length;
+            const talkCount = userTurns.length;
+            const listenAck = S.counters.backchannelsByUser;
+            const talkPercent = Math.round((talkCount / Math.max(1, talkCount + listenAck)) * 100);
+            const adHocPercent = Math.round((S.counters.adHocQuestions / Math.max(1, qCount)) * 100);
+            const followupCount = S.counters.followupChains;
+            return { talkPercent, adHocPercent, followupCount };
+        }
+        function talkMsg(p) {
+            if (p >= 65) return "발화를 많이 했어요!";
+            if (p >= 40) return "균형 잡힌 대화였어요.";
+            return "경청이 돋보였어요.";
+        }
+        function renderKPIs() {
+            const { talkPercent, adHocPercent, followupCount } = computeKPIs();
+            const elTalk = document.querySelector("#kpiTalkPercent");
+            const elTalkMsg = document.querySelector("#kpiTalkMsg");
+            const elAdhoc = document.querySelector("#kpiAdHocPercent");
+            const elFollow = document.querySelector("#kpiFollowupCount");
+            if (elTalk) elTalk.textContent = `${talkPercent}%`;
+            if (elTalkMsg) elTalkMsg.textContent = talkMsg(talkPercent);
+            if (elAdhoc) elAdhoc.textContent = `${adHocPercent}%`;
+            if (elFollow) elFollow.textContent = `${followupCount}회`;
+        }
+        function renderTimeline() {
+            const wrap = document.getElementById("utteranceTimeline");
+            if (!wrap) return;
+            const total = (S.timeline.at(-1)?.end || 1);
+            wrap.innerHTML = "";
+            S.timeline.forEach(seg => {
+                const w = ((seg.end - seg.start) / total) * 100;
+                const bar = document.createElement("div");
+                bar.className = `utt-bar ${seg.speaker === "user" ? "bar--user" : "bar--persona"}`;
+                bar.style.width = `${Math.max(0.5, w)}%`;
+                wrap.appendChild(bar);
+            });
+        }
+        function setRapportStage(stage) {
+            const steps = document.querySelectorAll(".affinity-step");
+            steps.forEach((s, i) => s.classList.toggle("active", i === stage - 1));
+        }
+        NS.Render = { renderKPIs, renderTimeline, setRapportStage };
     })(window.AnalyticsKit);
 
     // 6) 정서적 대응 3건 생성 모듈 (emotions)
     (function (NS) {
-      const S = NS.Store;
-      async function generateEmotionalFeedback() {
-        const apiKey = S.apiKey();
-        const recentText = S.turns.slice(-40).map(t => `[${t.speaker}] ${t.text}`).join("\n").slice(-3000);
-        const payload = {
-          model: "gpt-4o",
-          messages: [{
-            role: "user",
-            content: [{
-              type: "text",
-              text:
-`다음은 인터뷰 대화 로그 일부입니다.
+        const S = NS.Store;
+        async function generateEmotionalFeedback() {
+            const apiKey = S.apiKey();
+            if (!apiKey) throw new Error('API 키가 설정되지 않았습니다.');
+
+            const recentText = S.turns.slice(-40).map(t => `[${t.speaker}] ${t.text}`).join("\n").slice(-3000);
+            const promptBody = `다음은 인터뷰 대화 로그 일부입니다.
 - 망설임/침묵 대응
 - 긍정 정서(웃음/농담) 반응
 - 부정/거절/불편 신호에 대한 추가 확인/공감
 이 3가지를 간결히 평가해 주세요. 아래 JSON만 출력:
 
 [
-  {"title":"망설임(침묵, 주저) 상황","note":"..."},
-  {"title":"웃음(긍정적 정서) 상황","note":"..."},
-  {"title":"부정적 반응(불만, 거부, 불편) 상황","note":"..."}
+    {"title":"망설임(침묵, 주저) 상황","note":"..."},
+    {"title":"웃음(긍정적 정서) 상황","note":"..."},
+    {"title":"부정적 반응(불만, 거부, 불편) 상황","note":"..."}
 ]
 
 대화:
-${recentText}`
-            }]
-          }],
-          temperature: 0.4, max_tokens: 300
-        };
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        try {
-          return JSON.parse(data.choices?.[0]?.message?.content || "[]");
-        } catch { return []; }
-      }
-                    async function renderEmotionalCards(targetId="#feedbackList") {
-                        const items = await generateEmotionalFeedback();
-                        let box = document.querySelector(targetId);
-                        // 호환성: 기존 마크업이 #emotionList 인 경우 폴백
-                        if (!box) box = document.querySelector('#emotionList');
-                        if (!box) return;
-        box.innerHTML = items.map(it => `
-          <li class="emotion-card">
-            <div class="emotion-title">${it.title}</div>
-            <div class="emotion-note">${it.note}</div>
-          </li>
-        `).join("");
-      }
-      NS.Emotions = { renderEmotionalCards };
+${recentText}`;
+
+            async function requestFeedback(model) {
+                const payload = {
+                    model,
+                    messages: [{
+                        role: "user",
+                        content: [{ type: "text", text: promptBody }]
+                    }],
+                    temperature: 0.4,
+                    max_tokens: 300
+                };
+
+                let res;
+                try {
+                    res = await fetch("https://api.openai.com/v1/chat/completions", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (networkErr) {
+                    const err = new Error(`정서 분석 요청에 실패했습니다: ${networkErr.message}`);
+                    err.cause = networkErr;
+                    err.model = model;
+                    throw err;
+                }
+
+                let data = null;
+                try {
+                    data = await res.json();
+                } catch (parseErr) {
+                    const err = new Error('OpenAI 응답을 JSON으로 해석하지 못했습니다.');
+                    err.cause = parseErr;
+                    err.model = model;
+                    throw err;
+                }
+
+                if (!res.ok) {
+                    const err = new Error(data?.error?.message || `OpenAI 응답 오류 (${res.status})`);
+                    err.status = res.status;
+                    err.model = model;
+                    throw err;
+                }
+
+                const content = data?.choices?.[0]?.message?.content?.trim();
+                if (!content) {
+                    const err = new Error('OpenAI가 비어 있는 응답을 반환했습니다.');
+                    err.model = model;
+                    throw err;
+                }
+
+                let parsed;
+                try {
+                    parsed = JSON.parse(content);
+                } catch (jsonErr) {
+                    const err = new Error('정서 분석 응답이 JSON 형식이 아닙니다.');
+                    err.cause = jsonErr;
+                    err.model = model;
+                    throw err;
+                }
+
+                return Array.isArray(parsed) ? parsed : [];
+            }
+
+            const candidateModels = ["gpt-4o", "gpt-4o-mini"];
+            let lastError = null;
+
+            for (const model of candidateModels) {
+                try {
+                    return await requestFeedback(model);
+                } catch (err) {
+                    lastError = err;
+                    console.warn(`Emotional feedback model "${model}" failed.`, err);
+                }
+            }
+
+            throw lastError || new Error('정서 분석 생성을 완료하지 못했습니다.');
+        }
+
+        async function renderEmotionalCards(targetId = "#feedbackList") {
+            let items = [];
+            try {
+                items = await generateEmotionalFeedback();
+            } catch (err) {
+                console.warn('generateEmotionalFeedback failed, falling back to heuristic cards.', err);
+            }
+
+            let box = document.querySelector(targetId);
+            if (!box) box = document.querySelector('#emotionList');
+            if (!box) return;
+
+            if (!Array.isArray(items) || !items.length) {
+                renderEmotionalCardsLocal(box, window.interviewLog || []);
+                box.dataset.emotionSource = 'heuristic';
+                return;
+            }
+
+            box.dataset.emotionSource = 'openai';
+            box.innerHTML = items.map(it => {
+                const title = typeof it.title === 'string' ? it.title : '정서 신호';
+                const note = typeof it.note === 'string' ? it.note : '';
+                return `
+                    <li class="emotion-card">
+                        <div class="emotion-title">${title}</div>
+                        <div class="emotion-note">${note}</div>
+                    </li>
+                `;
+            }).join("");
+        }
+        NS.Emotions = { renderEmotionalCards };
     })(window.AnalyticsKit);
 
     // 7) 초기화/와이어링 모듈 (init)
     (function (NS) {
-      function init() {
-        if (window.questions && window.questions.length) {
-          NS.NLP.ensurePreparedEmbeddings(window.questions).catch(console.warn);
+        function init() {
+            if (window.questions && window.questions.length) {
+                NS.NLP.ensurePreparedEmbeddings(window.questions).catch(console.warn);
+            }
+            const analysisBtn = document.querySelector(".btn-analysis");
+            if (analysisBtn) {
+                analysisBtn.addEventListener("click", () => {
+                    NS.Render.renderKPIs();
+                    NS.Render.renderTimeline();
+                    NS.Emotions.renderEmotionalCards("#feedbackList");
+                });
+            }
         }
-                const analysisBtn = document.querySelector(".btn-analysis");
-        if (analysisBtn) {
-          analysisBtn.addEventListener("click", () => {
-            NS.Render.renderKPIs();
-            NS.Render.renderTimeline();
-                        NS.Emotions.renderEmotionalCards("#feedbackList");
-          });
-        }
-      }
-      NS.init = init;
+        NS.init = init;
     })(window.AnalyticsKit);
 
     // 페이지 로드 후 한 번 호출
