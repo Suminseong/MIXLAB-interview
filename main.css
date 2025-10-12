@@ -62,7 +62,7 @@
   display: flex;
   gap: 8px;
   padding: 12px 16px;
-  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 40%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #fff 40%);
   z-index: 5;
 }
 
@@ -891,11 +891,13 @@ body::-webkit-scrollbar {
   color: #8F949B;
   font-size: 14px;
 }
+
 .analyze-kpi-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
+
 .kpi-card {
   display: flex;
   align-items: center;
@@ -903,8 +905,9 @@ body::-webkit-scrollbar {
   background: #ffffff;
   border-radius: 16px;
   padding: 16px 18px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
+
 .kpi-icon {
   width: 44px;
   height: 44px;
@@ -913,13 +916,39 @@ body::-webkit-scrollbar {
   align-items: center;
   justify-content: center;
 }
-.kpi-icon img { width: 28px; height: 28px; }
-.kpi-icon--talk { background: #FFE6E6; }
-.kpi-icon--adhoc { background: #EAF5E6; }
-.kpi-icon--follow { background: #ECEBFF; }
-.kpi-texts { display: flex; flex-direction: column; }
-.kpi-value { font-weight: 700; font-size: 20px; color: #363A3D; }
-.kpi-desc { font-size: 13px; color: #8F949B; }
+
+.kpi-icon img {
+  width: 28px;
+  height: 28px;
+}
+
+.kpi-icon--talk {
+  background: #FFE6E6;
+}
+
+.kpi-icon--adhoc {
+  background: #EAF5E6;
+}
+
+.kpi-icon--follow {
+  background: #ECEBFF;
+}
+
+.kpi-texts {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-value {
+  font-weight: 700;
+  font-size: 20px;
+  color: #363A3D;
+}
+
+.kpi-desc {
+  font-size: 13px;
+  color: #8F949B;
+}
 
 
 /* .sub-lower {
@@ -1182,10 +1211,12 @@ body::-webkit-scrollbar {
 /* ------------interview------------ */
 /* 인터뷰 컨테이너: 내부 스크롤을 담당하도록 레이아웃 구성 */
 #interview-container {
-  overflow: hidden; /* 가로 스크롤 제거 및 내부 요소에 위임 */
+  overflow: hidden;
+  /* 가로 스크롤 제거 및 내부 요소에 위임 */
   display: flex;
   flex-direction: column;
-  max-height: 70vh; /* 메인 컨테이너를 넘지 않게 제한 */
+  max-height: 70vh;
+  /* 메인 컨테이너를 넘지 않게 제한 */
 }
 
 #chatbox {
@@ -1193,10 +1224,13 @@ body::-webkit-scrollbar {
   flex-direction: column;
   border: none;
   width: 100%;
-  flex: 1 1 auto;          /* 남는 공간을 채우고 */
-  min-height: 0;            /* flex 컨테이너에서 스크롤 가능하도록 필수 */
+  flex: 1 1 auto;
+  /* 남는 공간을 채우고 */
+  min-height: 0;
+  /* flex 컨테이너에서 스크롤 가능하도록 필수 */
   padding: 10px 10px 0 10px;
-  overflow-y: auto;         /* 이 영역에서만 스크롤 */
+  overflow-y: auto;
+  /* 이 영역에서만 스크롤 */
   margin-bottom: 10px;
   gap: 20px;
 }
@@ -1764,7 +1798,7 @@ body::-webkit-scrollbar {
   font-size: 12px;
   line-height: 1.5;
   border: 1px solid #ECF1F6;
-  box-shadow: 0 2px 8px rgba(18,24,40,0.04);
+  box-shadow: 0 2px 8px rgba(18, 24, 40, 0.04);
   /* hidden by default (show on hover) */
   opacity: 0;
   max-height: 0;
@@ -1775,8 +1809,8 @@ body::-webkit-scrollbar {
 }
 
 .affinity-widget:hover .affinity-desc,
-.affinity-stepper:hover + .affinity-desc,
-.affinity-stepper:focus-within + .affinity-desc {
+.affinity-stepper:hover+.affinity-desc,
+.affinity-stepper:focus-within+.affinity-desc {
   opacity: 1;
   max-height: 200px;
   transform: translateY(0);
@@ -1816,15 +1850,28 @@ body::-webkit-scrollbar {
   height: 20px;
   border-radius: 50%;
   margin-top: 2px;
-  box-shadow: inset 0 0 0 4px #EAF6EE; /* default soft green ring */
-  background: #4CCB7F; /* default green */
+  box-shadow: inset 0 0 0 4px #EAF6EE;
+  /* default soft green ring */
+  background: #4CCB7F;
+  /* default green */
   display: inline-block;
 }
 
 /* variants */
-.emotion-list li.neutral::before { background: #C9D3E0; box-shadow: inset 0 0 0 4px #EEF2F7; }
-.emotion-list li.positive::before { background: #4CCB7F; box-shadow: inset 0 0 0 4px #EAF6EE; }
-.emotion-list li.negative::before { background: #FF7A7A; box-shadow: inset 0 0 0 4px #FFE9E9; }
+.emotion-list li.neutral::before {
+  background: #C9D3E0;
+  box-shadow: inset 0 0 0 4px #EEF2F7;
+}
+
+.emotion-list li.positive::before {
+  background: #4CCB7F;
+  box-shadow: inset 0 0 0 4px #EAF6EE;
+}
+
+.emotion-list li.negative::before {
+  background: #FF7A7A;
+  box-shadow: inset 0 0 0 4px #FFE9E9;
+}
 
 /* optional small tone tag inside card header */
 .emotion-list .tone {
@@ -3987,4 +4034,254 @@ input:-webkit-autofill {
 
 .bar--persona {
   background: #D8DEE9;
+}
+
+/*-----임시-------*/
+
+.active-question {
+  background-color: #DDE2FF !important;
+  font-weight: 600 !important;
+}
+
+/* ---- Emotion card layout fix ---- */
+/* Default .emotion-list li uses grid with a dot column; for emotion-card we want full-width text. */
+.emotion-list li.emotion-card {
+  display: block;
+  grid-template-columns: none;
+}
+
+.emotion-list li.emotion-card::before {
+  display: none;
+  content: none;
+}
+
+.emotion-list li.emotion-card .emotion-title {
+  display: block;
+  margin-bottom: 6px;
+  color: #5B5E63;
+  font-weight: 600;
+}
+
+.emotion-list li.emotion-card .emotion-note {
+  color: #67707A;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* ================= Final Guide & Suggestions ================ */
+.final-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.final-brief {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.final-brief-header {
+  font-weight: 700;
+  color: #5B5E63;
+  margin-bottom: 12px;
+}
+
+.brief-cards {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.brief-card {
+  width: 170px;
+  height: 204px;
+  position: relative;
+}
+
+.brief-card .card-surface {
+  width: 170px;
+  height: 204px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px #E6E6E6 solid;
+}
+
+.brief-card .card-body {
+  width: 114px;
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.brief-card .card-body img {
+  width: 30px;
+  height: 30px;
+}
+
+.brief-card .label {
+  color: #5B5E63;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.brief-card .value {
+  color: #5B5E63;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 20.8px;
+}
+
+.final-questions {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.final-questions-title {
+  font-weight: 700;
+  color: #5B5E63;
+  margin-bottom: 8px;
+}
+
+.final-questions-list {
+  list-style: decimal;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.final-questions-list li {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #F0F2F5;
+  padding: 10px 14px;
+  color: #5B5E63;
+  position: relative;
+}
+
+.final-questions-list li .badge {
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  background: #EEF1FF;
+  color: #5872FF;
+  border: 1px solid #E7F0FF;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+.final-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: #5872FF;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: #F5F7FF;
+  color: #5872FF;
+  border: 1px solid #E7F0FF;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Suggestion widget */
+.suggestion-widget {
+  padding: 32px;
+  background: #fff;
+  box-shadow: 0 0 20px rgba(120, 125, 142, 0.05);
+  border-radius: 32px;
+  outline: 1px #DEE5EF solid;
+  outline-offset: -1px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.suggestion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.suggestion-title {
+  color: #5B5E63;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.suggestion-subtitle {
+  color: #BBBFC2;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.suggestion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  counter-reset: sug;
+}
+
+.suggestion-list li {
+  list-style: none;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.suggestion-list li::before {
+  counter-increment: sug;
+  content: counter(sug) ".";
+  color: #8F949B;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-block;
+  width: 18px;
+}
+
+.suggestion-pill {
+  width: 100%;
+  max-width: 340px;
+  padding: 10px 16px;
+  background: #fff;
+  border-radius: 12px;
+  outline: 1px #F6F6F6 solid;
+  outline-offset: -1px;
+  color: #8F949B;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+#revision-page {
+  overflow-y: scroll;
+}
+
+#analysis-page {
+  overflow-y: scroll;
 }

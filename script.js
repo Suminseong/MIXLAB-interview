@@ -705,6 +705,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     const questionListEl = document.getElementById("questionList");
                     if (questionListEl) {
                         questionListEl.innerHTML = questions.map((q, i) => `<li>${i + 1}. ${q}</li>`).join("");
+                        // 질문 리스트 갱신 후 팔로업 배지 갱신
+                        try { updateFollowupBadges(); } catch (_) {}
                     }
                     // input width/삭제/추가 버튼 이벤트 재연결
                     setTimeout(() => {
@@ -1769,6 +1771,324 @@ document.addEventListener("DOMContentLoaded", () => {
     window.interviewLog = interviewLog;
     let sendStartTime = null;
 
+    // ===== Final Guide: aggregation helpers =====
+    // 최종 질문지 편집 상태
+    let finalQuestions = [];
+    window.finalQuestions = finalQuestions;
+    let currentEditContext = 'base'; // 'base' | 'final'
+    function getInterviewPurpose() {
+        const v = (document.getElementById('interviewFor')?.value || '').trim();
+        return v || '인터뷰 목적 미입력';
+    }
+    function getInterviewSubject() {
+        const v = (document.getElementById('interviewTitle')?.value || '').trim();
+        return v || '인터뷰 주제 미입력';
+    }
+    function getExpectedDurationLabel() {
+        try {
+            const set = document.getElementById('set-time')?.textContent?.trim();
+            if (set) return set;
+        } catch (_) {}
+        const m = (window.interviewDuration || 20);
+        return `${m}분`;
+    }
+    function collectOriginalQuestions() {
+        // 기본 생성 질문 배열
+        if (Array.isArray(questions) && questions.length) return questions.slice();
+        // 폴백: 화면의 question-container input들
+        const inputs = Array.from(document.querySelectorAll('#question-container .question-edit-input'));
+        return inputs.map(i => i.value.trim()).filter(Boolean);
+    }
+    function collectFollowupAttempts() {
+        const S = window.AnalyticsKit?.Store;
+        const followupCounts = S?.followupsByQuestion || {};
+        // interviewLog에서 질문 index별로 추정 팔로업 텍스트 수집
+        const byIdx = {};
+        (window.interviewLog || []).forEach(r => {
+            const idx = r.questionIndex || 0;
+            if (!idx) return;
+            if (!byIdx[idx]) byIdx[idx] = [];
+            const t = (r.userMessage || '').trim();
+            if (t) byIdx[idx].push(t);
+        });
+        return { followupCounts, byIdx };
+    }
+    function mergeFinalQuestions() {
+        const base = collectOriginalQuestions();
+        const { byIdx } = collectFollowupAttempts();
+        const merged = [];
+        base.forEach((q, i) => {
+            merged.push(q);
+            const idx = i + 1;
+            const tails = (byIdx[idx] || []).filter(t => /[?？]$/.test(t));
+            // 대표 팔로업을 최대 1~2개까지만 추출해 인접 배지로 표시(텍스트는 본문에 병합하지 않음)
+            if (tails.length) {
+                merged[merged.length - 1] = {
+                    text: q,
+                    followups: tails.slice(0, 2)
+                };
+            }
+        });
+        // Add ad-hoc/new questions from logs
+        try {
+            const logs = (window.interviewLog || []);
+            const newQs = [];
+            const seen = new Set(base.map(s=>s.trim()));
+            logs.forEach(r => {
+                const u = (r.userMessage || '').trim();
+                if (!u || !/[?？]$/.test(u)) return;
+                const qLabel = r.question || '';
+                const idx = r.questionIndex || 0;
+                const outOfRange = !idx || (Array.isArray(base) && (idx < 1 || idx > base.length));
+                const isDerived = /파생 질문/.test(qLabel || '');
+                if ((outOfRange || isDerived) && !seen.has(u)) {
+                    seen.add(u);
+                    newQs.push({ text: u, type: 'new' });
+                }
+            });
+            if (newQs.length) merged.push(...newQs);
+        } catch (_) {}
+        return merged;
+    }
+    function deriveNotesFromDashboard() {
+        // 현재 대시보드 데이터에서 문제 신호를 간단히 요약
+        const notes = [];
+        try {
+            const S = window.AnalyticsKit?.Store;
+            const talkRatio = S?.counters?.talkRatio || 0;
+            if (talkRatio && talkRatio > 0.65) notes.push('인터뷰어 발화가 많은 편입니다. 개방형 질문과 경청 비중을 높이세요.');
+        } catch (_) {}
+        try {
+            const el = document.querySelector('#emotionList');
+            const src = el?.dataset?.emotionSource || '';
+            if (src) {
+                // 감정 카드 결과 기반 간단 요약
+                const text = el.textContent || '';
+                if (/부정|불편|거부|불쾌/.test(text)) notes.push('부정적 반응 신호가 있었습니다. 공감/인정 표현을 우선하세요.');
+            }
+        } catch (_) {}
+        try {
+            const S = window.AnalyticsKit?.Store;
+            const f = S?.followupsByQuestion || {};
+            const dense = Object.values(f).some(n => n >= 2);
+            if (dense) notes.push('특정 질문에서 꼬리질문이 집중되었습니다. 시간 배분을 조정하세요.');
+        } catch (_) {}
+        if (!notes.length) notes.push('별도의 주의사항은 없습니다. 계획한 흐름대로 진행하세요.');
+        return notes;
+    }
+    function renderFinalGuide() {
+        const briefEl = document.getElementById('briefCards');
+        const listEl = document.getElementById('finalQuestionsList');
+        if (!briefEl || !listEl) return;
+        const subject = getInterviewSubject();
+        const purpose = getInterviewPurpose();
+        const duration = getExpectedDurationLabel();
+        const notes = deriveNotesFromDashboard();
+        const cardTpl = (iconUrl, label, value) => (
+            `<div class="brief-card">
+                <div class="card-surface"></div>
+                <div class="card-body">
+                    <img src="${iconUrl}" alt=""/>
+                    <div class="label">${label}</div>
+                    <div class="value">${value}</div>
+                </div>
+            </div>`
+        );
+        briefEl.innerHTML = [
+            cardTpl('img/ico_topic.png', '인터뷰 주제', subject),
+            cardTpl('img/ico_purpose.png', '인터뷰 목적', purpose),
+            cardTpl('img/ico_time.png', '예상 진행 시간', duration),
+            cardTpl('img/ico_note.png', '주의사항', notes[0] || '-')
+        ].join('');
+
+        // 최종 질문지(편집 가능) 렌더: 저장된 편집본이 있으면 텍스트만 덮어쓰기
+        const mergedBase = mergeFinalQuestions();
+        let merged = mergedBase;
+        try {
+            const saved = localStorage.getItem('finalQuestions');
+            if (saved) {
+                const restored = JSON.parse(saved);
+                if (Array.isArray(restored) && restored.length) {
+                    // overlay
+                    merged = mergedBase.map((item, i) => {
+                        const sv = restored[i];
+                        if (sv == null) return item;
+                        if (typeof item === 'string') return String(sv ?? '');
+                        return { ...item, text: String(sv ?? '') };
+                    });
+                    if (restored.length > mergedBase.length) {
+                        for (let i = mergedBase.length; i < restored.length; i++) {
+                            merged.push(String(restored[i] ?? ''));
+                        }
+                    }
+                }
+            }
+        } catch(err) { /* ignore */ }
+        renderFinalQuestionsEditable(merged);
+    }
+
+    function renderFinalQuestionsEditable(merged) {
+        const listEl = document.getElementById('finalQuestionsList');
+        if (!listEl) return;
+        // 편집 배열 준비
+        finalQuestions = merged.map(item => typeof item === 'string' ? item : (item.text || ''));
+        window.finalQuestions = finalQuestions;
+        // 렌더
+        listEl.innerHTML = merged.map((item, i) => {
+            const text = (typeof item === 'string') ? item : (item.text || '');
+            const fBadge = (item && item.followups && item.followups.length) ? `<span class=\"badge\">팔로업 ${item.followups.length}</span>` : '';
+            const nBadge = (item && item.type === 'new') ? `<span class=\"badge\" style=\"background:#EAF5E6;color:#2F8A4C;border-color:#D2EDDC;\">신규</span>` : '';
+            return `
+                <li>
+                  <div class="question-edit-wrapper" data-context="final">
+                    <span class="question-index-num">${i + 1}.</span>
+                    <input type="text" class="question-edit-input" data-index="${i}" value="${text.replace(/"/g, '&quot;')}" placeholder="${text ? '' : '내용을 입력하세요.'}" />
+                    <button class="question-delete-btn" type="button" data-index="${i}" title="삭제">
+                      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2"/>
+                        <rect x="10" y="15.25" width="12" height="1.5" rx="0.75" fill="#8F949B"/>
+                      </svg>
+                    </button>
+                    ${fBadge}${nBadge}
+                  </div>
+                </li>`;
+        }).join('');
+        bindFinalQuestionsEvents();
+    }
+
+    function bindFinalQuestionsEvents() {
+        const container = document.getElementById('finalQuestionsList');
+        if (!container) return;
+        // 입력 가변 폭/동기화
+        const inputs = container.querySelectorAll('.question-edit-input');
+        inputs.forEach(input => {
+            const adjustWidth = () => {
+                const tempDiv = document.createElement('div');
+                tempDiv.style.position = 'absolute';
+                tempDiv.style.visibility = 'hidden';
+                tempDiv.style.whiteSpace = 'nowrap';
+                tempDiv.style.font = window.getComputedStyle(input).font;
+                tempDiv.textContent = input.value || input.placeholder || '';
+                document.body.appendChild(tempDiv);
+                const textWidth = tempDiv.offsetWidth; document.body.removeChild(tempDiv);
+                const extraPx = 120; const minWidthPx = Math.max(100, textWidth + extraPx);
+                const clampWidth = `clamp(7vw, ${(minWidthPx / 16)}rem, 35vw)`;
+                input.style.width = clampWidth;
+                const wrapper = input.closest('.question-edit-wrapper'); if (wrapper) wrapper.style.width = clampWidth;
+            };
+            const persist = () => {
+                try { localStorage.setItem('finalQuestions', JSON.stringify(finalQuestions)); } catch(err) { /* ignore */ }
+            };
+            input.addEventListener('input', (e)=>{
+                const idx = parseInt(input.dataset.index); if (!Number.isNaN(idx)) finalQuestions[idx] = input.value.trim();
+                adjustWidth();
+                persist();
+            });
+            adjustWidth();
+        });
+        // 삭제 버튼
+        const deleteBtns = container.querySelectorAll('.question-delete-btn');
+        deleteBtns.forEach(btn => {
+            btn.addEventListener('click', (e)=>{
+                e.preventDefault();
+                const idx = parseInt(btn.getAttribute('data-index'));
+                if (Number.isNaN(idx)) return;
+                finalQuestions.splice(idx, 1);
+                try { localStorage.setItem('finalQuestions', JSON.stringify(finalQuestions)); } catch(err) { /* ignore */ }
+                // 재렌더: 기본 병합 + 저장본 오버레이 적용
+                renderFinalGuide();
+            });
+        });
+    }
+
+    // Suggestion widget wiring
+    async function generateSuggestedQuestions(topN = 5) {
+        const key = localStorage.getItem('openai_api_key') || '';
+        const baseQs = collectOriginalQuestions();
+        const conv = (window.interviewLog || []).slice(-40).map(r => ({
+            q: r.question || '',
+            u: r.userMessage || '',
+            a: r.botAnswer || ''
+        }));
+        const prompt = (
+`당신은 인터뷰 보조 AI입니다. 아래의 기존 질문들과 최근 모의 인터뷰 대화 로그를 참고하여, 기존 질문을 반복하지 않으면서 유용한 팔로업 또는 보완 질문 ${topN}개를 한국어로 제안하세요.
+각 항목은 한 문장 질문형이어야 하며 번호 없이 배열로만 반환하세요.
+
+기존 질문:
+${baseQs.map((q,i)=>`${i+1}. ${q}`).join('\n')}
+
+최근 대화 로그(최대 40턴, Q/U/A):
+${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
+`);
+        if (!key) {
+            // 키가 없으면 간단한 휴리스틱 제안
+            const heur = [
+                '지금까지 답변을 종합하면 어떤 점이 가장 중요하다고 느끼시나요?',
+                '그 경험에서 특히 기억에 남는 순간이 있었다면 말씀해 주실 수 있나요?',
+                '일상에서 이를 실천하는 데 가장 큰 걸림돌은 무엇인가요?',
+                '주변 사람들의 반응이나 영향은 어땠나요?',
+                '앞으로 더 잘하기 위해 어떤 지원이 있으면 좋을까요?'
+            ];
+            return heur.slice(0, topN);
+        }
+        try {
+            const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${key}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: 'You return only JSON array of Korean questions. No extra text.' },
+                        { role: 'user', content: prompt }
+                    ],
+                    temperature: 0.7
+                })
+            });
+            const data = await res.json();
+            const text = data?.choices?.[0]?.message?.content || '[]';
+            let arr = [];
+            try { arr = JSON.parse(text); } catch (_) {
+                // 간단 파서: 줄바꿈 기반
+                arr = text.split(/\n+/).map(s=>s.replace(/^[-*\d\.\s]+/, '').trim()).filter(Boolean);
+            }
+            return arr.slice(0, topN);
+        } catch (e) {
+            console.warn('suggestions failed', e);
+            return [];
+        }
+    }
+    async function renderSuggestionWidget() {
+        const list = document.getElementById('suggestedQuestionsList');
+        if (!list) return;
+        const qs = await generateSuggestedQuestions(5);
+        if (!qs.length) {
+            list.innerHTML = '<li><div class="suggestion-pill">제안을 생성할 수 없습니다. 대화 로그를 더 쌓은 뒤 다시 시도해주세요.</div></li>';
+            return;
+        }
+        list.innerHTML = qs.map(q=>`<li><div class="suggestion-pill">${q}</div></li>`).join('');
+    }
+
+    // Buttons
+    (function wireFinalGuideButtons(){
+        const printBtn = document.getElementById('printFinalGuideBtn');
+        if (printBtn) printBtn.addEventListener('click', ()=> window.print());
+        const regenBtn = document.getElementById('regenSuggestionsBtn');
+        if (regenBtn) regenBtn.addEventListener('click', ()=> renderSuggestionWidget());
+    })();
+
+    // Nav wiring: when switching to Final Guide (revision), render
+    (function wireNavForFinalGuide(){
+        const navItems = Array.from(document.querySelectorAll('#nav-bar .btn-revision'));
+        navItems.forEach(el=>{
+            el.addEventListener('click', ()=>{
+                setTimeout(()=>{ currentEditContext = 'final'; renderFinalGuide(); renderSuggestionWidget(); }, 50);
+            });
+        });
+    })();
+
     // ===== 통합 레이어 추가: 상수/유틸/임베딩/페이즈/스타일/생성 =====
     const ACK_REGEX = /^(네|넵|예|응|어|음|아|맞[아요]|그렇[죠|습니다]?|좋[아요]|오케이|ok)\s*$/i;
     const KO_STOPWORDS = new Set(['그리고', '그러나', '하지만', '그러면', '그래서', '또', '또는', '즉', '혹은', '이것', '저것', '그것', '거기', '여기', '저기', '좀', '아주', '매우', '너무', '정말', '진짜', '거의', '약간', '등', '등등', '같은', '것', '수', '때', '점', '및', '는', '은', '이', '가', '을', '를', '에', '의', '로', '으로', '와', '과', '도', '만', '에게', '한', '하다', '했습니다', '했어요', '하는', '되다', '됐다']);
@@ -1856,15 +2176,31 @@ document.addEventListener("DOMContentLoaded", () => {
         // 보강: 임베딩 보장 (최후 방어)
         if (!_qEmbeddings && Array.isArray(questions) && questions.length) {
             try { await ensureQuestionEmbeddings(key, questions); }
-            catch (e) { console.error('❌ embeddings init fail in send:', e); }
+            catch (e) { console.error('embeddings init fail in send:', e); }
         }
 
         // 질문 인덱스 추정
         let predicted = { index: Math.max(1, lastIndex || 1), score: 0, reason: 'default' };
+        const prevIndex = lastIndex || 0; // 직전 인덱스 보관
         try { predicted = await classifyQuestionIndex(userText, lastIndex || 0, questions || [], key); } catch (e) { }
+        // 팔로업 카운팅: 같은 질문에서 사용자가 '질문'을 이어가면 팔로업으로 간주
+        try {
+            const S = window.AnalyticsKit && window.AnalyticsKit.Store;
+            const isQ = !!(window.AnalyticsKit && window.AnalyticsKit.NLP && window.AnalyticsKit.NLP.isQuestion && window.AnalyticsKit.NLP.isQuestion(userText));
+            if (S && isQ && predicted.index === Math.max(1, prevIndex)) {
+                const idx = predicted.index;
+                S.followupsByQuestion[idx] = (S.followupsByQuestion[idx] || 0) + 1;
+                // UI 배지 즉시 갱신
+                updateFollowupBadges();
+            }
+        } catch (_) {}
+
         highlightCurrentQuestion(predicted.index);
         if (lastIndex === 0 && predicted.index === 1 && !document.querySelector('.stage-message')) { appendStageMessage('인터뷰를 시작합니다'); }
         lastIndex = predicted.index;
+
+        // 진행 중 질문 인덱스 Store 반영
+        try { if (window.AnalyticsKit?.Store) window.AnalyticsKit.Store.currentQuestionIndex = lastIndex; } catch (_) {}
 
         // 사용자 메시지 반영
         appendMessage(userText, 'user'); if (!isVoice && inputEl) inputEl.value = '';
@@ -1954,6 +2290,9 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             followupDepth: 0,
             lastUserQuestionText: "",
+            // === added: 팔로업/현재 질문 상태 ===
+            followupsByQuestion: {},    // { [questionIndex:number]: count }
+            currentQuestionIndex: 0,    // 진행중인 질문 인덱스(1-base, 0=아이스브레이킹)
             apiKey() { return localStorage.getItem("openai_api_key") || ""; }
         };
         NS.Store = Store;
@@ -1986,7 +2325,7 @@ document.addEventListener("DOMContentLoaded", () => {
         function cosineSim(a, b) {
             let dot = 0, na = 0, nb = 0;
             for (let i = 0; i < Math.min(a.length, b.length); i++) {
-                dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i];
+                dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[b];
             }
             return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-9);
         }
@@ -2122,134 +2461,162 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 6) 정서적 대응 3건 생성 모듈 (emotions)
     (function (NS) {
+        // 새 정서적 응대 로컬 분석기로 교체
         const S = NS.Store;
-        async function generateEmotionalFeedback() {
-            const apiKey = S.apiKey();
-            if (!apiKey) throw new Error('API 키가 설정되지 않았습니다.');
 
-            const recentText = S.turns.slice(-40).map(t => `[${t.speaker}] ${t.text}`).join("\n").slice(-3000);
-            const promptBody = `다음은 인터뷰 대화 로그 일부입니다.
-- 망설임/침묵 대응
-- 긍정 정서(웃음/농담) 반응
-- 부정/거절/불편 신호에 대한 추가 확인/공감
-이 3가지를 간결히 평가해 주세요. 아래 JSON만 출력:
+        // 간단 휴리스틱 패턴들 (인터뷰어=사용자 발화 기준)
+        const RE = {
+            empathy: /(그럴 수 있겠(네|어요)|그렇군요|그랬군요|힘드셨겠(죠|어요|네요)|어려우셨겠(죠|어요|네요)|고생하셨(겠|네)요|이해됩니다|이해돼요|공감합니다|말씀해주셔서 감사합니다|감사합니다)/i,
+            support: /(잘해주고 계세요|조금 더|좀 더|이어(서)? (말씀|설명)해주셔도 돼요|계속 말씀하셔도 돼요|더 말씀해주셔도 돼요|편하게 말씀|천천히 말씀|괜찮아요|부담 갖지 마세요)/i,
+            // 비판·판단 회피: "~군요/~겠네요"로 수용 + 개방형 후속 요청
+            nonjudgment_combo: /((군요|겠네요|겠어요|그렇군요).*(더|좀|조금|자세히).*(말씀|들려|설명).*\?$)/i,
+            // 라포 형성(아이스브레이킹/완화)
+            rapport: /(편하게|자유롭게|괜찮습니다|정답은 없|부담 갖지|가볍게 시작|천천히 해도|반갑습니다|환영합니다)/i,
+            // 부정적/판단적 어휘(감점/제외 목적)
+            judging_neg: /(왜 그렇게 했|그건 잘못|틀렸|말이 안 되|상식적이지 않|비합리|비난|책임은 당신|네 탓|너 때문)/i
+        };
 
-[
-    {"title":"망설임(침묵, 주저) 상황","note":"..."},
-    {"title":"웃음(긍정적 정서) 상황","note":"..."},
-    {"title":"부정적 반응(불만, 거부, 불편) 상황","note":"..."}
-]
-
-대화:
-${recentText}`;
-
-            async function requestFeedback(model) {
-                const payload = {
-                    model,
-                    messages: [{
-                        role: "user",
-                        content: [{ type: "text", text: promptBody }]
-                    }],
-                    temperature: 0.4,
-                    max_tokens: 300
-                };
-
-                let res;
-                try {
-                    res = await fetch("https://api.openai.com/v1/chat/completions", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-                        body: JSON.stringify(payload)
-                    });
-                } catch (networkErr) {
-                    const err = new Error(`정서 분석 요청에 실패했습니다: ${networkErr.message}`);
-                    err.cause = networkErr;
-                    err.model = model;
-                    throw err;
-                }
-
-                let data = null;
-                try {
-                    data = await res.json();
-                } catch (parseErr) {
-                    const err = new Error('OpenAI 응답을 JSON으로 해석하지 못했습니다.');
-                    err.cause = parseErr;
-                    err.model = model;
-                    throw err;
-                }
-
-                if (!res.ok) {
-                    const err = new Error(data?.error?.message || `OpenAI 응답 오류 (${res.status})`);
-                    err.status = res.status;
-                    err.model = model;
-                    throw err;
-                }
-
-                const content = data?.choices?.[0]?.message?.content?.trim();
-                if (!content) {
-                    const err = new Error('OpenAI가 비어 있는 응답을 반환했습니다.');
-                    err.model = model;
-                    throw err;
-                }
-
-                let parsed;
-                try {
-                    parsed = JSON.parse(content);
-                } catch (jsonErr) {
-                    const err = new Error('정서 분석 응답이 JSON 형식이 아닙니다.');
-                    err.cause = jsonErr;
-                    err.model = model;
-                    throw err;
-                }
-
-                return Array.isArray(parsed) ? parsed : [];
-            }
-
-            const candidateModels = ["gpt-4o", "gpt-4o-mini"];
-            let lastError = null;
-
-            for (const model of candidateModels) {
-                try {
-                    return await requestFeedback(model);
-                } catch (err) {
-                    lastError = err;
-                    console.warn(`Emotional feedback model "${model}" failed.`, err);
-                }
-            }
-
-            throw lastError || new Error('정서 분석 생성을 완료하지 못했습니다.');
+        function splitSentences(t) {
+            return (t || '')
+                .split(/(?<=[\.!\?…]|[^\p{Script=Hangul}]$)|(?<=요)\s|(?<=다)\s/gu)
+                .map(s => s.trim())
+                .filter(Boolean);
         }
 
-        async function renderEmotionalCards(targetId = "#feedbackList") {
-            let items = [];
-            try {
-                items = await generateEmotionalFeedback();
-            } catch (err) {
-                console.warn('generateEmotionalFeedback failed, falling back to heuristic cards.', err);
+        function analyzeEmotionalResponses() {
+            // 우선순위 데이터 소스: AnalyticsKit.Store.turns → window.interviewLog
+            let userUtterances = [];
+            if (Array.isArray(S?.turns) && S.turns.length) {
+                userUtterances = S.turns.filter(t => t.speaker === 'user').map(t => t.text || '').filter(Boolean);
+            } else if (Array.isArray(window.interviewLog) && window.interviewLog.length) {
+                userUtterances = window.interviewLog.map(r => r.userMessage || '').filter(Boolean);
             }
 
-            let box = document.querySelector(targetId);
-            if (!box) box = document.querySelector('#emotionList');
+            const total = userUtterances.length || 0;
+            const buckets = {
+                empathy: { count: 0, samples: [] },
+                support: { count: 0, samples: [] },
+                nonjudgment: { count: 0, samples: [] },
+                rapport: { count: 0, samples: [] }
+            };
+
+            // 문장 단위로 정밀 탐지
+            userUtterances.forEach(utt => {
+                const sentences = splitSentences(utt);
+                sentences.forEach(s => {
+                    // 판단적 어휘 포함 시 정서적 응대 카운트에서 제외
+                    if (RE.judging_neg.test(s)) return;
+
+                    if (RE.empathy.test(s)) {
+                        buckets.empathy.count++;
+                        if (buckets.empathy.samples.length < 2) buckets.empathy.samples.push(s);
+                        return;
+                    }
+                    if (RE.support.test(s)) {
+                        buckets.support.count++;
+                        if (buckets.support.samples.length < 2) buckets.support.samples.push(s);
+                        return;
+                    }
+                    if (RE.nonjudgment_combo.test(s)) {
+                        buckets.nonjudgment.count++;
+                        if (buckets.nonjudgment.samples.length < 2) buckets.nonjudgment.samples.push(s);
+                        return;
+                    }
+                    if (RE.rapport.test(s)) {
+                        buckets.rapport.count++;
+                        if (buckets.rapport.samples.length < 2) buckets.rapport.samples.push(s);
+                        return;
+                    }
+                });
+            });
+
+            const supportiveSum = buckets.empathy.count + buckets.support.count + buckets.nonjudgment.count + buckets.rapport.count;
+            const score = Math.round((supportiveSum / Math.max(1, total)) * 100);
+
+            return {
+                totalUserUtterances: total,
+                buckets,
+                score // 정서적 응대 점수 (0~100)
+            };
+        }
+
+        function renderEmotionalCards(targetId = "#feedbackList") {
+            const box = document.querySelector(targetId) || document.querySelector('#emotionList');
             if (!box) return;
 
-            if (!Array.isArray(items) || !items.length) {
-                renderEmotionalCardsLocal(box, window.interviewLog || []);
-                box.dataset.emotionSource = 'heuristic';
+            const result = analyzeEmotionalResponses();
+
+            // 데이터 없음 처리
+            if (!result.totalUserUtterances) {
+                box.innerHTML = `
+                    <li class="emotion-card">
+                        <div class="emotion-title">정서적 응대 분석</div>
+                        <div class="emotion-note">인터뷰어 발화가 없어 분석할 수 없습니다.</div>
+                    </li>
+                `;
+                box.dataset.emotionSource = 'local-heuristic';
                 return;
             }
 
-            box.dataset.emotionSource = 'openai';
+            const { buckets, score, totalUserUtterances } = result;
+
+            const items = [
+                {
+                    key: 'score',
+                    title: '정서적 응대 점수',
+                    note: `인터뷰어 발화 ${totalUserUtterances}건 중 정서적 응대 ${buckets.empathy.count + buckets.support.count + buckets.nonjudgment.count + buckets.rapport.count}건`,
+                    extra: `${score}%`
+                },
+                {
+                    key: 'empathy',
+                    title: '공감·인정 표현',
+                    count: buckets.empathy.count,
+                    samples: buckets.empathy.samples
+                },
+                {
+                    key: 'support',
+                    title: '지지·격려 표현',
+                    count: buckets.support.count,
+                    samples: buckets.support.samples
+                },
+                {
+                    key: 'nonjudgment',
+                    title: '비판·판단 회피',
+                    count: buckets.nonjudgment.count,
+                    samples: buckets.nonjudgment.samples
+                },
+                {
+                    key: 'rapport',
+                    title: '라포 형성 발화',
+                    count: buckets.rapport.count,
+                    samples: buckets.rapport.samples
+                }
+            ];
+
+            box.dataset.emotionSource = 'local-heuristic';
             box.innerHTML = items.map(it => {
-                const title = typeof it.title === 'string' ? it.title : '정서 신호';
-                const note = typeof it.note === 'string' ? it.note : '';
+                if (it.key === 'score') {
+                    return `
+                        <li class="emotion-card">
+                            <div class="emotion-title">${it.title}</div>
+                            <div class="emotion-note"><strong style="font-size:1.25rem;color:#5872FF">${it.extra}</strong></div>
+                            <div class="emotion-note" style="color:#666">${it.note}</div>
+                        </li>
+                    `;
+                }
+                const sampleHtml = (it.samples && it.samples.length)
+                    ? `<div class="emotion-note" style="color:#666">예: “${it.samples[0]}”${it.samples[1] ? ` / “${it.samples[1]}”` : ''}</div>`
+                    : '';
                 return `
                     <li class="emotion-card">
-                        <div class="emotion-title">${title}</div>
-                        <div class="emotion-note">${note}</div>
+                        <div class="emotion-title">${it.title} <span style="color:#8F949B">(${it.count})</span></div>
+                        ${sampleHtml}
                     </li>
                 `;
             }).join("");
         }
+
+        // 노출 API
         NS.Emotions = { renderEmotionalCards };
     })(window.AnalyticsKit);
 
@@ -2280,8 +2647,6 @@ ${recentText}`;
     if (sendBtn) sendBtn.addEventListener('click', (e) => { e.preventDefault(); sendMessage(null, false); });
     if (userInputEl) userInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(null, false); } });
 
-    // ================== AnalyticsKit 통합 모듈 끝 ==================
-
     // ===== 질문 추가 플러스(+) 버튼 복원 =====
     const globalAddBtn = document.getElementById("global-question-add-btn");
     let currentHoverIndex = null;
@@ -2289,6 +2654,8 @@ ${recentText}`;
     document.addEventListener("mouseover", (e) => {
         const wrapper = e.target.closest(".question-edit-wrapper");
         if (!wrapper) return;
+        // 현재 편집 컨텍스트 설정: finalQuestionsList 내부인지 여부
+        currentEditContext = wrapper.closest('#finalQuestionsList') ? 'final' : 'base';
 
         const wrappers = [...document.querySelectorAll(".question-edit-wrapper")];
         const currentIndex = wrappers.indexOf(wrapper);
@@ -2322,42 +2689,85 @@ ${recentText}`;
 
     if (globalAddBtn) {
         globalAddBtn.addEventListener("click", () => {
-            if (typeof questions === 'undefined' || !Array.isArray(questions)) return;
             // 현재 마우스가 올라간 row 인덱스 새로 계산 (혹시 currentHoverIndex가 null이거나 잘못된 경우)
             let wrappers = Array.from(document.querySelectorAll('.question-edit-wrapper'));
             let hoverIdx = wrappers.findIndex(w => w.contains(globalAddBtn));
             if (hoverIdx === -1) hoverIdx = currentHoverIndex;
             if (hoverIdx == null || hoverIdx < -1) hoverIdx = wrappers.length - 1;
 
-            // 현재 입력값 저장
-            const inputs = document.querySelectorAll('.question-edit-input');
+            if (currentEditContext === 'final') {
+                // 현재 입력값 저장 (final)
+                const container = document.getElementById('finalQuestionsList');
+                const inputs = container ? container.querySelectorAll('.question-edit-input') : [];
+                inputs.forEach(input => {
+                    const idx = parseInt(input.dataset.index);
+                    if (!isNaN(idx) && idx < finalQuestions.length) {
+                        finalQuestions[idx] = input.value;
+                    }
+                });
+                finalQuestions.splice(hoverIdx + 1, 0, "");
+                try { localStorage.setItem('finalQuestions', JSON.stringify(finalQuestions)); } catch(err) { /* ignore */ }
+                renderFinalGuide();
+                setTimeout(() => {
+                    const wraps = document.querySelectorAll('#finalQuestionsList .question-edit-wrapper');
+                    const newWrapper = wraps[hoverIdx + 1];
+                    if (newWrapper) {
+                        const input = newWrapper.querySelector('input.question-edit-input');
+                        if (input) { input.focus(); input.select(); }
+                    }
+                }, 0);
+                return;
+            }
+
+            // 기본 질문 컨텍스트
+            if (typeof questions === 'undefined' || !Array.isArray(questions)) return;
+            const inputs = document.querySelectorAll('#question-container .question-edit-input');
             inputs.forEach(input => {
                 const idx = parseInt(input.dataset.index);
                 if (!isNaN(idx) && idx < questions.length) {
                     questions[idx] = input.value;
                 }
             });
-
-            // 새 질문 추가
             questions.splice(hoverIdx + 1, 0, "");
             questionNum = questions.length;
             const questionNumSpan = document.getElementById('count');
             if (questionNumSpan) questionNumSpan.textContent = questionNum;
-            if (typeof window.renderQuestions === 'function') {
-                window.renderQuestions();
-            }
-            // 새로 추가된 질문 input에 자동 포커스
+            if (typeof window.renderQuestions === 'function') window.renderQuestions();
             setTimeout(() => {
-                const wrappers = document.querySelectorAll('.question-edit-wrapper');
-                const newWrapper = wrappers[hoverIdx + 1];
+                const wraps = document.querySelectorAll('#question-container .question-edit-wrapper');
+                const newWrapper = wraps[hoverIdx + 1];
                 if (newWrapper) {
                     const input = newWrapper.querySelector('input.question-edit-input');
-                    if (input) {
-                        input.focus();
-                        input.select();
-                    }
+                    if (input) { input.focus(); input.select(); }
                 }
             }, 0);
         });
     }
 });
+// 팔로업 배지 렌더러
+function updateFollowupBadges() {
+    const S = window.AnalyticsKit && window.AnalyticsKit.Store;
+    if (!S) return;
+    const counts = S.followupsByQuestion || {};
+    const lis = document.querySelectorAll('#questionList li');
+    lis.forEach((li, i) => {
+        const idx = i + 1; // Q index(1-base)
+        let badge = li.querySelector('.followup-badge');
+        const n = counts[idx] || 0;
+        if (n > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'followup-badge';
+                badge.style.marginLeft = '8px';
+                badge.style.color = '#8F949B';
+                badge.style.fontSize = '12px';
+                li.appendChild(badge);
+            }
+            badge.textContent = `(팔로업 ${n})`;
+        } else if (badge) {
+            badge.remove();
+        }
+    });
+}
+// 전역 노출(필요 시 재호출)
+window.updateFollowupBadges = updateFollowupBadges;

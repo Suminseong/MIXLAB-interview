@@ -93,7 +93,7 @@
                     </div>
                     <div class="btn-revision" id="nav-item">
                         <div class="nav-img"><img src="./img/revision.svg" alt="refine"></div>
-                        <p class="nav-text" data-label="질문지보완">Refine　</p>
+                        <p class="nav-text" data-label="최종 가이드">Final Guide</p>
                     </div>
                 </div>
                 <button id="changeApiKey">
@@ -237,8 +237,21 @@
                 </div>
 
                 <div id="revision-page" class="page" style="display: none;">
-                    <h2>인터뷰 수정</h2>
-                    <div class="revision-box" id="revision-container"></div>
+                    <h2>Final Guide | 최종 가이드</h2>
+                    <div class="final-guide" id="revision-container">
+                        <div class="final-brief">
+                            <div class="final-brief-header">인터뷰 브리프 | Interview Brief</div>
+                            <div class="brief-cards" id="briefCards">
+                            </div>
+                        </div>
+                        <div class="final-questions">
+                            <div class="final-questions-title">최종 질문 목록 | Final Questions List</div>
+                            <ul class="final-questions-list" id="finalQuestionsList"></ul>
+                            <div class="final-actions">
+                                <button id="printFinalGuideBtn" class="btn-primary">프린트</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -353,7 +366,20 @@
                             </div>
                         </div>
                 </div> <!--분석 페이지 추가하는 곳-->
-                <div class="container-children sub-revision sub-inactive"></div>
+                <div class="container-children sub-revision sub-inactive">
+                    <div class="suggestion-widget" id="suggestionWidget">
+                        <div class="suggestion-header">
+                            <div class="suggestion-title">추가 질문 제안</div>
+                            <div class="suggestion-subtitle">대화 흐름을 분석한 AI가 추가로 유용할 질문을 제안합니다</div>
+                        </div>
+                        <ol class="suggestion-list" id="suggestedQuestionsList">
+                            <!-- suggestions injected here -->
+                        </ol>
+                        <div class="suggestion-actions">
+                            <button id="regenSuggestionsBtn" class="btn-secondary">다시 제안 받기</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="side-box" id="gen-question"> 
                 <div class="container-children">
