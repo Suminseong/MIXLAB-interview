@@ -154,18 +154,15 @@ async function renderAnalysisDashboard(opts = {}) {
         console.warn('donut render failed', e);
     }
 
-    // 4) 핵심 키워드 (extractTopKeywords가 전역에 없을 수 있어 폴백 사용)
+    // 4) 핵심 키워드 (pill 스타일 클라우드)
     try {
-        // 안전하게 전역 함수가 있으면 사용하고, 없으면 로컬 폴백으로 대체
         const kw = (typeof extractTopKeywords === 'function')
-            ? extractTopKeywords(logs, 12)
-            : (function fallbackExtractTopKeywords(logs, topN = 12) {
-                // 간단한 한국어 토크나이저 + 빈도 기반 상위 N개 추출
+            ? extractTopKeywords(logs, 8)
+            : (function fallbackExtractTopKeywords(logs, topN = 8) {
                 if (!Array.isArray(logs) || !logs.length) return [];
                 const KO_STOPWORDS_LOCAL = new Set(['그리고', '그러나', '하지만', '그러면', '그래서', '또', '또는', '즉', '혹은', '이것', '저것', '그것', '거기', '여기', '저기', '좀', '아주', '매우', '너무', '정말', '진짜', '거의', '약간', '등', '등등', '같은', '것', '수', '때', '점', '및', '는', '은', '이', '가', '을', '를', '에', '의', '로', '으로', '와', '과', '도', '만', '에게', '한', '하다', '했습니다', '했어요', '하는', '되다', '됐다']);
                 const text = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
-                // 한글/영문/숫자 외 문자 제거, 공백으로 분리
-                const tokens = (text || '').replace(/[^\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
+                const tokens = (text || '').replace(/[^ - - - -\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
                 const freq = new Map();
                 for (const t of tokens) freq.set(t, (freq.get(t) || 0) + 1);
                 const arr = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
@@ -175,28 +172,24 @@ async function renderAnalysisDashboard(opts = {}) {
         const cloudEl = document.getElementById('keywordCloud');
         if (cloudEl) {
             cloudEl.innerHTML = '';
-            const w = Math.min(360, cloudEl.clientWidth || 360), h = 120;
-            const svg = d3.select(cloudEl).append('svg').attr('width', w).attr('height', h);
-            const words = (kw && kw.length) ? kw.map((k, i) => ({ text: k.text, size: 12 + (k.weight * 3) })) : [{ text: '-', size: 14 }];
-            d3.layout.cloud().size([w, h])
-                .words(words)
-                .padding(2)
-                .rotate(() => 0)
-                .font('Pretendard Variable')
-                .fontSize(d => d.size)
-                .on('end', function (words) {
-                    svg.append('g').attr('transform', `translate(${w / 2},${h / 2})`)
-                        .selectAll('text')
-                        .data(words)
-                        .enter().append('text')
-                        .style('font-size', d => d.size + 'px')
-                        .style('fill', (d, i) => i === 0 ? '#5872FF' : '#B0B4BC')
-                        .style('font-family', 'Pretendard Variable')
-                        .attr('text-anchor', 'middle')
-                        .attr('transform', d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
-                        .text(d => d.text);
-                })
-                .start();
+            const colorClasses = ['color-blue', 'color-sky', 'color-gray'];
+            const sizeClasses = ['size-lg', 'size-md', 'size-sm'];
+            if (kw && kw.length) {
+                kw.forEach((k, i) => {
+                    const span = document.createElement('span');
+                    span.className = 'keyword-pill';
+                    // 랜덤 색상, 크기 부여
+                    span.classList.add(colorClasses[Math.floor(Math.random()*colorClasses.length)]);
+                    span.classList.add(sizeClasses[Math.floor(Math.random()*sizeClasses.length)]);
+                    span.textContent = k.text;
+                    cloudEl.appendChild(span);
+                });
+            } else {
+                const span = document.createElement('span');
+                span.className = 'keyword-pill color-gray size-md';
+                span.textContent = '-';
+                cloudEl.appendChild(span);
+            }
         }
     } catch (e) {
         console.warn('keyword cloud failed', e);
@@ -284,8 +277,95 @@ async function renderAnalysisDashboard(opts = {}) {
 }
 // ---------- 대체 함수 끝 ----------
 document.addEventListener("DOMContentLoaded", () => {
+    // ====== 로딩 애니메이션 CSS 추가 ======
+    const style = document.createElement('style');
+    style.textContent = `
+    .loading-dots {
+        display: flex;
+        align-items: flex-end;
+        height: 32px;
+        gap: 8px;
+        justify-content: center;
+    }
+    .loading-dots .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #bfc7d1;
+        display: inline-block;
+        animation: dot-bounce 1.2s infinite;
+    }
+    .loading-dots .dot:nth-child(1) { animation-delay: 0s; }
+    .loading-dots .dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dot-bounce {
+        0%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-12px); }
+    }
+    `;
+    document.head.appendChild(style);
+    // 입력창 표시 버튼 기능
+    const showInputBtn = document.getElementById('showInputBtn');
+    const inputGroup = document.querySelector('#interview-page .input-group');
+    if (showInputBtn && inputGroup) {
+        showInputBtn.addEventListener('click', function() {
+            inputGroup.classList.add('active');
+            showInputBtn.style.display = 'none';
+        });
+    }
+        // 입력창 숨김 버튼 기능
+        const hideInputBtn = document.getElementById('hideInputBtn');
+        if (hideInputBtn && inputGroup && showInputBtn) {
+            hideInputBtn.addEventListener('click', function() {
+                inputGroup.classList.remove('active');
+                showInputBtn.style.display = 'flex';
+            });
+        }
 
     // 음성 인식 기능 (Web Speech API) - 상단 recognition 블록 제거, 아래 SR 자동 루프만 사용
+    function showUserMessage(text) {
+        const rightBox = document.getElementById('chating-right-box');
+        const leftBox = document.getElementById('chating-left-box');
+        // 질문 입력 시, 만약 답변 박스에 내용이 있으면 둘 다 chatbox로 올림
+        if (rightBox.textContent.trim() || leftBox.textContent.trim()) {
+            // 쌍으로 chatbox에 append
+            if (rightBox.textContent.trim()) appendMessage(rightBox.textContent, 'user');
+            if (leftBox.textContent.trim()) appendMessage(leftBox.textContent, 'bot');
+            // 최신 박스 비움
+            rightBox.textContent = '';
+            leftBox.textContent = '';
+        }
+        // 새 질문 표시
+        rightBox.textContent = text;
+    }
+    function showBotMessage(text) {
+        const leftBox = document.getElementById('chating-left-box');
+        if (!leftBox) return;
+        leftBox.textContent = text;
+    }
+
+    // 답변 생성 중 로딩 애니메이션 표시
+    function showBotLoading() {
+        const leftBox = document.getElementById('chating-left-box');
+        if (!leftBox) return;
+        leftBox.innerHTML = `
+        <div class="loading-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+    `;
+    }
+    // 질문지 생성 안내 이미지 숨김 함수
+    function hideMakeQuestionImg() {
+        const imgWrapper = document.getElementById("make-question-img-wrapper");
+        if (imgWrapper) imgWrapper.style.display = "none";
+    }
+    // 퍼소나 생성 안내 이미지 숨김 함수
+    function hideMakePersonaImg() {
+        const imgWrapper = document.getElementById("make-persona-img-wrapper");
+        if (imgWrapper) imgWrapper.style.display = "none";
+    }
 
     // 퍼소나 슬라이드 관련
     let personaPageIndex = 0;
@@ -638,7 +718,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const payload = {
             model: "gpt-4o-mini",
-            messages: [{ role: "system", content: [{ text: `${interviewTitle}를 주제로 한 인터뷰는 ${interviewFor}을 목적으로 해야합니다. 이 인터뷰에서 해야하는는 질문을 ${questionNum}개 생성합니다. 인터뷰 질문은 인터뷰 순서에 맞게 구성되어야 하며, 개수는 user의 프롬프트에 기반합니다. 첫 질문은 인터뷰 주제에 대한 간단한 질문으로 시작합니다. 2번째 질문부터 본격적으로 목적에 맞게 질문을 작성하는데, 목적을 그대로 해석하지 말고, 목적으로부터 파생되는 심층적인 인사이트에 집중한 질문 생성을 기대합니다. 다음과 같은 이름을 부여한 인덱스로 내용을 채워 json 배열 타입으로 출력합니다. 이 양식 이외의 내용은 출력금지. json 형태로 출력하며, \n질문1\n질문2\n...\n이때, 숫자, 질문 인덱스 표시는 하지 않고, 텍스트만 큰 따옴표로 묶어서 넣고, 콤마를 삽입합니다. 그 밖의 내용은 절대 출력 금지. 개수를 정확히 준수합니다.`, type: "text" }] }],
+            messages: [{ role: "system", content: [{ text: `${interviewTitle}를 주제로 한 인터뷰는 ${interviewPurpose}을 목적으로 해야합니다. 이 인터뷰에서 해야하는는 질문을 ${questionNum}개 생성합니다. 인터뷰 질문은 인터뷰 순서에 맞게 구성되어야 하며, 개수는 user의 프롬프트에 기반합니다. 첫 질문은 인터뷰 주제에 대한 간단한 질문으로 시작합니다. 2번째 질문부터 본격적으로 목적에 맞게 질문을 작성하는데, 목적을 그대로 해석하지 말고, 목적으로부터 파생되는 심층적인 인사이트에 집중한 질문 생성을 기대합니다. 다음과 같은 이름을 부여한 인덱스로 내용을 채워 json 배열 타입으로 출력합니다. 이 양식 이외의 내용은 출력금지. json 형태로 출력하며, \n질문1\n질문2\n...\n이때, 숫자, 질문 인덱스 표시는 하지 않고, 텍스트만 큰 따옴표로 묶어서 넣고, 콤마를 삽입합니다. 그 밖의 내용은 절대 출력 금지. 개수를 정확히 준수합니다.`, type: "text" }] }],
             temperature: 0.75,
             max_tokens: 2048,
             top_p: 1,
@@ -1017,24 +1097,22 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         // 직업, 성격, 관심사(첫번째만), 언어습관(첫번째만)
         const group3 = document.createElement('div');
-        group3.className = 'persona-group';
-        const occupation = persona.occupation;
-        const personality = persona.personality;
-        const interests = persona.interests ? persona.interests.split(',')[0].trim() : '';
-        const speech = persona.speech ? persona.speech.split(',')[0].trim() : '';
-        [occupation, personality, interests, speech].forEach(v => {
-            if (v) {
-                const span = document.createElement('span');
-                span.textContent = v;
-                group3.appendChild(span);
-            }
-        });
-        personaBox.appendChild(group1);
-        personaBox.appendChild(group2);
-        personaBox.appendChild(group3);
-        // 인터뷰 대화창 좌측 아바타 이미지도 동일 경로로 동기화 (말하지 않을 때는 정적 PNG)
-        syncChatingLeftImage(persona, false);
-    }
+    group3.className = 'persona-group';
+    const occupation = persona.occupation;
+    const personality = persona.personality;
+    const interests = persona.interests ? persona.interests.split(',')[0].trim() : '';
+    const speech = persona.speech ? persona.speech.split(',')[0].trim() : '';
+    [occupation, personality, interests, speech].forEach(v => {
+        if (v) {
+            const span = document.createElement('span');
+            span.textContent = v;
+            group3.appendChild(span);
+        }
+    });
+    personaBox.appendChild(group1);
+    personaBox.appendChild(group2);
+    personaBox.appendChild(group3);
+}
 
     document.getElementById('goToInterviewBtn').addEventListener('click', function () {
         const selectedBox = document.querySelector('.persona-box.selected');
@@ -1421,46 +1499,66 @@ document.addEventListener("DOMContentLoaded", () => {
     // endInterview 전역 함수 없이 버튼 핸들러에서 직접 처리하는 패턴 사용 (module_cham.js 스타일)
 
     function showInterviewEndModal() {
-        // 인터뷰 종료 모달 생성
+        // 인터뷰 종료 모달 생성 (세련된 디자인)
         const modal = document.createElement('div');
         modal.id = 'interviewEndModal';
         modal.style.cssText = `
-        display: flex;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(255, 255, 255, 0.95);
-        z-index: 10001;
-        justify-content: center;
-        align-items: center;
-    `;
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(30, 34, 54, 0.35);
+            z-index: 10001;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(6px) saturate(1.2);
+        `;
 
         const modalContent = document.createElement('div');
         modalContent.style.cssText = `
-        background: white;
-        padding: 3rem;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-        text-align: center;
-        max-width: 400px;
-        width: 90%;
-    `;
+            background: rgba(255,255,255,0.92);
+            padding: 2.5rem 2.2rem 2.2rem 2.2rem;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(30,34,54,0.18);
+            text-align: center;
+            max-width: 420px;
+            width: 92vw;
+            position: relative;
+            animation: modalPop 0.4s cubic-bezier(.7,-0.4,.3,1.4);
+        `;
 
+        // 아이콘 및 애니메이션 추가
         modalContent.innerHTML = `
-        <h3 style="margin-bottom: 1.5rem; color: #333; font-size: 1.5rem;">인터뷰가 종료되었습니다.</h3>
-        <button id="goToAnalysisBtn" style="
-            padding: 1rem 2rem;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        ">인터뷰 분석 결과 보러가기</button>
-    `;
+            <div style="margin-bottom:1.2rem;">
+                <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="filter:drop-shadow(0 2px 8px #357AFF22);">
+                    <circle cx="28" cy="28" r="28" fill="#E7F0FF"/>
+                    <path d="M18 28L26 36L38 22" stroke="#357AFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h3 style="margin-bottom: 1.1rem; color: #2456b3; font-size: 1.45rem; font-weight:600; letter-spacing:-0.5px;">인터뷰가 종료되었습니다</h3>
+            <div style="margin-bottom:2.1rem; color:#444; font-size:1.08rem; line-height:1.6;">수고하셨습니다!<br>아래 버튼을 눌러 분석 결과를 확인하세요.</div>
+            <button id="goToAnalysisBtn" style="
+                padding: 0.85rem 2.1rem;
+                background: linear-gradient(90deg,#357AFF 0%,#2456b3 100%);
+                color: #fff;
+                border: none;
+                border-radius: 10px;
+                font-size: 1.08rem;
+                font-weight: 500;
+                box-shadow: 0 2px 8px rgba(53,122,255,0.10);
+                cursor: pointer;
+                transition: background 0.2s, box-shadow 0.2s;
+            ">분석 결과 보러가기</button>
+            <style>
+            @keyframes modalPop {
+                0% { transform: scale(0.7); opacity: 0; }
+                70% { transform: scale(1.08); opacity: 1; }
+                100% { transform: scale(1); opacity: 1; }
+            }
+            </style>
+        `;
 
         modal.appendChild(modalContent);
         document.body.appendChild(modal);
@@ -1721,37 +1819,43 @@ document.addEventListener("DOMContentLoaded", () => {
     //     chatbox.scrollTop = chatbox.scrollHeight;
     // }
     function appendMessage(message, sender) {
+        // fade-in 애니메이션 효과 추가
         if (sender === 'bot') {
             const wrapper = document.createElement('div');
             wrapper.className = 'message-wrapper';
 
             const nameTag = document.createElement('div');
             nameTag.className = 'persona-name-tag';
-
             if (selectedPersona && selectedPersona.name) {
-                nameTag.textContent = selectedPersona.name.slice(-2); // 성 제외, 두 글자
+                nameTag.textContent = selectedPersona.name.slice(-2);
             } else {
-                nameTag.textContent = "퍼소나"; // fallback
+                nameTag.textContent = "퍼소나";
             }
 
             const messageElement = document.createElement('div');
             messageElement.className = 'message bot';
             messageElement.textContent = message;
 
+            // 애니메이션 초기 상태
+            wrapper.style.opacity = '0';
+            wrapper.style.transition = 'opacity 0.5s cubic-bezier(0.4,0,0.2,1)';
+
             wrapper.appendChild(nameTag);
             wrapper.appendChild(messageElement);
             chatbox.appendChild(wrapper);
+            // 트리거
+            setTimeout(() => { wrapper.style.opacity = '1'; }, 10);
         } else {
             const messageElement = document.createElement('div');
             messageElement.className = `message ${sender}`;
             messageElement.textContent = message;
+            // 애니메이션 초기 상태
+            messageElement.style.opacity = '0';
+            messageElement.style.transition = 'opacity 0.5s cubic-bezier(0.4,0,0.2,1)';
             chatbox.appendChild(messageElement);
+            setTimeout(() => { messageElement.style.opacity = '1'; }, 10);
         }
-        // 항상 스크롤을 맨 아래로 고정(지연 요소 대응)
         __scheduleChatAutoScroll();
-
-        // 전체 페이지 스크롤은 제거
-        // chatbox.scrollTop = chatbox.scrollHeight; // 이미 위에서 처리함
     }
 
     function appendStageMessage(text) {
@@ -1800,7 +1904,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return inputs.map(i => i.value.trim()).filter(Boolean);
     }
     function collectFollowupAttempts() {
-        const S = window.AnalyticsKit?.Store;
+        const S = window.AnalyticsKit && window.AnalyticsKit.Store;
         const followupCounts = S?.followupsByQuestion || {};
         // interviewLog에서 질문 index별로 추정 팔로업 텍스트 수집
         const byIdx = {};
@@ -1820,7 +1924,7 @@ document.addEventListener("DOMContentLoaded", () => {
         base.forEach((q, i) => {
             merged.push(q);
             const idx = i + 1;
-            const tails = (byIdx[idx] || []).filter(t => /[?？]$/.test(t));
+            const tails = (byIdx[idx] || []).filter(t => /파생 질문/.test(t));
             // 대표 팔로업을 최대 1~2개까지만 추출해 인접 배지로 표시(텍스트는 본문에 병합하지 않음)
             if (tails.length) {
                 merged[merged.length - 1] = {
@@ -1938,20 +2042,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const text = (typeof item === 'string') ? item : (item.text || '');
             const fBadge = (item && item.followups && item.followups.length) ? `<span class=\"badge\">팔로업 ${item.followups.length}</span>` : '';
             const nBadge = (item && item.type === 'new') ? `<span class=\"badge\" style=\"background:#EAF5E6;color:#2F8A4C;border-color:#D2EDDC;\">신규</span>` : '';
-            return `
-                <li>
-                  <div class="question-edit-wrapper" data-context="final">
-                    <span class="question-index-num">${i + 1}.</span>
-                    <input type="text" class="question-edit-input" data-index="${i}" value="${text.replace(/"/g, '&quot;')}" placeholder="${text ? '' : '내용을 입력하세요.'}" />
-                    <button class="question-delete-btn" type="button" data-index="${i}" title="삭제">
-                      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                        <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2"/>
-                        <rect x="10" y="15.25" width="12" height="1.5" rx="0.75" fill="#8F949B"/>
-                      </svg>
-                    </button>
-                    ${fBadge}${nBadge}
-                  </div>
-                </li>`;
+                        return `
+                                <li>
+                                    <div class="question-edit-wrapper" data-context="final">
+                                        <input type="text" class="question-edit-input" data-index="${i}" value="${text.replace(/"/g, '&quot;')}" placeholder="${text ? '' : '내용을 입력하세요.'}" />
+                                        <button class="question-delete-btn" type="button" data-index="${i}" title="삭제">
+                                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                                                <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2"/>
+                                                <rect x="10" y="15.25" width="12" height="1.5" rx="0.75" fill="#8F949B"/>
+                                            </svg>
+                                        </button>
+                                        ${fBadge}${nBadge}
+                                    </div>
+                                </li>`;
         }).join('');
         bindFinalQuestionsEvents();
     }
@@ -2068,7 +2171,7 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
             list.innerHTML = '<li><div class="suggestion-pill">제안을 생성할 수 없습니다. 대화 로그를 더 쌓은 뒤 다시 시도해주세요.</div></li>';
             return;
         }
-        list.innerHTML = qs.map(q=>`<li><div class="suggestion-pill">${q}</div></li>`).join('');
+    list.innerHTML = qs.map(q=>`<li><div class="suggestion-pill">${q}</div></li>`).join('');
     }
 
     // Buttons
@@ -2103,7 +2206,7 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
 
     let _qEmbeddings = null;
     async function embedText(key, text) { const r = await fetch("https://api.openai.com/v1/embeddings", { method: "POST", headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: "text-embedding-3-small", input: text }) }); const d = await r.json(); if (!r.ok) throw new Error(d.error?.message || 'Embeddings API error'); return d.data[0].embedding; }
-    function cosineSim(a, b) { let dot = 0, na = 0, nb = 0; for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; } return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-12); }
+    function cosineSim(a, b) { let dot = 0, na = 0, nb = 0; for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[b]; } return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-9); }
     async function ensureQuestionEmbeddings(key, qs) { if (!Array.isArray(qs) || !qs.length) { _qEmbeddings = null; return; } _qEmbeddings = await Promise.all(qs.map(q => embedText(key, q))); }
     async function classifyQuestionIndex(userText, lastIdx, qs, key) {
         if (!userText || userText.trim().length < 2 || ACK_REGEX.test(userText.trim())) return { index: Math.max(0, lastIdx), score: 0, reason: 'ack/short' };
@@ -2202,8 +2305,9 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
         // 진행 중 질문 인덱스 Store 반영
         try { if (window.AnalyticsKit?.Store) window.AnalyticsKit.Store.currentQuestionIndex = lastIndex; } catch (_) {}
 
-        // 사용자 메시지 반영
-        appendMessage(userText, 'user'); if (!isVoice && inputEl) inputEl.value = '';
+    // 사용자 메시지 반영
+    showUserMessage(userText);
+    if (!isVoice && inputEl) inputEl.value = '';
 
         // 페이즈 결정
         const interviewTitle = interviewTitleInput.value.trim();
@@ -2217,7 +2321,7 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
             const systemPrompt = buildSystemPrompt(interviewTitle, questions, lastIndex, phase, { name: selectedPersona?.name, age: selectedPersona?.age, gender: selectedPersona?.gender, occupation: selectedPersona?.occupation, personality: selectedPersona?.personality, speech: selectedPersona?.speech }, styleHints);
             const answer = await generateCoreAnswer(key, systemPrompt, userText, { phase });
 
-            appendMessage(answer, 'bot');
+            showBotMessage(answer);
             // OpenAI TTS로 바로 읽어주기
             try { await speakTextPersona(answer, selectedPersona); } catch (_) { }
 
@@ -2647,6 +2751,14 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
     if (sendBtn) sendBtn.addEventListener('click', (e) => { e.preventDefault(); sendMessage(null, false); });
     if (userInputEl) userInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(null, false); } });
 
+        // #logo img 클릭 시 메인화면(첫 번째 탭)으로 이동
+        const logoImg = document.querySelector('#logo img');
+        if (logoImg) {
+            logoImg.style.cursor = 'pointer';
+            logoImg.addEventListener('click', function() {
+                location.reload();
+            });
+        }
     // ===== 질문 추가 플러스(+) 버튼 복원 =====
     const globalAddBtn = document.getElementById("global-question-add-btn");
     let currentHoverIndex = null;
@@ -2769,5 +2881,26 @@ function updateFollowupBadges() {
         }
     });
 }
+
+// 퍼소나 다음버튼
+document.getElementById("goToPersonaBtn").addEventListener("click", () => {
+    // 모든 질문 input이 비어있는지 체크
+    const questionInputs = document.querySelectorAll('.question-edit-input');
+    let hasEmpty = false;
+    questionInputs.forEach(input => {
+        if (!input.value.trim()) {
+            hasEmpty = true;
+        }
+    });
+    if (hasEmpty) {
+        alert('질문지 내용을 입력해주세요.');
+        return;
+    }
+    // 유효성 검사 통과 시 페이지 전환
+    document.getElementById("question-page").style.display = "none";
+    document.getElementById("persona-page").style.display = "block";
+    document.querySelector(".btn-persona").click();  // 탭 전환 효과 동일하게
+});
+
 // 전역 노출(필요 시 재호출)
 window.updateFollowupBadges = updateFollowupBadges;

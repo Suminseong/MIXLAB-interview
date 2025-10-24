@@ -1,3 +1,124 @@
+.brief-cards .brief-card:nth-child(4) {
+  width: clamp(100px, 28vw, 320px);
+}
+.brief-cards .brief-card:nth-child(4) .card-surface {
+  width: clamp(100px, 28vw, 400px);
+}
+.brief-cards .brief-card:nth-child(4) .card-body {
+  width: clamp(60px, 22vw, 240px);
+}
+#interview-page .input-group #userInput {
+  font-size: clamp(14px, 1vw, 17px);
+  padding: clamp(5px, 0.7vw, 10px) clamp(8px, 1vw, 16px);
+  height: clamp(28px, 2.2vw, 38px);
+  border-radius: clamp(12px, 1vw, 18px);
+  width: clamp(180px, 40vw, 480px);
+}
+#interview-page .input-group #sendButton {
+  background: #357AFF;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  min-width: 30px;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 8px rgba(53,122,255,0.10);
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+  outline: none;
+}
+#interview-page .input-group #sendButton:hover {
+  background: #2456b3;
+  box-shadow: 0 4px 16px rgba(53,122,255,0.16);
+  transform: scale(1.08);
+}
+#interview-page .input-group #sendButton:active {
+  background: #E7F0FF;
+  color: #357AFF;
+  transform: scale(0.95);
+}
+.show-input-btn span, .hide-input-btn span {
+  color: #8AB7FF !important;
+  font-size: 1.1rem;
+  line-height: 1;
+  display: block;
+}
+/* 입력창 표시/숨김 버튼 공통 스타일 */
+
+.show-input-btn, .hide-input-btn {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: clamp(12px, 1.5vw, 20px);
+  z-index: 101;
+  background: #fff;
+  color: #357AFF;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  box-shadow: 0 2px 8px rgba(84, 88, 103, 0.10);
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.18s;
+  outline: none;
+}
+.show-input-btn:hover, .hide-input-btn:hover {
+  background: #F7F8FA;
+  color: #2456b3;
+  box-shadow: 0 4px 16px rgba(84, 88, 103, 0.16);
+  transform: translateX(-50%) scale(1.08);
+}
+.show-input-btn:active, .hide-input-btn:active {
+  background: #E7F0FF;
+  color: #357AFF;
+  transform: translateX(-50%) scale(0.95);
+}
+
+/* main-container 기준 중앙정렬 (relative 필요) */
+.main-container {
+  position: relative;
+}
+
+/* input-group 내부 숨김 버튼 위치 조정 */
+#interview-page .input-group .hide-input-btn {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(60px, 4vw, 74px);
+  transform: translateX(-50%);
+  margin: 0;
+  background: #fff;
+  color: #357AFF;
+  border: none;
+  border-radius: 50%;
+  min-width: 30px;
+  width: 30px !important;
+  height: 30px !important;
+  padding: 0 !important;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 8px rgba(84, 88, 103, 0.10);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.18s;
+  outline: none;
+}
+#interview-page .input-group.active:hover .hide-input-btn {
+  display: flex;
+}
+
+
+#hideInputBtn {
+  left: 50% !important;
+}
+
 /* ====== New Dot Spinner ====== */
 .dot-spinner {
   display: flex;
@@ -16,69 +137,104 @@
   animation: dot-bounce 1s infinite;
 }
 
-.dot1 {
-  animation-delay: 0s;
-}
-
-.dot2 {
-  animation-delay: 0.2s;
-}
-
-.dot3 {
-  animation-delay: 0.4s;
-}
-
-.dot4 {
-  animation-delay: 0.6s;
-}
+.dot1 { animation-delay: 0s; }
+.dot2 { animation-delay: 0.2s; }
+.dot3 { animation-delay: 0.4s; }
+.dot4 { animation-delay: 0.6s; }
 
 @keyframes dot-bounce {
-
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.7;
-  }
-
-  50% {
-    transform: translateY(-18px);
-    opacity: 1;
-  }
+  0%, 100% { transform: translateY(0); opacity: 0.7; }
+  50% { transform: translateY(-18px); opacity: 1; }
 }
-
 #chatbox {
   display: flex;
   /* flex-direction: column-reverse !important; */
   height: 100%;
   overflow-y: auto;
 }
-
 /* 인터뷰 입력창 하단 고정 */
 
-/* 인터뷰 입력창: 컨테이너 내부 하단 고정 (페이지 전체가 아닌 박스 내부 스크롤) */
+/* 인터뷰 입력창을 화면 하단에 고정 */
 #interview-page .input-group {
-  position: sticky;
-  bottom: 0;
+  position: fixed;
+  left: -8%;
+  right: 0;
+  bottom: -120px; /* 처음엔 화면 아래로 숨김 */
+  width: clamp(300px, 100vw, 1000px);
+  margin: 0 auto;
   display: flex;
-  gap: 8px;
-  padding: 12px 16px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #fff 40%);
-  z-index: 5;
+  gap: clamp(6px, 1vw, 18px);
+  padding: clamp(10px, 1vw, 18px) clamp(12px, 2vw, 28px);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: bottom 0.4s cubic-bezier(0.4,0.2,0.2,1), opacity 0.3s;
+}
+
+#interview-page .input-group.active {
+  bottom: clamp(20px, 2vw, 28px); /* 정상 위치로 이동 */
+  opacity: 1;
+  pointer-events: auto;
+  width: 30%;
+}
+
+
+/* input-group 내부 공통 요소 스타일 */
+#interview-page .input-group > * {
+  font-size: clamp(15px, 1.2vw, 20px);
+  height: clamp(32px, 3vw, 48px);
+  min-width: clamp(40px, 8vw, 120px);
+  border-radius: clamp(12px, 2vw, 24px);
+  padding: clamp(6px, 0.8vw, 12px) clamp(10px, 1vw, 18px);
+  box-sizing: border-box;
+}
+
+/* 마이크 버튼 제거: 관련 스타일 삭제 (만약 .micButton 등 있으면 무시) */
+
+/* 전송 버튼 원형 스타일 */
+#interview-page .input-group .sendButton {
+  min-width: clamp(40px, 3vw, 48px);
+  width: clamp(40px, 3vw, 48px);
+  height: clamp(40px, 3vw, 48px);
+  border-radius: 50%;
+  padding: 0;
+  background: #357AFF;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(18px, 1.5vw, 24px);
+  border: none;
+  box-shadow: 0 2px 8px rgba(53, 122, 255, 0.08);
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+}
+#interview-page .input-group .sendButton:hover {
+  background: #2456b3;
+  box-shadow: 0 4px 16px rgba(53, 122, 255, 0.16);
+  transform: scale(1.08);
+}
+
+#logo img {
+  width: clamp(32px, 3.5vw, 58px) !important;
+  height: auto !important;
+  vertical-align: middle;
+  display: inline-block;
 }
 
 #interview-page {
-  padding-bottom: 0;
+  padding-bottom: 0px; /* 입력창 높이만큼 하단 여백 */
 }
-
 /* chatbox에 표시되는 퍼소나 이미지만 작게 */
-.chatbox-persona-img {
-  width: 24px !important;
+.chatbox-persona-img{
+  width: 24px  !important;
   height: 24px !important;
   object-fit: cover;
   border-radius: 50%;
   margin-top: 0 !important;
   margin-bottom: 4px !important;
 }
+
 
 /* 퍼소나 카드에 부드러운 hover 애니메이션 추가 */
 .persona-box {
@@ -147,7 +303,9 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(30, 34, 54, 0.35);
+  backdrop-filter: blur(6px) saturate(1.2);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 10000;
   justify-content: center;
   align-items: center;
@@ -162,34 +320,10 @@
   pointer-events: auto;
 }
 
-.api-key-modal-content {
-  background: white;
-  padding: 32px 24px;
-  width: 320px;
-  text-align: center;
-  border-radius: 16px;
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.10);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-}
-
 .api-key-icon {
   width: clamp(20px, 6vw, 120px);
   height: auto;
   margin-bottom: 10px;
-}
-
-#apiKeyInput {
-  border-radius: 20vw;
-  border: 1px solid #d1d2d3;
-}
-
-.apikey_text {
-  display: flex;
-  text-align: left;
 }
 
 /* 추�???질문지 ?�각?�으�??�인 가?�하�??�두?�으�?. */
@@ -366,6 +500,8 @@
   color: #222;
   font-weight: 500;
   text-align: left;
+  max-width: none;
+  white-space: nowrap;
 }
 
 #nav-item .nav-text[data-label]::after {
@@ -379,6 +515,8 @@
   opacity: 1;
   pointer-events: none;
   transition: color 0.2s;
+  max-width: none;
+  white-space: normal;
 }
 
 #nav-item:hover .nav-img img,
@@ -675,8 +813,7 @@ body::-webkit-scrollbar {
   max-height: 73vh;
   display: flex;
   flex-direction: column;
-  /* ?�요???�라 height ?�는 max-height 조정 */
-  /* 부�??�역???��? ?�게, ?��??�서�??�크�?*/
+  gap: clamp(14px, 1.2vw, 20px);
 }
 
 /* ====== 공통 ?�크롤바 ?��???====== */
@@ -729,18 +866,6 @@ body::-webkit-scrollbar {
   scrollbar-color: #E7F0FF transparent;
 }
 
-
-
-/* 질문 ?�정 input ?��???(질문지 input ?�용) */
-/* 질문 ?�정 input + ??�� 버튼 ?�퍼 */
-.question-edit-wrapper {
-  display: inline-flex;
-  align-items: center;
-  /* ???�로 중앙 ?�렬 */
-  gap: 0.5vw;
-  /* input�?버튼 간격 */
-}
-
 .question-edit-input {
   width: auto;
 
@@ -750,7 +875,6 @@ body::-webkit-scrollbar {
   padding: clamp(9.5px, 0.8vw, 16px) clamp(18px, 1vw, 44px);
   border: 1.5px solid #F2F3F5;
   border-radius: 50vw;
-  margin-bottom: clamp(15px, 1.3vw, 22px);
   background: #fff;
   outline: none;
   box-sizing: content-box !important;
@@ -758,11 +882,6 @@ body::-webkit-scrollbar {
   display: inline-block;
   white-space: nowrap;
   vertical-align: middle;
-}
-
-.question-index-num {
-  margin-bottom: clamp(15px, 1.3vw, 22px);
-  color: #CDD1D6;
 }
 
 
@@ -895,7 +1014,8 @@ body::-webkit-scrollbar {
 .analyze-kpi-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: clamp(14px, 1.2vw, 20px);
+  margin-bottom: clamp(14px, 1.2vw, 20px);
 }
 
 .kpi-card {
@@ -1209,30 +1329,21 @@ body::-webkit-scrollbar {
 
 
 /* ------------interview------------ */
-/* 인터뷰 컨테이너: 내부 스크롤을 담당하도록 레이아웃 구성 */
-#interview-container {
-  overflow: hidden;
-  /* 가로 스크롤 제거 및 내부 요소에 위임 */
-  display: flex;
-  flex-direction: column;
-  max-height: 70vh;
-  /* 메인 컨테이너를 넘지 않게 제한 */
+#interview-container{
+    overflow-x: hidden;
+    height: 660px;
+    overflow-y: visible !important;
 }
 
 #chatbox {
-  display: flex;
-  flex-direction: column;
-  border: none;
-  width: 100%;
-  flex: 1 1 auto;
-  /* 남는 공간을 채우고 */
-  min-height: 0;
-  /* flex 컨테이너에서 스크롤 가능하도록 필수 */
-  padding: 10px 10px 0 10px;
-  overflow-y: auto;
-  /* 이 영역에서만 스크롤 */
-  margin-bottom: 10px;
-  gap: 20px;
+    display: flex;
+    flex-direction: column;
+    border: none ;
+    height: 60%;
+    width: 100%;
+    overflow-y: scroll;
+    margin-bottom: 10px;
+    margin-top: 10px;
 }
 
 .chatbox-persona {
@@ -1322,7 +1433,9 @@ body::-webkit-scrollbar {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(71, 71, 71, 0.5);
+  background: rgba(30, 34, 54, 0.35);
+  backdrop-filter: blur(6px) saturate(1.2);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 9999;
   display: flex;
   justify-content: center;
@@ -1434,12 +1547,6 @@ body::-webkit-scrollbar {
   background-color: #475ED8;
 }
 
-/* 질문지 ?�이?�이??/
-#questionList li.active-question {
-    background-color: #DDE2FF;
-    font-weight: 600;
-}
-
 /* ===================== 분석 ?�?�보???��???===================== */
 .analyze-dashboard {
   display: flex;
@@ -1449,21 +1556,15 @@ body::-webkit-scrollbar {
 }
 
 .analyze-main {
-  flex: 2 1 0;
-  background: #fff;
   border-radius: 32px;
-  padding: 32px 36px 24px 36px;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  box-shadow: 0 0 32px rgba(84, 88, 103, 0.04);
   color: #B0B4BC;
   border-radius: 16px;
-  padding: 4px 14px;
   font-size: 13px;
   overflow-x: hidden;
   overflow-y: auto;
-  margin-right: 6px;
 }
 
 .analyze-persona-tabs {
@@ -1489,13 +1590,6 @@ body::-webkit-scrollbar {
   color: #fff;
 }
 
-.analyze-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #5B5E63;
-  margin-bottom: 8px;
-}
-
 .analyze-chart-section {
   background: #F8F9FB;
   border-radius: 24px;
@@ -1511,45 +1605,90 @@ body::-webkit-scrollbar {
 
 .analyze-keywords {
   flex: 1 1 0;
-  background: #fff;
   border-radius: 24px;
   padding: 18px 18px 8px 18px;
   min-width: 180px;
-  box-shadow: 0 0 12px rgba(84, 88, 103, 0.04);
+  height: auto;
 }
 
 .keywords-title {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: clamp(14px, 1vw, 16px);
+  font-weight: 400;
   color: #5B5E63;
-  margin-bottom: 8px;
+  margin-bottom: clamp(14px, 1.4vw, 24px);
 }
 
 .keyword-cloud {
-  width: 100%;
-  height: 110px;
+  width: 80%;
   min-height: 80px;
-  background: #F8F9FB;
-  border-radius: 16px;
+  max-height: clamp(200px, 29vh, 300px);
+  background: linear-gradient(90deg,#f8f9fb 60%,#e7f0ff 100%);
+  border-radius: 22px;
+  box-shadow: 0 4px 24px rgba(53,122,255,0.08);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: clamp(18px, 3vw, 36px) clamp(12px, 2vw, 32px);
+  flex-wrap: wrap;
+  gap: clamp(10px, 2vw, 24px);
+  border: 1.5px solid #e3e7ef;
+  text-align: center;
 }
-
-.analyze-summary-panels {
-  flex: 2 1 0;
-  display: flex;
-  gap: 16px;
+.keyword-pill {
+  display: inline-block;
+  background: linear-gradient(120deg, #e7f0ff 0%, #f8f9fb 100%);
+  color: #357AFF;
+  font-size: clamp(11px, 0.7vw, 16px);
+  font-weight: 700;
+  border-radius: 18px;
+  /* 기본값은 중간 크기 */
+  padding: clamp(5px, 0.6vw, 10px) clamp(8px, 1.2vw, 18px);
 }
-
-.summary-panel,
-.feedback-panel {
-  background: #fff;
-  border-radius: 24px;
-  padding: 18px 18px 8px 18px;
-  min-width: 180px;
-  box-shadow: 0 0 12px rgba(84, 88, 103, 0.04);
-  flex: 1 1 0;
+.keyword-pill.size-lg {
+  padding: clamp(7px, 0.9vw, 14px) clamp(12px, 1.6vw, 24px);
+}
+.keyword-pill.size-md {
+  padding: clamp(5px, 0.6vw, 10px) clamp(8px, 1.2vw, 18px);
+}
+.keyword-pill.size-sm {
+  padding: clamp(3px, 0.4vw, 7px) clamp(5px, 0.8vw, 12px);
+  margin: 2px 8px;
+  box-shadow: 0 2px 12px rgba(53,122,255,0.13);
+  border: 1.5px solid #e3e7ef;
+  letter-spacing: -0.5px;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.keyword-pill:hover {
+  background: #357AFF;
+  color: #fff;
+  transform: scale(1.12);
+  z-index: 2;
+}
+/* 랜덤 효과용 클래스 예시 (JS에서 랜덤으로 부여) */
+.keyword-pill.size-lg { font-size: clamp(14px, 1.1vw, 20px); }
+.keyword-pill.size-md { font-size: clamp(12px, 0.9vw, 16px); }
+.keyword-pill.size-sm { font-size: clamp(10px, 0.7vw, 13px); }
+.keyword-pill.color-blue {
+  color: #357AFF;
+  background: #E7F0FF;
+}
+.keyword-pill.color-sky {
+  color: #357AFF;
+  background: #E7F0FF;
+}
+.keyword-pill.color-gray {
+  color: #5B5E63;
+  background: #F3F4F7;
+}
+.keyword-pill.float-anim {
+  animation: floatCloud 2.2s ease-in-out infinite alternate;
+}
+@keyframes floatCloud {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
 }
 
 .summary-title,
@@ -1568,31 +1707,12 @@ body::-webkit-scrollbar {
   padding: 10px 16px;
 }
 
-.feedback-list {
-  font-size: 13px;
-  color: #8F949B;
-  padding-left: 16px;
-  margin: 0;
-}
-
-.feedback-list li {
-  margin-bottom: 6px;
-}
-
 .analyze-side {
   flex: 1 1 0;
   display: flex;
   flex-direction: column;
   gap: 18px;
   min-width: 220px;
-}
-
-.side-widget {
-  background: #fff;
-  border-radius: 24px;
-  padding: 18px 18px 8px 18px;
-  box-shadow: 0 0 12px rgba(84, 88, 103, 0.04);
-  margin-bottom: 0;
 }
 
 .donut-widget {
@@ -1688,28 +1808,6 @@ body::-webkit-scrollbar {
 
 .lang-widget {
   min-height: 70px;
-}
-
-.lang-feedback-list {
-  font-size: 13px;
-  color: #8F949B;
-  padding-left: 16px;
-  margin: 0;
-}
-
-.lang-feedback-list li {
-  margin-bottom: 6px;
-}
-
-.info-tooltip {
-  background: #F2F3F5;
-  color: #8F949B;
-  border-radius: 50%;
-  padding: 0 7px;
-  font-size: 13px;
-  cursor: pointer;
-  margin-left: 4px;
-  border: 1px solid #E0E2E6;
 }
 
 /* ?�트�??�니메이??*/
@@ -1820,7 +1918,7 @@ body::-webkit-scrollbar {
 
 /* ================= Emotion (sidebar) ================= */
 .emotion-widget .widget-title {
-  margin-bottom: 12px;
+  margin-bottom: clamp(12px, 0.9vw, 16px);
 }
 
 .emotion-list {
@@ -2039,13 +2137,17 @@ body::-webkit-scrollbar {
   pointer-events: auto;
 }
 
+/* API Key Modal 영역 */
+
 .api-key-modal-content {
   background: white;
-  padding: 32px 24px;
-  width: 320px;
+  padding: 32px 40px !important;
+  width: 400px !important;
+  min-width: 320px;
+  box-sizing: border-box;
   text-align: center;
   border-radius: 16px;
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.10);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2053,20 +2155,42 @@ body::-webkit-scrollbar {
   margin: 0;
 }
 
+.apikey_text {
+  display: flex;
+  text-align: left;
+  font-size: clamp(14px, 1.2vw, 18px);
+  color: #5B5E63;
+  margin-bottom: 8px;
+}
+
+#apiKeyInput{
+  width: 100%;
+  border-radius: 20vw;
+  border: 1.5px solid #d1d2d3;
+  padding: clamp(10px, 1vw, 12px) clamp(12px, 1.2vw, 16px) !important;
+  font-size: clamp(12px, 0.85vw, 15px);
+  margin-top: clamp(8px, 0.6vw, 14px) !important;
+}
+
+#saveApiKey {
+  background: #E7F0FF;
+  color: #475ED8;
+  border: solid 1.5px #ABC4FF;
+  border-radius: 20vw;
+  font-size: clamp(12px, 1vw, 15px);
+  cursor: pointer;
+  transition: 0.2s ease, transform 0.1s ease;
+  padding: clamp(7px, 0.6vw, 14px) clamp(20px, 1.6vw, 32px);
+  margin-top: clamp(16px, 1.2vw, 20px) !important;
+  font-weight: 600;
+}
+
+/* ---- */
+
 .api-key-icon {
   width: clamp(20px, 6vw, 120px);
   height: auto;
   margin-bottom: 10px;
-}
-
-#apiKeyInput {
-  border-radius: 20vw;
-  border: 1px solid #d1d2d3;
-}
-
-.apikey_text {
-  display: flex;
-  text-align: left;
 }
 
 /* 추�???질문지 ?�각?�으�??�인 가?�하�??�두?�으�?. */
@@ -2374,17 +2498,6 @@ input:-webkit-autofill {
 }
 
 
-.question-box {
-  overflow-y: auto;
-  max-height: 73vh;
-  display: flex;
-  flex-direction: column;
-  /* ?�요???�라 height ?�는 max-height 조정 */
-  /* 부�??�역???��? ?�게, ?��??�서�??�크�?*/
-}
-
-/* ====== 공통 ?�크롤바 ?��???====== */
-/* ===== ?�롬, ?��?, ?�파리용 ?�크롤바 ===== */
 *::-webkit-scrollbar {
   width: 13px;
   height: 13px;
@@ -2392,14 +2505,14 @@ input:-webkit-autofill {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #E7F0FF;
+  background: #e7e7e7;
   border-radius: 10vw;
   border: 3px solid transparent;
   min-height: 30px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #8ab7ff;
+  background: #cccdcd;
   /* hover???�일 ?�상 ?��? */
 }
 
@@ -2454,7 +2567,6 @@ input:-webkit-autofill {
   padding: clamp(9.5px, 0.8vw, 16px) clamp(18px, 1vw, 44px);
   border: 1.5px solid #F2F3F5;
   border-radius: 50vw;
-  margin-bottom: clamp(15px, 1.3vw, 22px);
   background: #fff;
   outline: none;
   box-sizing: content-box !important;
@@ -2465,7 +2577,6 @@ input:-webkit-autofill {
 }
 
 .question-index-num {
-  margin-bottom: clamp(15px, 1.3vw, 22px);
   color: #CDD1D6;
 }
 
@@ -2915,25 +3026,6 @@ input:-webkit-autofill {
   align-items: stretch;
 }
 
-/* ------------interview------------ */
-#interview-container {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  max-height: 70vh;
-}
-
-#chatbox {
-  display: flex;
-  flex-direction: column;
-  border: none;
-  width: 100%;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  margin-bottom: 10px;
-}
-
 /* 공통 메시지 ?��???*/
 .message {
   max-width: 70%;
@@ -3091,34 +3183,12 @@ input:-webkit-autofill {
   background-color: #475ED8;
 }
 
-/* 질문지 ?�이?�이??/
-#questionList li.active-question {
-    background-color: #DDE2FF;
-    font-weight: 600;
-}
-
 /* ===================== 분석 ?�?�보???��???===================== */
 .analyze-dashboard {
   display: flex;
   flex-direction: row;
   gap: 32px;
   margin-top: 12px;
-}
-
-.analyze-main {
-  flex: 2 1 0;
-  background: #fff;
-  border-radius: 32px;
-  padding: 32px 36px 24px 36px;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  box-shadow: 0 0 32px rgba(84, 88, 103, 0.04);
-  color: #B0B4BC;
-  border-radius: 16px;
-  padding: 4px 14px;
-  font-size: 13px;
-  margin-right: 6px;
 }
 
 .analyze-persona-tabs {
@@ -3145,10 +3215,10 @@ input:-webkit-autofill {
 }
 
 .analyze-title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: clamp(14px, 1vw, 16px);
+  font-weight: 400;
   color: #5B5E63;
-  margin-bottom: 8px;
+  margin-bottom: clamp(14px, 1.4vw, 24px);
 }
 
 .analyze-chart-section {
@@ -3164,31 +3234,19 @@ input:-webkit-autofill {
   margin-top: 10px;
 }
 
-.analyze-keywords {
-  flex: 1 1 0;
-  background: #fff;
-  border-radius: 24px;
-  padding: 18px 18px 8px 18px;
-  min-width: 180px;
-  box-shadow: 0 0 12px rgba(84, 88, 103, 0.04);
-}
-
-.keywords-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #5B5E63;
-  margin-bottom: 8px;
-}
 
 .keyword-cloud {
   width: 100%;
-  height: 110px;
+  max-width: 240px !important;
+  height: auto;
   min-height: 80px;
   background: #F8F9FB;
   border-radius: 16px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow-x: auto;
+  padding: clamp(14px, 2vw, 22px) clamp(6px, 1vw, 12px);
 }
 
 .analyze-summary-panels {
@@ -3226,7 +3284,6 @@ input:-webkit-autofill {
 .feedback-list {
   font-size: 13px;
   color: #8F949B;
-  padding-left: 16px;
   margin: 0;
 }
 
@@ -3245,7 +3302,8 @@ input:-webkit-autofill {
 .side-widget {
   background: #fff;
   border-radius: 24px;
-  padding: 18px 18px 8px 18px;
+  padding: clamp(18px, 1.5vw, 26px) clamp(18px, 1.7vw, 30px);
+  padding-bottom: clamp(12px, 1vw, 17px);
   box-shadow: 0 0 12px rgba(84, 88, 103, 0.04);
   margin-bottom: 0;
 }
@@ -3345,22 +3403,11 @@ input:-webkit-autofill {
   min-height: 70px;
 }
 
-.lang-feedback-list {
-  font-size: 13px;
-  color: #8F949B;
-  padding-left: 16px;
-  margin: 0;
-}
-
-.lang-feedback-list li {
-  margin-bottom: 6px;
-}
-
 .info-tooltip {
   background: #F2F3F5;
   color: #8F949B;
   border-radius: 50%;
-  padding: 0 7px;
+  padding: clamp(2px, 0.2vw, 4px) clamp(6px, 0.5vw, 10px);
   font-size: 13px;
   cursor: pointer;
   margin-left: 4px;
@@ -3427,7 +3474,7 @@ input:-webkit-autofill {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: clamp(8px, 0.8vw, 12px) clamp(20px, 2.2vw, 32px);
+  padding: clamp(6px, 0.8vw, 9px) clamp(20px, 2.2vw, 22px);
   gap: clamp(6px, 0.8vw, 12px);
 
   background: #E7F0FF;
@@ -3436,7 +3483,7 @@ input:-webkit-autofill {
 
   font-family: 'Pretendard';
   font-weight: 600;
-  font-size: clamp(13px, 1.1vw, 17px);
+  font-size: clamp(13px, 1.1vw, 16px);
   line-height: clamp(16px, 1.3vw, 20px);
   letter-spacing: -0.03em;
   color: #8194FF;
@@ -3596,16 +3643,6 @@ input:-webkit-autofill {
   width: clamp(20px, 6vw, 120px);
   height: auto;
   margin-bottom: 10px;
-}
-
-#apiKeyInput {
-  border-radius: 20vw;
-  border: 1px solid #d1d2d3;
-}
-
-.apikey_text {
-  display: flex;
-  text-align: left;
 }
 
 /* 추�???질문지 ?�각?�으�??�인 가?�하�??�두?�으�?. */
@@ -3791,56 +3828,73 @@ input:-webkit-autofill {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(30, 34, 54, 0.35);
+  backdrop-filter: blur(6px) saturate(1.2);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 10000;
   justify-content: center;
   align-items: center;
 }
 
+
 .interview-time-modal-content {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  max-width: 400px;
-  width: 90%;
+  background: rgba(255,255,255,0.96);
+  padding: 3.2rem 2.5rem 2.5rem 2.5rem;
+  border-radius: clamp(16px, 2.2vw, 32px);
+  box-shadow: 0 8px 32px rgba(30,34,54,0.18);
+  max-width: 420px;
+  width: 92vw;
   text-align: center;
   position: relative;
+  animation: modalPop 0.4s cubic-bezier(.7,-0.4,.3,1.4);
+}
+
+@keyframes modalPop {
+  0% { transform: scale(0.7); opacity: 0; }
+  70% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .interview-time-modal-content h3 {
-  margin-bottom: 1.5rem;
-  color: #333;
-  font-size: 1.5rem;
+  margin-bottom: 1.8rem;
+  color: #2D2E32;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.5px;
 }
 
 .time-option {
   display: block;
   width: 100%;
-  padding: 1rem;
+  padding: 0.85rem 0;
   margin: 0.5rem 0;
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  background: white;
+  border: 2px solid #e3e7ef;
+  border-radius: clamp(12px, 1vw, 16px);
+  background: #f8f9fb;
   cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  font-size: clamp(15px,1.2vw,19px);
+  font-weight: 400;
+  color: #67707A;
+  transition: all 0.22s cubic-bezier(.7,-0.4,.3,1.4);
+  box-shadow: 0 1px 4px rgba(53,122,255,0.06);
 }
 
 .time-option:hover {
-  border-color: #007bff;
-  background: #f8f9fa;
+  border-color: #357AFF;
+  background: #e7f0ff;
+  color: #2456b3;
 }
 
 .time-option.selected {
-  border-color: #007bff;
-  background: #e3f2fd;
-  color: #1976d2;
+  border-color: #2456b3;
+  background: linear-gradient(90deg,#e7f0ff 0%,#f8f9fb 100%);
+  color: #2456b3;
+  box-shadow: 0 2px 8px rgba(53,122,255,0.10);
 }
 
 .time-buttons {
   display: flex;
-  gap: 1rem;
+  gap: 1.1rem;
   justify-content: center;
   margin-top: 1.5rem;
 }
@@ -3848,28 +3902,31 @@ input:-webkit-autofill {
 .time-btn {
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 50px;
   cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  font-size: 1.08rem;
+  font-weight: 400;
+  transition: all 0.2s cubic-bezier(.7,-0.4,.3,1.4);
+  box-shadow: 0 1px 4px rgba(53,122,255,0.06);
 }
 
 .time-btn.confirm {
-  background: #007bff;
-  color: white;
+  background-color: #6BA4FF;
+  color: #fff;
 }
 
 .time-btn.confirm:hover {
-  background: #0056b3;
+  background: #2456b3;
 }
 
 .time-btn.cancel {
-  background: #6c757d;
-  color: white;
+  background: #e3e7ef;
+  color: #a1b0c6;
+  font-weight: 400;
 }
 
 .time-btn.cancel:hover {
-  background: #545b62;
+  background: #cfd8e3;
 }
 
 /* ===== 인터뷰 종료 모달 버튼 호버 효과 ===== */
@@ -3972,8 +4029,8 @@ input:-webkit-autofill {
 }
 
 #sendButton {
-  width: clamp(30px, 4vw, 48px);
-  height: 48px;
+  width: clamp(3px, 1.9vw, 48px) !important;
+  height: clamp(30px, 1.9vw, 48px) !important;
   border-radius: 20vw;
   border: none;
   background-color: #F2F3F5;
@@ -3989,28 +4046,43 @@ input:-webkit-autofill {
 
 /* ---- */
 
-#chating-left {
+#chating-left{
   display: flex;
 }
 
-#chating-left-box {
-  width: clamp(60px, 8vw, 300px);
-  height: clamp(40px, 2vw, 40px);
+#chating-left-box{
+  height: clamp(18px, 1.4vw, 24px);
   background-color: #F2F3F5;
   border-radius: 12px 12px 12px 4px;
+  color: #8F949B;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: clamp(10px, 1.2vw, 12px) clamp(4px, 1vw, 16px);
+  width: fit-content;
+  font-weight: 500;
 }
-
-#chating-left-img {
+#chating-left-img{
   width: clamp(60px, 8vw, 120px);
   border-radius: 50%;
 }
 
-#chating-right-box {
-  width: clamp(60px, 8vw, 300px);
-  height: clamp(40px, 2vw, 40px);
+#chating-right-box{
   background-color: #e7efff;
   border-radius: 12px 12px 4px 12px;
   margin-left: auto;
+  color: #8FA8D5;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: clamp(10px, 1.2vw, 12px) clamp(4px, 1vw, 16px);
+  width: fit-content;
+  font-weight: 500;
+}
+
+#chating{
+  position: relative;
+  bottom: -40px;
 }
 
 #utteranceTimeline {
@@ -4039,7 +4111,7 @@ input:-webkit-autofill {
 /*-----임시-------*/
 
 .active-question {
-  background-color: #DDE2FF !important;
+  background-color: #EEF2F7 !important;
   font-weight: 600 !important;
 }
 
@@ -4075,20 +4147,19 @@ input:-webkit-autofill {
 .final-guide {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: clamp(32px, 3vw, 48px);
 }
 
 .final-brief {
   background: #fff;
   border-radius: 16px;
-  padding: 20px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .final-brief-header {
   font-weight: 700;
   color: #5B5E63;
-  margin-bottom: 12px;
+  margin-bottom: clamp(20px, 1vw, 24px);
 }
 
 .brief-cards {
@@ -4098,14 +4169,14 @@ input:-webkit-autofill {
 }
 
 .brief-card {
-  width: 170px;
-  height: 204px;
+  width: clamp(140px, 18vw, 180px);
+  height: clamp(170px, 22vw, 220px);
   position: relative;
 }
 
 .brief-card .card-surface {
-  width: 170px;
-  height: 204px;
+  width: clamp(140px, 18vw, 180px);
+  height: clamp(170px, 22vw, 220px);
   position: absolute;
   left: 0;
   top: 0;
@@ -4115,7 +4186,16 @@ input:-webkit-autofill {
 }
 
 .brief-card .card-body {
-  width: 114px;
+  width: clamp(90px, 12vw, 130px);
+.brief-cards .brief-card:nth-child(4) {
+  width: clamp(200px, 28vw, 320px);
+}
+.brief-cards .brief-card:nth-child(4) .card-surface {
+  width: clamp(200px, 28vw, 320px);
+}
+.brief-cards .brief-card:nth-child(4) .card-body {
+  width: clamp(160px, 22vw, 240px);
+}
   position: absolute;
   left: 20px;
   top: 20px;
@@ -4132,22 +4212,25 @@ input:-webkit-autofill {
 
 .brief-card .label {
   color: #5B5E63;
-  font-size: 12px;
+  font-size: clamp(11px, 1vw, 14px);
   font-weight: 400;
+  line-height: 1.3;
+  word-break: keep-all;
+  white-space: pre-line;
 }
 
 .brief-card .value {
   color: #5B5E63;
-  font-size: 16px;
+  font-size: clamp(13px, 1.1vw, 16px);
   font-weight: 700;
-  line-height: 20.8px;
+  line-height: 1.4;
+  word-break: keep-all;
+  white-space: pre-line;
+  overflow-wrap: break-word;
 }
 
 .final-questions {
-  background: #fff;
   border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .final-questions-title {
@@ -4161,13 +4244,12 @@ input:-webkit-autofill {
   padding-left: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  overflow-y: scroll;
+  height: clamp(300px, 30vh, 600px);
+  padding-top: clamp(4px, 0.5vw, 8px);
 }
 
 .final-questions-list li {
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #F0F2F5;
   padding: 10px 14px;
   color: #5B5E63;
   position: relative;
@@ -4224,14 +4306,15 @@ input:-webkit-autofill {
 
 .suggestion-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  flex-direction: column;
 }
 
 .suggestion-title {
   color: #5B5E63;
   font-size: 18px;
   font-weight: 600;
+  margin-bottom: clamp(2px, 0.5vw, 4px);
 }
 
 .suggestion-subtitle {
@@ -4243,7 +4326,7 @@ input:-webkit-autofill {
 .suggestion-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: clamp(12px, 1vw, 14px);
   counter-reset: sug;
 }
 
@@ -4267,21 +4350,65 @@ input:-webkit-autofill {
 .suggestion-pill {
   width: 100%;
   max-width: 340px;
-  padding: 10px 16px;
+  padding: clamp(6px,0.7vw,10px) clamp(6px,0.8vw,14px);
   background: #fff;
   border-radius: 12px;
   outline: 1px #F6F6F6 solid;
   outline-offset: -1px;
   color: #8F949B;
-  font-size: 16px;
+  font-size: clamp(12px,1.1vw,14px);
   font-weight: 500;
   line-height: 24px;
 }
 
-#revision-page {
+#analysis-page {
   overflow-y: scroll;
 }
 
-#analysis-page {
-  overflow-y: scroll;
+.analyze-bottom-section{
+  display: flex;
+  justify-content: space-between;
+}
+
+.keyword-cloud svg{
+  width: clamp(100px, 20vw, 300px);
+  height: clamp(50px, 14vw, 180px);
+}
+
+#printFinalGuideBtn{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(6px, 0.8vw, 9px) clamp(20px, 2.2vw, 22px);
+  gap: clamp(6px, 0.8vw, 12px);
+
+  background: #E7F0FF;
+  border: 1px solid #ABC4FF;
+  border-radius: 50px;
+
+  font-family: 'Pretendard';
+  font-weight: 600;
+  font-size: clamp(13px, 1.1vw, 16px);
+  line-height: clamp(16px, 1.3vw, 20px);
+  letter-spacing: -0.03em;
+  color: #8194FF;
+
+  cursor: pointer;
+  transition: opacity 0.4s ease, transform 0.2s ease;
+  position: absolute;
+  right: clamp(24px, 2.5vw, 40px);
+  bottom: clamp(24px, 2.5vw, 40px);
+}
+
+#regenSuggestionsBtn{
+  display: flex;
+  margin-left: auto;
+  margin-top: clamp(8px, 0.8vw, 10px);
+}
+
+.widget-title{
+  font-size: clamp(14px, 1vw, 16px);
+  font-weight: 400;
+  color: #5B5E63;
+  margin-bottom: clamp(14px, 1.4vw, 24px);
 }
