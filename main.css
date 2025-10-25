@@ -227,8 +227,8 @@
 }
 /* chatbox에 표시되는 퍼소나 이미지만 작게 */
 .chatbox-persona-img{
-  width: 24px  !important;
-  height: 24px !important;
+  width: clamp(24px, 3vw, 32px) !important;
+  height: clamp(24px, 3vw, 32px)  !important;
   object-fit: cover;
   border-radius: 50%;
   margin-top: 0 !important;
@@ -807,13 +807,13 @@ body::-webkit-scrollbar {
   /* overflow-y: auto; */
 }
 
-
+/* 전시장 조정 */
 .question-box {
   overflow-y: auto;
   max-height: 73vh;
   display: flex;
   flex-direction: column;
-  gap: clamp(14px, 1.2vw, 20px);
+  gap: clamp(16px, 1.4vw, 32px);
 }
 
 /* ====== 공통 ?�크롤바 ?��???====== */
@@ -1329,9 +1329,10 @@ body::-webkit-scrollbar {
 
 
 /* ------------interview------------ */
+/* 전시장 조정 */
 #interview-container{
     overflow-x: hidden;
-    height: 660px;
+    height: 90vh;
     overflow-y: visible !important;
 }
 
