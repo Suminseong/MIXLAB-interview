@@ -4102,11 +4102,13 @@ input:-webkit-autofill {
 }
 
 .bar--user {
-  background: #8AB7FF;
+  /* 인터뷰이 색상 */
+  background: #6FA6FE;
 }
 
 .bar--persona {
-  background: #D8DEE9;
+  /* 인터뷰어 색상 */
+  background: #C9DFFF;
 }
 
 /*-----임시-------*/
