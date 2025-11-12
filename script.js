@@ -6,6 +6,7 @@ function renderEmotionalCardsLocal(selector = '#emotionList', logs = []) {
     // Heuristics from logs
     const textAll = Array.isArray(logs) ? logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ') : '';
     const hasLaugh = /웃|하하|호호|하핫|헤헤|^\s*\)|\(:/gm.test(textAll);
+
     const hasDiscomfort = /(불편|싫|짜증|불만|거부|불쾌|꺼려|곤란|기분 나쁘)/gm.test(textAll);
 
     // pause detection between turns (>= 15s)
@@ -60,6 +61,121 @@ function renderEmotionalCardsLocal(selector = '#emotionList', logs = []) {
     `).join('');
 }
 
+// 간단한 키워드 클라우드 빌더(외부 라이브러리 없이 동작)
+function buildKeywordCloud(el, logs, maxWords = 20) {
+    if (!el) return;
+    if (typeof window !== 'undefined' && typeof window.buildKeywordCloud === 'function' && window.buildKeywordCloud !== buildKeywordCloud) {
+        try {
+            window.buildKeywordCloud(el, logs, maxWords);
+            return;
+        } catch (err) {
+            console.warn('Delegated buildKeywordCloud failed, using local fallback.', err);
+        }
+    }
+
+    el.innerHTML = '';
+    el.style.position = el.style.position || 'relative';
+    el.style.overflow = 'hidden';
+
+    const fallbackExtractTopKeywords = (sourceLogs, topN = 20) => {
+        if (!Array.isArray(sourceLogs) || !sourceLogs.length) return [];
+        const KO_STOPWORDS_LOCAL = new Set(['그리고', '그러나', '하지만', '그러면', '그래서', '또', '또는', '즉', '혹은', '이것', '저것', '그것', '거기', '여기', '저기', '좀', '아주', '매우', '너무', '정말', '진짜', '거의', '약간', '등', '등등', '같은', '것', '수', '때', '점', '및', '는', '은', '이', '가', '을', '를', '에', '의', '로', '으로', '와', '과', '도', '만', '에게', '한', '하다', '했습니다', '했어요', '하는', '되다', '됐다']);
+        const text = sourceLogs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
+        const tokens = (text || '').replace(/[^\uAC00-\uD7A3\w\s]/g, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
+        const freq = new Map();
+        for (const t of tokens) freq.set(t, (freq.get(t) || 0) + 1);
+        const entries = [...freq.entries()].sort((a, b) => b[1] - a[1]).filter(([, count]) => count > 1);
+        return entries.slice(0, topN).map(([text, count]) => ({ text, weight: count }));
+    };
+
+    let keywords = [];
+    try {
+        if (typeof extractTopKeywords === 'function') {
+            keywords = extractTopKeywords(logs, maxWords) || [];
+        } else {
+            keywords = fallbackExtractTopKeywords(logs, maxWords) || [];
+        }
+    } catch (err) {
+        console.warn('Keyword extraction failed, falling back to simple display.', err);
+        keywords = [];
+    }
+
+    if (!keywords.length) {
+        const span = document.createElement('span');
+        span.className = 'keyword-pill color-gray size-md';
+        span.textContent = '-';
+        el.appendChild(span);
+        return;
+    }
+
+    const words = keywords.map((k, i) => ({ text: k.text, size: Math.max(12, 12 + (k.weight || 1) * 4), index: i }));
+    const W = Math.max(200, el.clientWidth || el.offsetWidth || 300);
+    const H = Math.max(80, el.clientHeight || el.offsetHeight || 140);
+    const placedRects = [];
+
+    try {
+        words.forEach(word => {
+            const span = document.createElement('span');
+            span.textContent = word.text;
+            span.style.position = 'absolute';
+            span.style.display = 'inline-block';
+            span.style.fontSize = word.size + 'px';
+            span.style.lineHeight = '1';
+            span.style.whiteSpace = 'nowrap';
+            span.style.fontFamily = 'Pretendard, system-ui, Arial';
+            span.style.color = word.index === 0 ? '#5872FF' : '#B0B4BC';
+            span.style.cursor = 'default';
+            span.style.userSelect = 'none';
+            span.style.zIndex = String(1000 - word.index);
+            el.appendChild(span);
+
+            const spanW = span.offsetWidth || (word.text.length * (word.size * 0.55));
+            const spanH = span.offsetHeight || (word.size * 1.05);
+            const cx = W / 2 - spanW / 2;
+            const cy = H / 2 - spanH / 2;
+            let placed = false;
+            const maxAttempts = 800;
+            for (let a = 0; a < maxAttempts; a++) {
+                const t = a * 0.35;
+                const radius = 5 + a * 0.6;
+                const x = Math.round(cx + radius * Math.cos(t));
+                const y = Math.round(cy + radius * Math.sin(t));
+                const nx = Math.max(0, Math.min(W - spanW, x));
+                const ny = Math.max(0, Math.min(H - spanH, y));
+                const rect = { x: nx, y: ny, w: spanW, h: spanH };
+                let overlap = false;
+                for (const r of placedRects) {
+                    if (!(rect.x + rect.w < r.x || rect.x > r.x + r.w || rect.y + rect.h < r.y || rect.y > r.y + r.h)) { overlap = true; break; }
+                }
+                if (!overlap) {
+                    placedRects.push(rect);
+                    span.style.left = rect.x + 'px';
+                    span.style.top = rect.y + 'px';
+                    placed = true;
+                    break;
+                }
+            }
+            if (!placed) {
+                const rx = Math.max(0, Math.min(W - spanW, Math.floor(Math.random() * Math.max(1, W - spanW))));
+                const ry = Math.max(0, Math.min(H - spanH, Math.floor(Math.random() * Math.max(1, H - spanH))));
+                placedRects.push({ x: rx, y: ry, w: spanW, h: spanH });
+                span.style.left = rx + 'px';
+                span.style.top = ry + 'px';
+            }
+        });
+        el.style.minHeight = H + 'px';
+    } catch (err) {
+        console.warn('Failed to layout keyword cloud, reverting to pill list.', err);
+        el.innerHTML = '';
+        keywords.forEach(k => {
+            const span = document.createElement('span');
+            span.className = 'keyword-pill color-gray size-md';
+            span.textContent = k.text;
+            el.appendChild(span);
+        });
+    }
+}
+
 // ---------- 실사용 renderAnalysisDashboard 대체 함수 ----------
 async function renderAnalysisDashboard(opts = {}) {
     const targetMinutes = opts.targetMinutes || (window.interviewDuration || 20);
@@ -91,6 +207,28 @@ async function renderAnalysisDashboard(opts = {}) {
         if (barCtx) {
             if (window.barChartInstance) window.barChartInstance.destroy();
             const labels = Array.from({ length: qCount }, (_, i) => `Q${i + 1}`);
+            const valueOnBarPlugin = {
+                id: 'valueOnBar',
+                afterDatasetsDraw(chart) {
+                    const { ctx, chartArea } = chart;
+                    const meta = chart.getDatasetMeta(0);
+                    if (!meta) return;
+                    ctx.save();
+                    meta.data.forEach((bar, idx) => {
+                        const raw = chart.data.datasets[0].data[idx];
+                        if (raw == null || !Number.isFinite(raw)) return;
+                        const formatted = Number.isInteger(raw) ? `${raw}초` : `${raw.toFixed(1)}초`;
+                        let y = bar.y - 6;
+                        if (y < chartArea.top + 6) y = chartArea.top + 6;
+                        ctx.fillStyle = '#4A4F58';
+                        ctx.font = '500 12px Pretendard, system-ui';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        ctx.fillText(formatted, bar.x, y);
+                    });
+                    ctx.restore();
+                }
+            };
             window.barChartInstance = new Chart(barCtx, {
                 type: 'bar',
                 data: {
@@ -104,7 +242,14 @@ async function renderAnalysisDashboard(opts = {}) {
                     }]
                 },
                 options: {
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.parsed.y}초`
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             min: 0,
@@ -117,7 +262,8 @@ async function renderAnalysisDashboard(opts = {}) {
                             grid: { display: false }
                         }
                     }
-                }
+                },
+                plugins: [valueOnBarPlugin]
             });
         }
     } catch (e) {
@@ -165,30 +311,31 @@ async function renderAnalysisDashboard(opts = {}) {
                 const tokens = (text || '').replace(/[^ - - - -\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
                 const freq = new Map();
                 for (const t of tokens) freq.set(t, (freq.get(t) || 0) + 1);
-                const arr = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
-                return arr;
+                const entries = [...freq.entries()].sort((a, b) => b[1] - a[1]).filter(([, count]) => count > 1);
+                return entries.slice(0, topN).map(([text, count]) => ({ text, weight: count }));
             })(logs, 12);
 
         const cloudEl = document.getElementById('keywordCloud');
         if (cloudEl) {
-            cloudEl.innerHTML = '';
-            const colorClasses = ['color-blue', 'color-sky', 'color-gray'];
-            const sizeClasses = ['size-lg', 'size-md', 'size-sm'];
-            if (kw && kw.length) {
-                kw.forEach((k, i) => {
+            // use the new buildKeywordCloud helper to render a scattered cloud map
+            try {
+                buildKeywordCloud(cloudEl, logs, 12);
+            } catch (err) {
+                // fallback to simple pill list if something goes wrong
+                cloudEl.innerHTML = '';
+                if (kw && kw.length) {
+                    kw.forEach(k => {
+                        const span = document.createElement('span');
+                        span.className = 'keyword-pill color-gray size-md';
+                        span.textContent = k.text;
+                        cloudEl.appendChild(span);
+                    });
+                } else {
                     const span = document.createElement('span');
-                    span.className = 'keyword-pill';
-                    // 랜덤 색상, 크기 부여
-                    span.classList.add(colorClasses[Math.floor(Math.random()*colorClasses.length)]);
-                    span.classList.add(sizeClasses[Math.floor(Math.random()*sizeClasses.length)]);
-                    span.textContent = k.text;
+                    span.className = 'keyword-pill color-gray size-md';
+                    span.textContent = '-';
                     cloudEl.appendChild(span);
-                });
-            } else {
-                const span = document.createElement('span');
-                span.className = 'keyword-pill color-gray size-md';
-                span.textContent = '-';
-                cloudEl.appendChild(span);
+                }
             }
         }
     } catch (e) {
@@ -211,11 +358,12 @@ async function renderAnalysisDashboard(opts = {}) {
                             if (!Array.isArray(logs) || !logs.length) return [];
                             const KO_STOPWORDS_LOCAL = new Set(['그리고', '그러나', '하지만', '그러면', '그래서', '또', '또는', '즉', '혹은', '이것', '저것', '그것', '거기', '여기', '저기', '좀', '아주', '매우', '너무', '정말', '진짜', '거의', '약간', '등', '등등', '같은', '것', '수', '때', '점', '및', '는', '은', '이', '가', '을', '를', '에', '의', '로', '으로', '와', '과', '도', '만', '에게', '한', '하다', '했습니다', '했어요', '하는', '되다', '됐다']);
                             const text = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
-                            const tokens = (text || '').replace(/[^\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
+                            // keep hangul, word chars and whitespace; remove punctuation
+                            const tokens = (text || '').replace(/[^\uAC00-\uD7A3\w\s]/g, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
                             const freq = new Map();
                             for (const t of tokens) freq.set(t, (freq.get(t) || 0) + 1);
-                            const arr = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
-                            return arr;
+                            const entries = [...freq.entries()].sort((a, b) => b[1] - a[1]).filter(([, count]) => count > 1);
+                            return entries.slice(0, topN).map(([text, count]) => ({ text, weight: count }));
                         })(logs, 5);
                     const topKW = topKWarr.map(k => k.text).join(', ');
                     summaryEl.textContent = `주요 키워드: ${topKW}. 총 질의응답 수: ${logs.length}. 평균 응답시간: ${Math.round((avgSecs.reduce((a, b) => a + b, 0) / (qCount || 1)) * 10) / 10}초(질문당).`;
@@ -242,14 +390,31 @@ async function renderAnalysisDashboard(opts = {}) {
         if (window.AnalyticsKit && window.AnalyticsKit.Render) {
             window.AnalyticsKit.Render.renderKPIs();
             window.AnalyticsKit.Render.renderTimeline();
-            // rapport stage: 임시로 1~3 중 1단계 기본
-            window.AnalyticsKit.Render.setRapportStage(1);
         } else {
             // 간단 대체: KPI 카드 직접 채우기 (로그 기반)
-            const kpiTalk = document.getElementById('kpiTalkPercent');
-            const kpiMsg = document.getElementById('kpiTalkMsg');
-            if (kpiTalk) kpiTalk.textContent = hasLogs ? `${Math.min(99, Math.round((logs.length / (logs.length + 1)) * 100))}%` : '0%';
-            if (kpiMsg) kpiMsg.textContent = hasLogs ? '발화를 많이 했어요!' : '분석없음';
+            const kpiTalkSplit = document.getElementById('kpiTalkSplit');
+            const kpiTailCount = document.getElementById('kpiTailCount');
+            if (hasLogs) {
+                const userChars = logs.reduce((sum, row) => sum + ((row.userMessage || '').length), 0);
+                const personaChars = logs.reduce((sum, row) => sum + ((row.botAnswer || '').length), 0);
+                const totalChars = userChars + personaChars;
+                const userPct = totalChars ? Math.round((userChars / totalChars) * 100) : 0;
+                const personaPct = totalChars ? Math.max(0, 100 - userPct) : 0;
+                let tailCount = 0;
+                try {
+                    if (window.AnalyticsKit?.Store?.followupsByQuestion) {
+                        tailCount = Object.values(window.AnalyticsKit.Store.followupsByQuestion)
+                            .reduce((acc, num) => acc + Number(num || 0), 0);
+                    } else {
+                        tailCount = logs.filter((entry, idx) => idx > 0 && entry.questionIndex === logs[idx - 1].questionIndex).length;
+                    }
+                } catch (_) { tailCount = 0; }
+                if (kpiTalkSplit) kpiTalkSplit.textContent = `[응답자 ${personaPct}% | 진행자 ${userPct}%]`;
+                if (kpiTailCount) kpiTailCount.textContent = `${tailCount}회`;
+            } else {
+                if (kpiTalkSplit) kpiTalkSplit.textContent = '[응답자 0% | 진행자 0%]';
+                if (kpiTailCount) kpiTailCount.textContent = '0회';
+            }
         }
     } catch (e) {
         console.warn('KPI render fallback failed', e);
@@ -356,17 +521,6 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
     `;
     }
-    // 질문지 생성 안내 이미지 숨김 함수
-    function hideMakeQuestionImg() {
-        const imgWrapper = document.getElementById("make-question-img-wrapper");
-        if (imgWrapper) imgWrapper.style.display = "none";
-    }
-    // 퍼소나 생성 안내 이미지 숨김 함수
-    function hideMakePersonaImg() {
-        const imgWrapper = document.getElementById("make-persona-img-wrapper");
-        if (imgWrapper) imgWrapper.style.display = "none";
-    }
-
     // 퍼소나 슬라이드 관련
     let personaPageIndex = 0;
     const personaSlideContainer = document.getElementById("persona-container");
@@ -375,11 +529,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function getPersonaCount() {
         return personaSlideContainer ? personaSlideContainer.children.length : 0;
-    }
-
-    function getGridSize() {
-        // 한 번에 보여줄 개수 (슬라이딩 윈도우)
-        return 2;
     }
 
     function updatePersonaSlide() {
@@ -1205,7 +1354,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log('embeddings check -> _qEmbeddings:', _qEmbeddings, 'AnalyticsKit.Store.qEmbeddings:', akStoreEmb);
             // 질문 임베딩 생성 함수가 존재하는지 로그로 안내
             if (typeof ensureQuestionEmbeddings !== 'function' && !(window.AnalyticsKit && window.AnalyticsKit.NLP && typeof window.AnalyticsKit.NLP.ensurePreparedEmbeddings === 'function')) {
-                console.error('❌ 질문 임베딩이 준비되지 않았습니다. ensureQuestionEmbeddings 또는 AnalyticsKit.NLP.ensurePreparedEmbeddings가 정의되어 있어야 합니다.');
+                console.error('질문 임베딩이 준비되지 않았습니다. ensureQuestionEmbeddings 또는 AnalyticsKit.NLP.ensurePreparedEmbeddings가 정의되어 있어야 합니다.');
             }
             return;
         }
@@ -1740,7 +1889,7 @@ document.addEventListener("DOMContentLoaded", () => {
             function cleanup(silent = false) {
                 isSpeaking = false;
                 setMicStatus('듣는 중');
-                try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(); } catch (_) { }
+                try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(text); } catch (_) { }
                 // 말하기 종료 시 정적 이미지로 복귀
                 try { syncChatingLeftImage(persona || selectedPersona, false); } catch (_) { }
                 try { URL.revokeObjectURL(audioUrl); } catch (_) { }
@@ -1749,7 +1898,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {
             isSpeaking = false;
             setMicStatus('듣는 중');
-            try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(); } catch (_) { }
+            try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(text); } catch (_) { }
             try { syncChatingLeftImage(persona || selectedPersona, false); } catch (_) { }
             if (!isListening && !isPending) { try { safeStart(); } catch (_) { } }
         }
@@ -2042,19 +2191,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const text = (typeof item === 'string') ? item : (item.text || '');
             const fBadge = (item && item.followups && item.followups.length) ? `<span class=\"badge\">팔로업 ${item.followups.length}</span>` : '';
             const nBadge = (item && item.type === 'new') ? `<span class=\"badge\" style=\"background:#EAF5E6;color:#2F8A4C;border-color:#D2EDDC;\">신규</span>` : '';
-                        return `
-                                <li>
-                                    <div class="question-edit-wrapper" data-context="final">
-                                        <input type="text" class="question-edit-input" data-index="${i}" value="${text.replace(/"/g, '&quot;')}" placeholder="${text ? '' : '내용을 입력하세요.'}" />
-                                        <button class="question-delete-btn" type="button" data-index="${i}" title="삭제">
-                                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                                                <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2"/>
-                                                <rect x="10" y="15.25" width="12" height="1.5" rx="0.75" fill="#8F949B"/>
-                                            </svg>
-                                        </button>
-                                        ${fBadge}${nBadge}
-                                    </div>
-                                </li>`;
+            return `
+                <li>
+                    <div class="question-edit-wrapper" data-context="final">
+                        <input type="text" class="question-edit-input" data-index="${i}" value="${text.replace(/"/g, '&quot;')}" placeholder="${text ? '' : '내용을 입력하세요.'}" />
+                        <button class="question-delete-btn" type="button" data-index="${i}" title="삭제">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                                <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2"/>
+                                <rect x="10" y="15.25" width="12" height="1.5" rx="0.75" fill="#8F949B"/>
+                            </svg>
+                        </button>
+                        ${fBadge}${nBadge}
+                    </div>
+                </li>`;
         }).join('');
         bindFinalQuestionsEvents();
     }
@@ -2418,8 +2567,20 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
                 speaker: turn.speaker
             });
         }
-        function personaSpeakStart() { S.isPersonaSpeaking = true; }
-        function personaSpeakEnd() { S.isPersonaSpeaking = false; }
+        let personaTurn = null;
+        function personaSpeakStart() {
+            if (personaTurn) return personaTurn;
+            personaTurn = markStart('persona');
+            S.isPersonaSpeaking = true;
+            return personaTurn;
+        }
+        function personaSpeakEnd(text = '') {
+            if (personaTurn) {
+                markEnd(personaTurn, text);
+                personaTurn = null;
+            }
+            S.isPersonaSpeaking = false;
+        }
         NS.Timeline = { markStart, markEnd, personaSpeakStart, personaSpeakEnd };
     })(window.AnalyticsKit);
 
@@ -2517,50 +2678,108 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
     // 5) KPI/타임라인 렌더 모듈 (render)
     (function (NS) {
         const S = NS.Store;
-        function computeKPIs() {
-            const userTurns = S.turns.filter(t => t.speaker === "user");
-            const qCount = userTurns.filter(t => NS.NLP.isQuestion(t.text)).length;
-            const talkCount = userTurns.length;
-            const listenAck = S.counters.backchannelsByUser;
-            const talkPercent = Math.round((talkCount / Math.max(1, talkCount + listenAck)) * 100);
-            const adHocPercent = Math.round((S.counters.adHocQuestions / Math.max(1, qCount)) * 100);
-            const followupCount = S.counters.followupChains;
-            return { talkPercent, adHocPercent, followupCount };
+        function computeTalkSplit() {
+            const segments = Array.isArray(S.timeline) ? S.timeline : [];
+            let personaValue = 0;
+            let userValue = 0;
+            segments.forEach(seg => {
+                const duration = Math.max(0, (seg?.end ?? 0) - (seg?.start ?? 0));
+                if (seg.speaker === 'persona') personaValue += duration;
+                else if (seg.speaker === 'user') userValue += duration;
+            });
+            if (personaValue + userValue === 0) {
+                const logs = Array.isArray(window.interviewLog) ? window.interviewLog : [];
+                if (logs.length) {
+                    personaValue = logs.reduce((sum, row) => sum + (row.botAnswer || '').length, 0);
+                    userValue = logs.reduce((sum, row) => sum + (row.userMessage || '').length, 0);
+                }
+            }
+            const total = personaValue + userValue;
+            const personaPct = total ? Math.round((personaValue / total) * 100) : 0;
+            const userPct = total ? Math.max(0, 100 - personaPct) : 0;
+            return { personaPct, userPct, personaValue, userValue, total };
         }
-        function talkMsg(p) {
-            if (p >= 65) return "발화를 많이 했어요!";
-            if (p >= 40) return "균형 잡힌 대화였어요.";
-            return "경청이 돋보였어요.";
+        function computeTailCount() {
+            const followups = S.followupsByQuestion || {};
+            return Object.values(followups).reduce((acc, num) => acc + Number(num || 0), 0);
+        }
+        function computeKPIs() {
+            return {
+                talkSplit: computeTalkSplit(),
+                tailCount: computeTailCount()
+            };
         }
         function renderKPIs() {
-            const { talkPercent, adHocPercent, followupCount } = computeKPIs();
-            const elTalk = document.querySelector("#kpiTalkPercent");
-            const elTalkMsg = document.querySelector("#kpiTalkMsg");
-            const elAdhoc = document.querySelector("#kpiAdHocPercent");
-            const elFollow = document.querySelector("#kpiFollowupCount");
-            if (elTalk) elTalk.textContent = `${talkPercent}%`;
-            if (elTalkMsg) elTalkMsg.textContent = talkMsg(talkPercent);
-            if (elAdhoc) elAdhoc.textContent = `${adHocPercent}%`;
-            if (elFollow) elFollow.textContent = `${followupCount}회`;
+            const { talkSplit, tailCount } = computeKPIs();
+            const elTalkSplit = document.querySelector('#kpiTalkSplit');
+            const elTail = document.querySelector('#kpiTailCount');
+            if (elTalkSplit) {
+                elTalkSplit.textContent = `[응답자 ${talkSplit.personaPct}% | 진행자 ${talkSplit.userPct}%]`;
+            }
+            if (elTail) {
+                elTail.textContent = `${tailCount}회`;
+            }
         }
         function renderTimeline() {
-            const wrap = document.getElementById("utteranceTimeline");
+            const wrap = document.getElementById('utteranceTimeline');
             if (!wrap) return;
-            const total = (S.timeline.at(-1)?.end || 1);
-            wrap.innerHTML = "";
-            S.timeline.forEach(seg => {
-                const w = ((seg.end - seg.start) / total) * 100;
-                const bar = document.createElement("div");
-                bar.className = `utt-bar ${seg.speaker === "user" ? "bar--user" : "bar--persona"}`;
-                bar.style.width = `${Math.max(0.5, w)}%`;
-                wrap.appendChild(bar);
+            wrap.innerHTML = '';
+            const segments = Array.isArray(S.timeline) ? S.timeline : [];
+            const totalDuration = segments.reduce((sum, seg) => sum + Math.max(0, (seg?.end ?? 0) - (seg?.start ?? 0)), 0);
+            const { personaPct, userPct } = computeTalkSplit();
+
+            const legend = document.createElement('div');
+            legend.className = 'utt-legend';
+            legend.innerHTML = `
+                <span class="legend-item"><span class="legend-dot legend-dot--persona"></span>응답자</span>
+                <span class="legend-item"><span class="legend-dot legend-dot--user"></span>진행자</span>
+                <span class="utt-split">[응답자 ${personaPct}% | 진행자 ${userPct}%]</span>
+            `;
+            wrap.appendChild(legend);
+
+            const track = document.createElement('div');
+            track.className = 'utt-track';
+            wrap.appendChild(track);
+
+            if (!totalDuration) {
+                const logs = Array.isArray(window.interviewLog) ? window.interviewLog : [];
+                const totalChars = logs.reduce((sum, row) => sum + (row.userMessage || '').length + (row.botAnswer || '').length, 0);
+                if (!totalChars) {
+                    const empty = document.createElement('div');
+                    empty.className = 'utt-empty';
+                    empty.textContent = '대화 기록이 없습니다.';
+                    track.appendChild(empty);
+                    return;
+                }
+                logs.forEach(row => {
+                    const userLen = (row.userMessage || '').length;
+                    const personaLen = (row.botAnswer || '').length;
+                    if (userLen > 0) {
+                        const bar = document.createElement('div');
+                        bar.className = 'utt-bar bar--user';
+                        bar.style.width = `${Math.max(0.5, (userLen / totalChars) * 100)}%`;
+                        track.appendChild(bar);
+                    }
+                    if (personaLen > 0) {
+                        const bar = document.createElement('div');
+                        bar.className = 'utt-bar bar--persona';
+                        bar.style.width = `${Math.max(0.5, (personaLen / totalChars) * 100)}%`;
+                        track.appendChild(bar);
+                    }
+                });
+                return;
+            }
+
+            segments.forEach(seg => {
+                const duration = Math.max(0, (seg?.end ?? 0) - (seg?.start ?? 0));
+                const widthPct = Math.max(0.5, (duration / totalDuration) * 100);
+                const bar = document.createElement('div');
+                bar.className = `utt-bar ${seg.speaker === 'user' ? 'bar--user' : 'bar--persona'}`;
+                bar.style.width = `${widthPct}%`;
+                track.appendChild(bar);
             });
         }
-        function setRapportStage(stage) {
-            const steps = document.querySelectorAll(".affinity-step");
-            steps.forEach((s, i) => s.classList.toggle("active", i === stage - 1));
-        }
-        NS.Render = { renderKPIs, renderTimeline, setRapportStage };
+        NS.Render = { renderKPIs, renderTimeline, computeKPIs, computeTalkSplit };
     })(window.AnalyticsKit);
 
     // 6) 정서적 대응 3건 생성 모듈 (emotions)
@@ -2662,15 +2881,10 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
                 return;
             }
 
-            const { buckets, score, totalUserUtterances } = result;
+            const { buckets, totalUserUtterances } = result;
+            const supportiveTotal = buckets.empathy.count + buckets.support.count + buckets.nonjudgment.count + buckets.rapport.count;
 
-            const items = [
-                {
-                    key: 'score',
-                    title: '정서적 응대 점수',
-                    note: `인터뷰어 발화 ${totalUserUtterances}건 중 정서적 응대 ${buckets.empathy.count + buckets.support.count + buckets.nonjudgment.count + buckets.rapport.count}건`,
-                    extra: `${score}%`
-                },
+            const detailItems = [
                 {
                     key: 'empathy',
                     title: '공감·인정 표현',
@@ -2695,29 +2909,42 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
                     count: buckets.rapport.count,
                     samples: buckets.rapport.samples
                 }
-            ];
+            ].filter(it => it.count > 0);
 
-            box.dataset.emotionSource = 'local-heuristic';
-            box.innerHTML = items.map(it => {
-                if (it.key === 'score') {
-                    return `
-                        <li class="emotion-card">
-                            <div class="emotion-title">${it.title}</div>
-                            <div class="emotion-note"><strong style="font-size:1.25rem;color:#5872FF">${it.extra}</strong></div>
-                            <div class="emotion-note" style="color:#666">${it.note}</div>
-                        </li>
-                    `;
-                }
-                const sampleHtml = (it.samples && it.samples.length)
-                    ? `<div class="emotion-note" style="color:#666">예: “${it.samples[0]}”${it.samples[1] ? ` / “${it.samples[1]}”` : ''}</div>`
-                    : '';
-                return `
+            const summaryCard = supportiveTotal
+                ? `
                     <li class="emotion-card">
-                        <div class="emotion-title">${it.title} <span style="color:#8F949B">(${it.count})</span></div>
-                        ${sampleHtml}
+                        <div class="emotion-title">정서적 응대 발화 <span style="color:#8F949B">(${supportiveTotal}회)</span></div>
+                        <div class="emotion-note" style="color:#666">인터뷰어 발화 ${totalUserUtterances}건 중 정서적 응대 문장 ${supportiveTotal}건을 찾았어요.</div>
+                    </li>
+                `
+                : `
+                    <li class="emotion-card">
+                        <div class="emotion-title">정서적 응대 발화</div>
+                        <div class="emotion-note" style="color:#666">아직 정서적 응대 표현을 찾지 못했어요. 공감이나 지지 문장을 추가로 시도해 보세요.</div>
                     </li>
                 `;
-            }).join("");
+
+            const detailHtml = detailItems.length
+                ? detailItems.map(it => {
+                    const sampleHtml = (it.samples && it.samples.length)
+                        ? `<div class="emotion-note" style="color:#666">예: “${it.samples[0]}”${it.samples[1] ? ` / “${it.samples[1]}”` : ''}</div>`
+                        : '';
+                    return `
+                        <li class="emotion-card">
+                            <div class="emotion-title">${it.title} <span style="color:#8F949B">(${it.count})</span></div>
+                            ${sampleHtml}
+                        </li>
+                    `;
+                }).join("")
+                : `
+                    <li class="emotion-card">
+                        <div class="emotion-note" style="color:#666">되짚어볼 만한 정서적 응대 문장이 아직 없습니다.</div>
+                    </li>
+                `;
+
+            box.dataset.emotionSource = 'local-heuristic';
+            box.innerHTML = summaryCard + detailHtml;
         }
 
         // 노출 API

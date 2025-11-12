@@ -1004,7 +1004,7 @@ body::-webkit-scrollbar {
 /* ===== Analysis: KPI cards (Interaction Dynamics) ===== */
 .kpi-labels {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 10px;
   color: #8F949B;
@@ -1013,7 +1013,7 @@ body::-webkit-scrollbar {
 
 .analyze-kpi-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(14px, 1.2vw, 20px);
   margin-bottom: clamp(14px, 1.2vw, 20px);
 }
@@ -4088,12 +4088,56 @@ input:-webkit-autofill {
 
 #utteranceTimeline {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.utt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #8F949B;
+}
+
+.utt-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.utt-legend .utt-split {
+  font-weight: 600;
+  color: #4A4F58;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-dot--persona {
+  background: #5872FF;
+}
+
+.legend-dot--user {
+  background: #8AB7FF;
+}
+
+.utt-track {
+  display: flex;
   gap: 4px;
   width: 100%;
-  height: 14px;
+  height: 16px;
   border-radius: 12px;
   background: #F2F3F5;
   padding: 3px;
+  align-items: stretch;
 }
 
 .utt-bar {
@@ -4106,7 +4150,14 @@ input:-webkit-autofill {
 }
 
 .bar--persona {
-  background: #D8DEE9;
+  background: #5872FF;
+}
+
+.utt-empty {
+  color: #8F949B;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
 }
 
 /*-----임시-------*/

@@ -196,30 +196,22 @@
                                         <div class="kpi-tab-group" style="margin: 32px 0 24px 0;">
                                             <div class="analyze-title"><b>상호작용 역동성 |</b>  Interaction Dynamics</div>
                                             <div class="kpi-labels">
-                                                <span class="kpi-label">| 말하기 경청 비율</span>
-                                                <span class="kpi-label">| 추가 질문 비율</span>
-                                                <span class="kpi-label">| 팔로업 횟수</span>
+                                                <span class="kpi-label">| 발화 분포 (응답자 ↔ 진행자)</span>
+                                                <span class="kpi-label">| 꼬리 질문 횟수</span>
                                             </div>
                                             <div class="analyze-kpi-cards">
                                                 <div class="kpi-card">
                                                     <div class="kpi-icon kpi-icon--talk"><img src="img/ico_mic.png" alt="talk"></div>
                                                     <div class="kpi-texts">
-                                                        <div id="kpiTalkPercent" class="kpi-value">0%</div>
-                                                        <div id="kpiTalkMsg" class="kpi-desc">발화 비율</div>
+                                                        <div id="kpiTalkSplit" class="kpi-value">[응답자 0% | 진행자 0%]</div>
+                                                        <div class="kpi-desc">응답자와 진행자 발화 비율</div>
                                                     </div>
                                                 </div>
                                                 <div class="kpi-card">
-                                                    <div class="kpi-icon kpi-icon--adhoc"><img src="img/ico_thunder.png" alt="adhoc"></div>
+                                                    <div class="kpi-icon kpi-icon--follow"><img src="img/ico_talk.png" alt="tail"></div>
                                                     <div class="kpi-texts">
-                                                        <div id="kpiAdHocPercent" class="kpi-value">0%</div>
-                                                        <div class="kpi-desc">즉흥 파생 질문</div>
-                                                    </div>
-                                                </div>
-                                                <div class="kpi-card">
-                                                    <div class="kpi-icon kpi-icon--follow"><img src="img/ico_talk.png" alt="followup"></div>
-                                                    <div class="kpi-texts">
-                                                        <div id="kpiFollowupCount" class="kpi-value">0회</div>
-                                                        <div class="kpi-desc">심층 추가 질문</div>
+                                                        <div id="kpiTailCount" class="kpi-value">0회</div>
+                                                        <div class="kpi-desc">꼬리 질문(후속 질문) 횟수</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -339,15 +331,6 @@
                 <!--인터뷰 사이드 영역-->
                 <div class="container-children sub-analysis sub-inactive">
                     <div class="analyze-side">
-                            <div class="side-widget affinity-widget">
-                                <div class="widget-title"><b>퍼소나 친밀도</b> <span class="info-tooltip" title="이 그래프는 인터뷰 초기 아이스브레이킹 단계에서 퍼소나와의 친화 형성 정도로 시각화한 것으로, 오고간 대화의 횟수와 그 내용에 따라 결정됩니다.">?</span></div>
-                                <div class="affinity-stepper" tabindex="0">
-                                    <div class="affinity-step active" data-label="탐색 단계">1</div>
-                                    <div class="affinity-step" data-label="대화 적응">2</div>
-                                    <div class="affinity-step" data-label="신뢰 형성">3</div>
-                                </div>
-                                <div class="affinity-desc">이 그래프는 인터뷰 초기 아이스브레이킹 단계에서 퍼소나와의 친화 형성 정도로 시각화한 것으로, 오고간 대화의 횟수와 그 내용에 따라 결정됩니다.</div>
-                            </div>
                             <div class="side-widget speed-widget" style="display: none;">
                                 <div class="widget-title">말의 속도</div>
                                 <div class="speed-bar-bg">
