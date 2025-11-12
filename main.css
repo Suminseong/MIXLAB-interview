@@ -4146,7 +4146,8 @@ input:-webkit-autofill {
 }
 
 .bar--user {
-  background: #8AB7FF;
+  /* 인터뷰이 색상 */
+  background: #6FA6FE;
 }
 
 .bar--persona {
