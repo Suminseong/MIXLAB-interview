@@ -4310,6 +4310,7 @@ input:-webkit-autofill {
   display: flex;
   gap: 4px;
   width: 100%;
+  flex-direction: column;
   height: 14px;
   border-radius: 12px;
   background: #F2F3F5;
@@ -4318,7 +4319,6 @@ input:-webkit-autofill {
 
 .utt-bar {
   height: 100%;
-  border-radius: 9px;
 }
 
 .bar--user {

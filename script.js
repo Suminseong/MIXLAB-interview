@@ -1,3 +1,117 @@
+document.addEventListener("DOMContentLoaded", () => {
+    // --- 퍼소나 CTA/재생성/다음 버튼 동적 제어 ---
+    const personaGenerateBtn = document.getElementById('persona-generate-btn');
+    const personaRegenBtn = document.getElementById('persona-regen-btn');
+    const personaNextBtn = document.getElementById('goToInterviewBtn');
+    if (personaGenerateBtn && personaRegenBtn && personaNextBtn) {
+        function setPersonaCTAState(generated) {
+            const ctaGroup = personaGenerateBtn.closest('.cta-btn-group');
+            if (generated) {
+                personaGenerateBtn.style.display = 'none';
+                personaRegenBtn.style.display = 'inline-block';
+                personaNextBtn.style.display = 'inline-block';
+                personaRegenBtn.disabled = false;
+                personaNextBtn.disabled = false;
+                if (ctaGroup && personaNextBtn.parentNode !== ctaGroup) {
+                    ctaGroup.appendChild(personaNextBtn);
+                }
+                if (personaRegenBtn.nextElementSibling !== personaNextBtn) {
+                    ctaGroup.insertBefore(personaNextBtn, personaRegenBtn.nextElementSibling);
+                }
+            } else {
+                personaGenerateBtn.style.display = 'inline-block';
+                personaRegenBtn.style.display = 'none';
+                personaNextBtn.style.display = 'none';
+            }
+        }
+    setPersonaCTAState(false);
+    // 전역에서 접근 가능하도록 window에 등록 (탭 전환에서 호출)
+    window.setPersonaCTAState = setPersonaCTAState;
+        personaGenerateBtn.addEventListener('click', function() {
+            setTimeout(() => setPersonaCTAState(true), 500);
+        });
+        personaRegenBtn.addEventListener('click', function() {
+            if (personaGenerateBtn) personaGenerateBtn.click();
+            setTimeout(() => setPersonaCTAState(true), 500);
+        });
+        personaNextBtn.addEventListener('click', function() {
+            // 기존 다음 단계 이동 로직이 이미 연결되어 있으면 별도 처리 불필요
+        });
+    }
+    // 안내 이미지가 보일 때 h2(인터뷰 질문) 숨기고, 질문 생성되면 h2 보이기
+    const questionContainer = document.getElementById('question-container');
+    const questionTitle = document.getElementById('question-title');
+    if (questionContainer && questionTitle) {
+        const titleObserver = new MutationObserver(() => {
+            if (questionContainer.children.length > 0) {
+                questionTitle.style.display = '';
+            } else {
+                questionTitle.style.display = 'none';
+            }
+        });
+        // 최초 상태도 반영
+        if (questionContainer.children.length > 0) {
+            questionTitle.style.display = '';
+        } else {
+            questionTitle.style.display = 'none';
+        }
+        titleObserver.observe(questionContainer, { childList: true });
+    }
+
+    // --- CTA/재생성/다음 버튼 동적 제어 ---
+    const generateBtn = document.getElementById('generate-btn');
+    const regenBtn = document.getElementById('regen-btn');
+    const nextBtn = document.getElementById('goToPersonaBtn');
+    let questionGenerated = false;
+
+    function setCTAState(generated) {
+        const ctaGroup = generateBtn.closest('.cta-btn-group');
+        if (generated) {
+            // 생성 버튼 숨김, 재생성+다음 버튼 보임 (같은 그룹 내에)
+            generateBtn.style.display = 'none';
+            regenBtn.style.display = 'inline-block';
+            nextBtn.style.display = 'inline-block';
+            regenBtn.disabled = false;
+            nextBtn.disabled = false;
+            // cta-btn-group 안에 nextBtn이 없으면 이동
+            if (ctaGroup && nextBtn.parentNode !== ctaGroup) {
+                ctaGroup.appendChild(nextBtn);
+            }
+            // 순서 보장: regenBtn 다음에 nextBtn이 오도록
+            if (regenBtn.nextElementSibling !== nextBtn) {
+                ctaGroup.insertBefore(nextBtn, regenBtn.nextElementSibling);
+            }
+        } else {
+            // 초기: 생성 버튼만 보임
+            generateBtn.style.display = 'inline-block';
+            regenBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+        }
+    }
+
+    // 최초 상태
+    setCTAState(false);
+
+    // 생성 버튼 클릭 시: 질문 생성 후 상태 변경
+    if (generateBtn) {
+        generateBtn.addEventListener('click', function() {
+            setTimeout(() => setCTAState(true), 500); // 질문 생성 후 버튼 전환(임시 딜레이)
+        });
+    }
+    // 재생성 버튼 클릭 시: 질문 재생성, 다음 버튼 유지
+    if (regenBtn) {
+        regenBtn.addEventListener('click', function() {
+            if (generateBtn) generateBtn.click(); // 기존 생성 로직 재사용
+            setTimeout(() => setCTAState(true), 500);
+        });
+    }
+    // 다음 버튼 클릭 시: 다음 단계로 이동(기존 로직 활용)
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() {
+            // 기존 다음 단계 이동 로직이 이미 연결되어 있으면 별도 처리 불필요
+        });
+    }
+});
 // ---------- Emotion cards: simple local renderer (fallback) ----------
 function renderEmotionalCardsLocal(selector = '#emotionList', logs = []) {
     const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
@@ -6,19 +120,15 @@ function renderEmotionalCardsLocal(selector = '#emotionList', logs = []) {
     // Heuristics from logs
     const textAll = Array.isArray(logs) ? logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ') : '';
     const hasLaugh = /웃|하하|호호|하핫|헤헤|^\s*\)|\(:/gm.test(textAll);
-
     const hasDiscomfort = /(불편|싫|짜증|불만|거부|불쾌|꺼려|곤란|기분 나쁘)/gm.test(textAll);
 
     // pause detection between turns (>= 15s)
     let longPauseCount = 0;
     if (Array.isArray(logs) && logs.length > 1) {
-        for (let i = 1;
-            i < logs.length;
-            i++) {
+        for (let i = 1; i < logs.length; i++) {
             const prevEnd = logs[i - 1].timestampEnd || logs[i - 1].timestamp || 0;
             const curStart = logs[i].timestampStart || logs[i].timestamp || 0;
-            const gap = curStart && prevEnd ? (curStart - prevEnd) / 1000 : 0;
-            // seconds
+            const gap = curStart && prevEnd ? (curStart - prevEnd) / 1000 : 0; // seconds
             if (gap >= 15) longPauseCount++;
         }
     }
@@ -63,6 +173,7 @@ function renderEmotionalCardsLocal(selector = '#emotionList', logs = []) {
         </li>
     `).join('');
 }
+
 
 // 간단한 키워드 클라우드 빌더(외부 라이브러리 없이 동작)
 function buildKeywordCloud(el, logs, maxWords = 20) {
@@ -210,28 +321,6 @@ async function renderAnalysisDashboard(opts = {}) {
         if (barCtx) {
             if (window.barChartInstance) window.barChartInstance.destroy();
             const labels = Array.from({ length: qCount }, (_, i) => `Q${i + 1}`);
-            const valueOnBarPlugin = {
-                id: 'valueOnBar',
-                afterDatasetsDraw(chart) {
-                    const { ctx, chartArea } = chart;
-                    const meta = chart.getDatasetMeta(0);
-                    if (!meta) return;
-                    ctx.save();
-                    meta.data.forEach((bar, idx) => {
-                        const raw = chart.data.datasets[0].data[idx];
-                        if (raw == null || !Number.isFinite(raw)) return;
-                        const formatted = Number.isInteger(raw) ? `${raw}초` : `${raw.toFixed(1)}초`;
-                        let y = bar.y - 6;
-                        if (y < chartArea.top + 6) y = chartArea.top + 6;
-                        ctx.fillStyle = '#4A4F58';
-                        ctx.font = '500 12px Pretendard, system-ui';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'bottom';
-                        ctx.fillText(formatted, bar.x, y);
-                    });
-                    ctx.restore();
-                }
-            };
             window.barChartInstance = new Chart(barCtx, {
                 type: 'bar',
                 data: {
@@ -245,14 +334,7 @@ async function renderAnalysisDashboard(opts = {}) {
                     }]
                 },
                 options: {
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: (ctx) => `${ctx.parsed.y}초`
-                            }
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
                         y: {
                             min: 0,
@@ -265,8 +347,7 @@ async function renderAnalysisDashboard(opts = {}) {
                             grid: { display: false }
                         }
                     }
-                },
-                plugins: [valueOnBarPlugin]
+                }
             });
         }
     } catch (e) {
@@ -311,34 +392,33 @@ async function renderAnalysisDashboard(opts = {}) {
                 if (!Array.isArray(logs) || !logs.length) return [];
                 const KO_STOPWORDS_LOCAL = new Set(['그리고', '그러나', '하지만', '그러면', '그래서', '또', '또는', '즉', '혹은', '이것', '저것', '그것', '거기', '여기', '저기', '좀', '아주', '매우', '너무', '정말', '진짜', '거의', '약간', '등', '등등', '같은', '것', '수', '때', '점', '및', '는', '은', '이', '가', '을', '를', '에', '의', '로', '으로', '와', '과', '도', '만', '에게', '한', '하다', '했습니다', '했어요', '하는', '되다', '됐다']);
                 const text = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
-                const tokens = (text || '').replace(/[^\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
+                const tokens = (text || '').replace(/[^ - - - -\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
                 const freq = new Map();
                 for (const t of tokens) freq.set(t, (freq.get(t) || 0) + 1);
-                const entries = [...freq.entries()].sort((a, b) => b[1] - a[1]).filter(([, count]) => count > 1);
-                return entries.slice(0, topN).map(([text, count]) => ({ text, weight: count }));
+                const arr = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
+                return arr;
             })(logs, 12);
 
         const cloudEl = document.getElementById('keywordCloud');
         if (cloudEl) {
-            // use the new buildKeywordCloud helper to render a scattered cloud map
-            try {
-                buildKeywordCloud(cloudEl, logs, 12);
-            } catch (err) {
-                // fallback to simple pill list if something goes wrong
-                cloudEl.innerHTML = '';
-                if (kw && kw.length) {
-                    kw.forEach(k => {
-                        const span = document.createElement('span');
-                        span.className = 'keyword-pill color-gray size-md';
-                        span.textContent = k.text;
-                        cloudEl.appendChild(span);
-                    });
-                } else {
+            cloudEl.innerHTML = '';
+            const colorClasses = ['color-blue', 'color-sky', 'color-gray'];
+            const sizeClasses = ['size-lg', 'size-md', 'size-sm'];
+            if (kw && kw.length) {
+                kw.forEach((k, i) => {
                     const span = document.createElement('span');
-                    span.className = 'keyword-pill color-gray size-md';
-                    span.textContent = '-';
+                    span.className = 'keyword-pill';
+                    // 랜덤 색상, 크기 부여
+                    span.classList.add(colorClasses[Math.floor(Math.random()*colorClasses.length)]);
+                    span.classList.add(sizeClasses[Math.floor(Math.random()*sizeClasses.length)]);
+                    span.textContent = k.text;
                     cloudEl.appendChild(span);
-                }
+                });
+            } else {
+                const span = document.createElement('span');
+                span.className = 'keyword-pill color-gray size-md';
+                span.textContent = '-';
+                cloudEl.appendChild(span);
             }
         }
     } catch (e) {
@@ -361,12 +441,11 @@ async function renderAnalysisDashboard(opts = {}) {
                             if (!Array.isArray(logs) || !logs.length) return [];
                             const KO_STOPWORDS_LOCAL = new Set(['그리고', '그러나', '하지만', '그러면', '그래서', '또', '또는', '즉', '혹은', '이것', '저것', '그것', '거기', '여기', '저기', '좀', '아주', '매우', '너무', '정말', '진짜', '거의', '약간', '등', '등등', '같은', '것', '수', '때', '점', '및', '는', '은', '이', '가', '을', '를', '에', '의', '로', '으로', '와', '과', '도', '만', '에게', '한', '하다', '했습니다', '했어요', '하는', '되다', '됐다']);
                             const text = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
-                            // keep hangul, word chars and whitespace; remove punctuation
-                            const tokens = (text || '').replace(/[^\uAC00-\uD7A3\w\s]/g, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
+                            const tokens = (text || '').replace(/[^\p{Script=Hangul}\w\s]/gu, ' ').toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS_LOCAL.has(t));
                             const freq = new Map();
                             for (const t of tokens) freq.set(t, (freq.get(t) || 0) + 1);
-                            const entries = [...freq.entries()].sort((a, b) => b[1] - a[1]).filter(([, count]) => count > 1);
-                            return entries.slice(0, topN).map(([text, count]) => ({ text, weight: count }));
+                            const arr = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
+                            return arr;
                         })(logs, 5);
                     const topKW = topKWarr.map(k => k.text).join(', ');
                     summaryEl.textContent = `주요 키워드: ${topKW}. 총 질의응답 수: ${logs.length}. 평균 응답시간: ${Math.round((avgSecs.reduce((a, b) => a + b, 0) / (qCount || 1)) * 10) / 10}초(질문당).`;
@@ -393,39 +472,54 @@ async function renderAnalysisDashboard(opts = {}) {
         if (window.AnalyticsKit && window.AnalyticsKit.Render) {
             window.AnalyticsKit.Render.renderKPIs();
             window.AnalyticsKit.Render.renderTimeline();
+            // rapport stage: 임시로 1~3 중 1단계 기본
+            window.AnalyticsKit.Render.setRapportStage(1);
         } else {
             // 간단 대체: KPI 카드 직접 채우기 (로그 기반)
-            const kpiTalkSplit = document.getElementById('kpiTalkSplit');
-            const kpiTailCount = document.getElementById('kpiTailCount');
-            if (hasLogs) {
-                const userChars = logs.reduce((sum, row) => sum + ((row.userMessage || '').length), 0);
-                const personaChars = logs.reduce((sum, row) => sum + ((row.botAnswer || '').length), 0);
-                const totalChars = userChars + personaChars;
-                const userPct = totalChars ? Math.round((userChars / totalChars) * 100) : 0;
-                const personaPct = totalChars ? Math.max(0, 100 - userPct) : 0;
-                let tailCount = 0;
-                try {
-                    if (window.AnalyticsKit?.Store?.followupsByQuestion) {
-                        tailCount = Object.values(window.AnalyticsKit.Store.followupsByQuestion)
-                            .reduce((acc, num) => acc + Number(num || 0), 0);
-                    } else {
-                        tailCount = logs.filter((entry, idx) => idx > 0 && entry.questionIndex === logs[idx - 1].questionIndex).length;
-                    }
-                } catch (_) { tailCount = 0; }
-                if (kpiTalkSplit) kpiTalkSplit.textContent = `[응답자 ${personaPct}% | 진행자 ${userPct}%]`;
-                if (kpiTailCount) kpiTailCount.textContent = `${tailCount}회`;
-            } else {
-                if (kpiTalkSplit) kpiTalkSplit.textContent = '[응답자 0% | 진행자 0%]';
-                if (kpiTailCount) kpiTailCount.textContent = '0회';
-            }
+            const kpiTalk = document.getElementById('kpiTalkPercent');
+            const kpiMsg = document.getElementById('kpiTalkMsg');
+            if (kpiTalk) kpiTalk.textContent = hasLogs ? `${Math.min(99, Math.round((logs.length / (logs.length + 1)) * 100))}%` : '0%';
+            if (kpiMsg) kpiMsg.textContent = hasLogs ? '발화를 많이 했어요!' : '분석없음';
         }
     } catch (e) {
         console.warn('KPI render fallback failed', e);
     }
 
-    // 7) 말의 속도/언어습관(간단 통계)
+    // 6.1) Ensure chatbox persona is shown on Analysis page
     try {
-        // 말의 속도: 사용자 발화 문자수 / 분 (평균)
+        // Use globally selected persona if available
+        const personaToUse = window.selectedPersonaGlobal || window.selectedPersona || null;
+        if (personaToUse && typeof renderChatboxPersona === 'function') {
+            // Try immediate render; if the analysis DOM hasn't inserted the
+            // .chatbox-persona element yet, retry a few times (handles timing)
+            const tryRender = () => {
+                const personaBox = document.querySelector('.chatbox-persona');
+                if (personaBox) {
+                    renderChatboxPersona(personaToUse, window.interviewDuration || null);
+                    return true;
+                }
+                return false;
+            };
+
+            if (!tryRender()) {
+                let attempts = 0;
+                const maxAttempts = 10; // ~1.5s total (150ms * 10)
+                const interval = 150;
+                const iv = setInterval(() => {
+                    attempts++;
+                    if (tryRender() || attempts >= maxAttempts) {
+                        clearInterval(iv);
+                    }
+                }, interval);
+            }
+        }
+    } catch (err) {
+        console.warn('renderChatboxPersona on analysis failed', err);
+    }
+
+    // 7) 말의 속도/언어습관
+    try {
+        // 말의 속도: 사용자 발화 문자수 / 분
         const userMsgs = logs.map(l => (l.userMessage || '')).filter(Boolean);
         let speedPct = 0;
         if (userMsgs.length && hasLogs) {
@@ -463,17 +557,12 @@ document.addEventListener("DOMContentLoaded", () => {
         display: inline-block;
         animation: dot-bounce 1.2s infinite;
     }
-    .loading-dots .dot:nth-child(1) { animation-delay: 0s;
- }
-    .loading-dots .dot:nth-child(2) { animation-delay: 0.2s;
- }
-    .loading-dots .dot:nth-child(3) { animation-delay: 0.4s;
- }
+    .loading-dots .dot:nth-child(1) { animation-delay: 0s; }
+    .loading-dots .dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots .dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes dot-bounce {
-        0%, 80%, 100% { transform: translateY(0);
- }
-        40% { transform: translateY(-12px);
- }
+        0%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-12px); }
     }
     `;
     document.head.appendChild(style);
@@ -481,24 +570,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const showInputBtn = document.getElementById('showInputBtn');
     const inputGroup = document.querySelector('#interview-page .input-group');
     if (showInputBtn && inputGroup) {
-        showInputBtn.addEventListener('click', function () {
+        showInputBtn.addEventListener('click', function() {
             inputGroup.classList.add('active');
             showInputBtn.style.display = 'none';
         });
     }
-    // 입력창 숨김 버튼 기능
-    const hideInputBtn = document.getElementById('hideInputBtn');
-    if (hideInputBtn && inputGroup && showInputBtn) {
-        hideInputBtn.addEventListener('click', function () {
-            inputGroup.classList.remove('active');
-            showInputBtn.style.display = 'flex';
-        });
-    }
+        // 입력창 숨김 버튼 기능
+        const hideInputBtn = document.getElementById('hideInputBtn');
+        if (hideInputBtn && inputGroup && showInputBtn) {
+            hideInputBtn.addEventListener('click', function() {
+                inputGroup.classList.remove('active');
+                showInputBtn.style.display = 'flex';
+            });
+        }
 
     // 음성 인식 기능 (Web Speech API) - 상단 recognition 블록 제거, 아래 SR 자동 루프만 사용
     function showUserMessage(text) {
         const rightBox = document.getElementById('chating-right-box');
         const leftBox = document.getElementById('chating-left-box');
+
+        // 인터뷰 시작 시 가이드 문구 숨기기
+        const guide = document.getElementById('interview-start-guide');
+        const hint = document.getElementById('input-hint-floating');
+        if (guide) guide.style.display = 'none';
+        if (hint) hint.style.display = 'none';
+
         // 질문 입력 시, 만약 답변 박스에 내용이 있으면 둘 다 chatbox로 올림
         if (rightBox.textContent.trim() || leftBox.textContent.trim()) {
             // 쌍으로 chatbox에 append
@@ -529,6 +625,52 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
     `;
     }
+    // 질문지 생성 안내 이미지 숨김 함수
+    function hideMakeQuestionImg() {
+        const imgWrapper = document.getElementById("make-question-img-wrapper");
+        if (imgWrapper) imgWrapper.style.display = "none";
+    }
+    function showMakeQuestionImg() {
+        const imgWrapper = document.getElementById("make-question-img-wrapper");
+        if (imgWrapper) imgWrapper.style.display = "flex";
+    }
+    // 퍼소나 생성 안내 이미지 숨김 함수
+    function hideMakePersonaImg() {
+        const imgWrapper = document.getElementById("make-persona-img-wrapper");
+        if (imgWrapper) imgWrapper.style.display = "none";
+    }
+    function showMakePersonaImg() {
+        const imgWrapper = document.getElementById("make-persona-img-wrapper");
+        if (imgWrapper) imgWrapper.style.display = "flex";
+    }
+
+    // 질문지/퍼소나 생성 시 안내 이미지 자동 숨김 처리
+    // 질문지 생성 시
+    const questionContainer = document.getElementById('question-container');
+    if (questionContainer) {
+        const observer = new MutationObserver(() => {
+            // 질문이 하나라도 있으면 이미지 숨김
+            if (questionContainer.children.length > 0) {
+                hideMakeQuestionImg();
+            } else {
+                showMakeQuestionImg();
+            }
+        });
+        observer.observe(questionContainer, { childList: true });
+    }
+    // 퍼소나 생성 시
+    const personaContainerForImg = document.getElementById('persona-container');
+    if (personaContainerForImg) {
+        const observer2 = new MutationObserver(() => {
+            if (personaContainerForImg.children.length > 0) {
+                hideMakePersonaImg();
+            } else {
+                showMakePersonaImg();
+            }
+        });
+        observer2.observe(personaContainerForImg, { childList: true });
+    }
+
     // 퍼소나 슬라이드 관련
     let personaPageIndex = 0;
     const personaSlideContainer = document.getElementById("persona-container");
@@ -539,19 +681,21 @@ document.addEventListener("DOMContentLoaded", () => {
         return personaSlideContainer ? personaSlideContainer.children.length : 0;
     }
 
+    function getGridSize() {
+        // 한 번에 보여줄 개수 (슬라이딩 윈도우)
+        return 2;
+    }
+
     function updatePersonaSlide() {
         if (personaSlideContainer) {
             const personas = personaSlideContainer.children;
-            const visibleCount = 2;
-            // 동시에 보여줄 개수
+            const visibleCount = 2; // 동시에 보여줄 개수
 
             console.log('Total personas:', personas.length);
             console.log('Current slide index:', personaPageIndex);
 
             // 모든 퍼소나에 슬라이드 트렌지션 적용
-            for (let i = 0;
-                i < personas.length;
-                i++) {
+            for (let i = 0; i < personas.length; i++) {
                 personas[i].style.transition = 'opacity 0.4s ease, transform 0.4s ease';
                 personas[i].style.opacity = '0';
                 personas[i].style.transform = 'translateX(30px) scale(0.95)';
@@ -560,9 +704,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // 잠시 후 현재 윈도우의 퍼소나들 표시
             setTimeout(() => {
                 // 모든 퍼소나 숨기기
-                for (let i = 0;
-                    i < personas.length;
-                    i++) {
+                for (let i = 0; i < personas.length; i++) {
                     personas[i].style.display = 'none';
                 }
 
@@ -573,9 +715,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.log('Showing personas from', startIndex, 'to', endIndex - 1);
 
                 // 윈도우 범위의 퍼소나들만 표시
-                for (let i = startIndex;
-                    i < endIndex;
-                    i++) {
+                for (let i = startIndex; i < endIndex; i++) {
                     if (personas[i]) {
                         personas[i].style.display = 'block';
                         // 순차적으로 페이드인
@@ -640,8 +780,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const saveApiKeyBtn = document.getElementById("saveApiKey");
     const changeApiKeyBtn = document.getElementById("changeApiKey");
 
-    let questionNum = 8;
-    // 기본 질문 개수
+    let questionNum = 8; // 기본 질문 개수
     let apiKey = localStorage.getItem("openai_api_key") || "";
 
     // 퍼소나 생성 관련 요소
@@ -652,11 +791,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const personaCountSpan = document.getElementById("persona-count");
     const callPersonaGPT = document.getElementById("persona-generate-btn");
 
-    let personaNum = 3;
-    // 초기값
+    let personaNum = 3; // 초기값
 
-    let lastIndex = 0;
-    // 현재까지의 interviewIndex 상태 기억용
+    let lastIndex = 0; // 현재까지의 interviewIndex 상태 기억용
 
     // ===== 이미지 프리로드/경로 유틸 (전역 스코프) =====
     const __preloadedImgs = new Set();
@@ -684,11 +821,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ---------------인트로애니메이션 관련
-    gsap.registerPlugin(MotionPathPlugin);
-    // ⬅️ 꼭 있어야 함!
+    gsap.registerPlugin(MotionPathPlugin);  // ⬅️ 꼭 있어야 함!
 
-    const path = document.querySelector("#motion-path");
-    // ← id로 바꿔야 함
+    const path = document.querySelector("#motion-path");  // ← id로 바꿔야 함
     const spans = document.querySelectorAll("#intro-logo span");
     const logo = document.getElementById("intro-logo");
     const svgWrapper = document.querySelector(".svg-wrapper");
@@ -719,9 +854,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 2. 원형들이 path를 따라 튕기듯 나옴
     tl.add(() => {
-        for (let i = 0;
-            i < 10;
-            i++) {
+        for (let i = 0; i < 10; i++) {
             const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             circle.setAttribute("r", "3");
             circle.setAttribute("fill", "white");
@@ -746,8 +879,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 delay: i * 0.08,
                 transformOrigin: "center center",
                 onComplete: () => {
-                    circle.remove();
-                    // 애니 끝나면 제거
+                    circle.remove(); // 애니 끝나면 제거
                 }
             });
 
@@ -775,8 +907,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function enterMainPage() {
         inMain = true;
-        cursor.classList.add("main-active");
-        // 흰색에서 → 파란색으로
+        cursor.classList.add("main-active"); // 흰색에서 → 파란색으로
     }
     // ------------------
 
@@ -820,8 +951,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (personaNum > 1) {
             personaNum--;
             personaCountSpan.textContent = personaNum;
-            removePersonaBox();
-            // 마지막 퍼소나 입력 필드 삭제
+            removePersonaBox(); // 마지막 퍼소나 입력 필드 삭제
         }
     });
 
@@ -829,24 +959,20 @@ document.addEventListener("DOMContentLoaded", () => {
         if (personaNum < 5) {
             personaNum++;
             personaCountSpan.textContent = personaNum;
-            addPersonaBox();
-            // 새로운 퍼소나 입력 필드 추가
+            addPersonaBox(); // 새로운 퍼소나 입력 필드 추가
         }
     });
 
     function getPersonaPrompts() {
         let prompts = [];
 
-        for (let i = 1;
-            i <= personaNum;
-            i++) {
+        for (let i = 1; i <= personaNum; i++) {
             const inputField = document.getElementById(`promptForPersona${i}`);
             if (inputField) {
                 const promptText = inputField.value.trim();
                 prompts.push(promptText);
             } else {
-                prompts.push("");
-                // 입력란이 없을 경우 빈 문자열 추가
+                prompts.push(""); // 입력란이 없을 경우 빈 문자열 추가
             }
         }
 
@@ -875,8 +1001,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function removePersonaBox() {
         const personaPromptBoxes = document.querySelectorAll(".persona-prompt-box");
         if (personaPromptBoxes.length > 0) {
-            personaBox.removeChild(personaPromptBoxes[personaPromptBoxes.length - 1]);
-            // 마지막 요소 삭제
+            personaBox.removeChild(personaPromptBoxes[personaPromptBoxes.length - 1]); // 마지막 요소 삭제
         }
     }
 
@@ -924,14 +1049,14 @@ document.addEventListener("DOMContentLoaded", () => {
                   <div class="question-edit-wrapper">
                     <span class="question-index-num">${i + 1}.</span>
                     <input type="text" class="question-edit-input" value="${q.replace(/"/g, '&quot;')}" data-index="${i}" placeholder="${q === '' ? '내용을 입력하세요.' : ''}" />
-                <button class="question-delete-btn" type="button" data-index="${i}" title="삭제">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                    <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2" />
-                    <rect x="10" y="15.25" width="12" height="1.5" rx="0.75" fill="#8F949B" />
-                </svg>
+                    <button class="question-delete-btn" type="button" data-index="${i}" title="삭제">
+                      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2"/>
+                        <rect x="10" y="15.25" width="12" height="1.5" rx="0.75" fill="#8F949B"/>
+                      </svg>
                     </button>
                   </div>
-                    `).join("");
+                `).join("");
 
                 function saveCurrentInputValues() {
                     const inputs = document.querySelectorAll('.question-edit-input');
@@ -951,23 +1076,21 @@ document.addEventListener("DOMContentLoaded", () => {
                       <input type="text" class="question-edit-input"
                         value="${q.replace(/"/g, '&quot;')}"
                         data-index="${i}"
-                        placeholder = "${q === '' ? '내용을 입력하세요.' : ''}" />
-                    <button class="question-delete-btn" type="button" data-index="${i}" title="삭제">
+                        placeholder="${q === '' ? '내용을 입력하세요.' : ''}" />
+                      <button class="question-delete-btn" type="button" data-index="${i}" title="삭제">
                         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2" />
-                            <rect x="10" y="15.25" width="12" height="1.5" rx="0.75" fill="#8F949B" />
+                          <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2"/>
+                          <rect x="10" y="15.25" width="12" height="1.5" rx="0.75" fill="#8F949B"/>
                         </svg>
-                    </button>
+                      </button>
                     </div>
-                    `).join("");
+                  `).join("");
                     // 질문 리스트도 갱신
                     const questionListEl = document.getElementById("questionList");
                     if (questionListEl) {
                         questionListEl.innerHTML = questions.map((q, i) => `<li>${i + 1}. ${q}</li>`).join("");
                         // 질문 리스트 갱신 후 팔로업 배지 갱신
-                        try {
-                            updateFollowupBadges();
-                        } catch (_) { }
+                        try { updateFollowupBadges(); } catch (_) {}
                     }
                     // input width/삭제/추가 버튼 이벤트 재연결
                     setTimeout(() => {
@@ -987,8 +1110,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 document.body.removeChild(tempDiv);
 
                                 // 모든 질문에 동일한 고정 여백 적용 (텍스트 길이 + 120px 고정 여백)
-                                const extraPx = 120;
-                                // 고정 여백
+                                const extraPx = 120; // 고정 여백
                                 const minWidthPx = Math.max(100, textWidth + extraPx);
                                 const clampWidth = `clamp(7vw, ${(minWidthPx / 16)}rem, 35vw)`;
 
@@ -1045,9 +1167,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     } else if (typeof ensureQuestionEmbeddings === 'function') {
                         await ensureQuestionEmbeddings(apiKey, questions);
                     }
-                } catch (e) {
-                    console.error('❌ ensureQuestionEmbeddings failed:', e);
-                }
+                } catch (e) { console.error('❌ ensureQuestionEmbeddings failed:', e); }
             } else {
                 resultContainer.innerHTML = "<p>질문 생성 실패</p>";
             }
@@ -1090,16 +1210,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 균등 성비 배열 생성
         let genderArr = [];
-        for (let i = 0;
-            i < personaNum;
-            i++) {
+        for (let i = 0; i < personaNum; i++) {
             genderArr.push(i % 2 === 0 ? "남성" : "여성");
         }
         // GPT API 호출 (퍼소나 생성)
         try {
-            for (let i = 0;
-                i < personaNum;
-                i++) {
+            for (let i = 0; i < personaNum; i++) {
                 const promptText = personaPrompts[i] || "";
                 const gender = genderArr[i];
                 const payload = {
@@ -1229,10 +1345,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 선택된 퍼소나 정보를 전역 변수에 저장하여 인터뷰 진행 내내 활용
     let selectedPersonaGlobal = null;
-    let selectedPersona = null;
-    // 인터뷰 진행 중 사용할 퍼소나 정보
-    let interviewDuration = null;
-    // 인터뷰 진행 시간 저장
+    let selectedPersona = null; // 인터뷰 진행 중 사용할 퍼소나 정보
+    let interviewDuration = null; // 인터뷰 진행 시간 저장
     // 인터뷰 좌측 말풍선 아바타 이미지 동기화 유틸
     function syncChatingLeftImage(persona, speaking = false) {
         const el = document.getElementById('chating-left-img');
@@ -1243,13 +1357,9 @@ document.addEventListener("DOMContentLoaded", () => {
         el.dataset.base = base;
         el.dataset.talk = talk;
         // 미리 로드 시도
-        try {
-            preloadImage(talk);
-        } catch (_) { }
+        try { preloadImage(talk); } catch (_) { }
         // speaking 상태에 따라 경로 적용, 실패시 base로 폴백
-        el.onerror = function () {
-            if (speaking) el.src = base;
-        };
+        el.onerror = function () { if (speaking) el.src = base; };
         el.src = speaking ? talk : base;
     }
 
@@ -1291,22 +1401,22 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         // 직업, 성격, 관심사(첫번째만), 언어습관(첫번째만)
         const group3 = document.createElement('div');
-        group3.className = 'persona-group';
-        const occupation = persona.occupation;
-        const personality = persona.personality;
-        const interests = persona.interests ? persona.interests.split(',')[0].trim() : '';
-        const speech = persona.speech ? persona.speech.split(',')[0].trim() : '';
-        [occupation, personality, interests, speech].forEach(v => {
-            if (v) {
-                const span = document.createElement('span');
-                span.textContent = v;
-                group3.appendChild(span);
-            }
-        });
-        personaBox.appendChild(group1);
-        personaBox.appendChild(group2);
-        personaBox.appendChild(group3);
-    }
+    group3.className = 'persona-group';
+    const occupation = persona.occupation;
+    const personality = persona.personality;
+    const interests = persona.interests ? persona.interests.split(',')[0].trim() : '';
+    const speech = persona.speech ? persona.speech.split(',')[0].trim() : '';
+    [occupation, personality, interests, speech].forEach(v => {
+        if (v) {
+            const span = document.createElement('span');
+            span.textContent = v;
+            group3.appendChild(span);
+        }
+    });
+    personaBox.appendChild(group1);
+    personaBox.appendChild(group2);
+    personaBox.appendChild(group3);
+}
 
     document.getElementById('goToInterviewBtn').addEventListener('click', function () {
         const selectedBox = document.querySelector('.persona-box.selected');
@@ -1315,8 +1425,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         const index = selectedBox.getAttribute('data-persona-index');
-        selectedPersonaGlobal = personaResults[index];
-        // 전역 변수에 저장
+        selectedPersonaGlobal = personaResults[index]; // 전역 변수에 저장
 
         // 인터뷰 시간 설정 팝업 표시
         showInterviewTimeModal();
@@ -1348,19 +1457,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 // 현재 선택 표시
                 this.classList.add('selected');
                 interviewDuration = parseInt(this.getAttribute('data-time'));
-                console.log('선택된 시간:', interviewDuration);
-                // 디버깅용
+                console.log('선택된 시간:', interviewDuration); // 디버깅용
                 // 전역 접근 가능하도록 노출
-                try {
-                    window.interviewDuration = interviewDuration;
-                } catch (_) { }
+                try { window.interviewDuration = interviewDuration; } catch (_) { }
             });
         });
 
         // 확인 버튼 클릭
         document.getElementById('timeModalConfirm').addEventListener('click', function () {
-            console.log('확인 버튼 클릭, interviewDuration:', interviewDuration);
-            // 디버깅용
+            console.log('확인 버튼 클릭, interviewDuration:', interviewDuration); // 디버깅용
             if (!interviewDuration || interviewDuration <= 0) {
                 alert('인터뷰 시간을 선택해주세요.');
                 return;
@@ -1404,7 +1509,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log('embeddings check -> _qEmbeddings:', _qEmbeddings, 'AnalyticsKit.Store.qEmbeddings:', akStoreEmb);
             // 질문 임베딩 생성 함수가 존재하는지 로그로 안내
             if (typeof ensureQuestionEmbeddings !== 'function' && !(window.AnalyticsKit && window.AnalyticsKit.NLP && typeof window.AnalyticsKit.NLP.ensurePreparedEmbeddings === 'function')) {
-                console.error('질문 임베딩이 준비되지 않았습니다. ensureQuestionEmbeddings 또는 AnalyticsKit.NLP.ensurePreparedEmbeddings가 정의되어 있어야 합니다.');
+                console.error('❌ 질문 임베딩이 준비되지 않았습니다. ensureQuestionEmbeddings 또는 AnalyticsKit.NLP.ensurePreparedEmbeddings가 정의되어 있어야 합니다.');
             }
             return;
         }
@@ -1413,12 +1518,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!selectedPersona) {
             alert('퍼소나를 선택해주세요.');
-            console.log('1217줄');
             return;
         }
 
-        console.log('인터뷰 시작 - 선택된 퍼소나:', selectedPersona);
-        // 디버깅용
+        console.log('인터뷰 시작 - 선택된 퍼소나:', selectedPersona); // 디버깅용
 
         // 현재 스크롤 위치 저장
         const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
@@ -1435,8 +1538,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // 스크롤 이동 방지를 위해 click() 대신 직접 탭 전환 로직 실행
         // activeStyle.js의 탭 전환 로직을 직접 호출
         const navItems = Array.from(document.querySelectorAll("#nav-bar > div"));
-        const interviewTabIndex = 2;
-        // btn-interview는 3번째 탭 (0: preset, 1: persona, 2: interview)
+        const interviewTabIndex = 2; // btn-interview는 3번째 탭 (0: preset, 1: persona, 2: interview)
 
         // 기존 활성 탭 비활성화
         navItems.forEach(nav => nav.classList.remove("nav-active"));
@@ -1499,11 +1601,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // 인터뷰 시작 시 chatbox에 퍼소나 정보 출력 (div 구조)
         renderChatboxPersona(selectedPersonaGlobal, interviewDuration);
         // 선택된 퍼소나의 talk GIF를 한 번 더 예열
-        if (selectedPersonaGlobal?.talkImage) {
-            try {
-                preloadImage(selectedPersonaGlobal.talkImage);
-            } catch (_) { }
-        }
+        if (selectedPersonaGlobal?.talkImage) { try { preloadImage(selectedPersonaGlobal.talkImage); } catch (_) { } }
 
         // 사이드바 강제 전환 함수
         function forceSidebarSwitch() {
@@ -1549,18 +1647,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const setTimeElement = document.getElementById('set-time');
             const leftTimeElement = document.getElementById('left-time');
 
-            console.log('요소 체크:', setTimeElement, leftTimeElement);
-            // 디버깅용
+            console.log('요소 체크:', setTimeElement, leftTimeElement); // 디버깅용
 
             if (setTimeElement && leftTimeElement) {
                 // 요소들이 존재하면 타이머 설정
-                console.log('요소들이 준비됨, 타이머 설정 시작');
-                // 디버깅용
+                console.log('요소들이 준비됨, 타이머 설정 시작'); // 디버깅용
                 setupInterviewTimer();
             } else {
                 // 아직 요소가 준비되지 않았으면 사이드바 강제 전환 후 다시 체크
-                console.log('요소가 아직 준비되지 않음, 사이드바 강제 전환 후 재시도');
-                // 디버깅용
+                console.log('요소가 아직 준비되지 않음, 사이드바 강제 전환 후 재시도'); // 디버깅용
                 forceSidebarSwitch();
                 setTimeout(waitForElements, 300);
             }
@@ -1572,18 +1667,13 @@ document.addEventListener("DOMContentLoaded", () => {
         // 사이드바 전환 후 요소 체크 시작
         setTimeout(waitForElements, 100);
 
-        // 마이크는 인터뷰 시작 시에만 활성화
-        try {
-            interviewActive = true;
-            safeStart();
-        } catch (_) { }
-
         // 이후 인터뷰 진행 로직에서 selectedPersonaGlobal과 interviewDuration 사용 가능
     }
 
     // 인터뷰 타이머 관련 변수들
     let interviewTimer = null;
     let remainingSeconds = 0;
+    let oneMinuteWarningShown = false;
 
     function setupInterviewTimer() {
         // 설정 시간 유효성 검사
@@ -1593,14 +1683,12 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        console.log('타이머 설정 중, interviewDuration:', interviewDuration);
-        // 디버깅용
+        console.log('타이머 설정 중, interviewDuration:', interviewDuration); // 디버깅용
 
         // 설정 시간을 초 단위로 변환
         remainingSeconds = interviewDuration * 60;
 
-        console.log('remainingSeconds:', remainingSeconds);
-        // 디버깅용
+        console.log('remainingSeconds:', remainingSeconds); // 디버깅용
 
         // DOM에서 직접 모든 요소 찾기
         const allElements = document.querySelectorAll('*');
@@ -1624,8 +1712,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (setTimeElement) {
             const setTime = formatTime(remainingSeconds);
             setTimeElement.textContent = setTime;
-            console.log('설정 시간 표시됨:', setTime);
-            // 디버깅용
+            console.log('설정 시간 표시됨:', setTime); // 디버깅용
         } else {
             console.error('set-time 요소를 찾을 수 없습니다');
             // 직접 생성해서 삽입해보기
@@ -1637,8 +1724,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (leftTimeElement) {
             const leftTime = formatTime(remainingSeconds);
             leftTimeElement.textContent = leftTime;
-            console.log('남은 시간 표시됨:', leftTime);
-            // 디버깅용
+            console.log('남은 시간 표시됨:', leftTime); // 디버깅용
         } else {
             console.error('left-time 요소를 찾을 수 없습니다');
         }
@@ -1684,14 +1770,11 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        console.log('타이머 시작, 초기 remainingSeconds:', remainingSeconds);
-        // 디버깅용
+        console.log('타이머 시작, 초기 remainingSeconds:', remainingSeconds); // 디버깅용
 
+        // ==== 인터뷰 타이머 시작 ====
         interviewTimer = setInterval(() => {
             remainingSeconds--;
-
-            console.log('타이머 틱, remainingSeconds:', remainingSeconds);
-            // 디버깅용
 
             // 남은 시간 업데이트
             const leftTimeElement = document.getElementById('left-time');
@@ -1701,15 +1784,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error('타이머 업데이트 중 left-time 요소를 찾을 수 없습니다');
             }
 
-            // 시간이 끝나면
+            // 1분(=60초) 남았을 때 한 번만 알림
+            if (remainingSeconds === 60 && !oneMinuteWarningShown) {
+                oneMinuteWarningShown = true;
+                showTimeWarning("지정해둔 시간이 곧 종료돼요!", 8000);
+            }
+
+            // 시간이 끝나면 (모달 대신 배너 표시)
             if (remainingSeconds <= 0) {
                 clearInterval(interviewTimer);
                 interviewTimer = null;
-                console.log('타이머 종료, 인터뷰 종료 모달 표시');
-                // 디버깅용
-                showInterviewEndModal();
+                showTimeWarning("지정해둔 시간이 종료되었어요! 서둘러 대화를 마무리 해주세요!", 10000);
+                // 자동 종료 모달 X → 사용자가 직접 종료 버튼 눌러야 함
             }
         }, 1000);
+
     }
 
     function formatTime(seconds) {
@@ -1718,15 +1807,30 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
+    // ==== 인터뷰 시간 경고 배너 표시 ====
+    function showTimeWarning(message, duration = 6000) {
+        let banner = document.getElementById('time-warning-banner');
+        if (!banner) {
+            // 배너가 없으면 동적으로 생성 (index.html에 넣지 않았을 경우 대비)
+            banner = document.createElement('div');
+            banner.id = 'time-warning-banner';
+            document.body.appendChild(banner);
+        }
+
+        banner.textContent = message;
+        banner.classList.add('active');
+
+        // duration 이후에 자동 숨김 (기본 6초)
+        clearTimeout(banner._hideTimeout);
+        banner._hideTimeout = setTimeout(() => {
+            banner.classList.remove('active');
+        }, duration);
+    }
+
+
     // endInterview 전역 함수 없이 버튼 핸들러에서 직접 처리하는 패턴 사용 (module_cham.js 스타일)
 
     function showInterviewEndModal() {
-        // 인터뷰 종료 처리: 비활성화된 마이크
-        try {
-            interviewActive = false;
-            stopMic();
-        } catch (_) { }
-
         // 인터뷰 종료 모달 생성 (세련된 디자인)
         const modal = document.createElement('div');
         modal.id = 'interviewEndModal';
@@ -1765,12 +1869,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     <path d="M18 28L26 36L38 22" stroke="#357AFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
-            <h3 style="margin-bottom: 1.1rem;color: #2456b3;font-size: 1.45rem;font-weight:600;letter-spacing:-0.5px;">인터뷰가 종료되었습니다</h3>
-            <div style="margin-bottom:2.1rem;
- color:#444;
- font-size:1.08rem;
- line-height:1.6;
-">수고하셨습니다!<br>아래 버튼을 눌러 분석 결과를 확인하세요.</div>
+            <h3 style="margin-bottom: 1.1rem; color: #2456b3; font-size: 1.45rem; font-weight:600; letter-spacing:-0.5px;">인터뷰가 종료되었습니다</h3>
+            <div style="margin-bottom:2.1rem; color:#444; font-size:1.08rem; line-height:1.6;">수고하셨습니다!<br>아래 버튼을 눌러 분석 결과를 확인하세요.</div>
             <button id="goToAnalysisBtn" style="
                 padding: 0.85rem 2.1rem;
                 background: linear-gradient(90deg,#357AFF 0%,#2456b3 100%);
@@ -1785,20 +1885,16 @@ document.addEventListener("DOMContentLoaded", () => {
             ">분석 결과 보러가기</button>
             <style>
             @keyframes modalPop {
-                0% { transform: scale(0.7);
- opacity: 0;
- }
-                70% { transform: scale(1.08);
- opacity: 1;
- }
-                100% { transform: scale(1);
- opacity: 1;
- }
+                0% { transform: scale(0.7); opacity: 0; }
+                70% { transform: scale(1.08); opacity: 1; }
+                100% { transform: scale(1); opacity: 1; }
             }
             </style>
         `;
+
         modal.appendChild(modalContent);
         document.body.appendChild(modal);
+
         // 분석 페이지로 이동 버튼 이벤트
         document.getElementById('goToAnalysisBtn').addEventListener('click', function () {
             // 1) 모달 제거
@@ -1812,23 +1908,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         targetMinutes: interviewDuration || 20,
                         highlightQuestionIndex: lastIndex || null
                     });
-                } catch (e) {
-                    console.warn('renderAnalysisDashboard failed:', e);
-                }
+                } catch (e) { console.warn('renderAnalysisDashboard failed:', e); }
             } else if (typeof window.renderAnalysis === 'function') {
-                try {
-                    window.renderAnalysis();
-                } catch (e) {
-                    console.warn('renderAnalysis fallback failed', e);
-                }
+                try { window.renderAnalysis(); } catch (e) { console.warn('renderAnalysis fallback failed', e); }
             } else if (window.AnalyticsKit?.Render) {
                 try {
                     window.AnalyticsKit.Render.renderKPIs();
                     window.AnalyticsKit.Render.renderTimeline();
                     window.AnalyticsKit.Emotions?.renderEmotionalCards?.('#feedbackList');
-                } catch (e) {
-                    console.warn('AnalyticsKit fallback render failed:', e);
-                }
+                } catch (e) { console.warn('AnalyticsKit fallback render failed:', e); }
             }
         });
     }
@@ -1839,7 +1927,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const apiUrl = "https://api.openai.com/v1/chat/completions";
     const modelId = "ft:gpt-4o-2024-08-06:chamkkae:chamkkae-v3a:AmwkrRHc";
+
     const chatbox = document.getElementById('chatbox');
+
     // "종료" 버튼 클릭 시 인터뷰 종료 모달 표시
     const endBtn = document.getElementById('endInterviewBtn');
     if (endBtn) {
@@ -1885,8 +1975,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, true);
     }
 
-    const audioElement = new Audio();
-    // 오디오 재생을 위한 HTMLAudioElement
+    const audioElement = new Audio(); // 오디오 재생을 위한 HTMLAudioElement
 
     // ====== TTS (OpenAI /v1/audio/speech) ======
     let ttsUnlocked = false;
@@ -1896,10 +1985,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (ttsUnlocked) return;
         try {
             const AC = window.AudioContext || window.webkitAudioContext;
-            if (!AC) {
-                ttsUnlocked = true;
-                return;
-            }
+            if (!AC) { ttsUnlocked = true; return; }
             const ctx = new AC();
             const buf = ctx.createBuffer(1, 1, 22050);
             const src = ctx.createBufferSource();
@@ -1914,8 +2000,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 주요 버튼에 1회 바인딩(이미 존재하는 요소 id 기준)
-    ;
-    ['micButton', 'sendButton', 'generate-btn', 'persona-generate-btn', 'goToInterviewBtn']
+    ;['micButton', 'sendButton', 'generate-btn', 'persona-generate-btn', 'goToInterviewBtn']
         .forEach(id => {
             const el = document.getElementById(id);
             if (el) el.addEventListener('click', unlockAudioOnce, { once: true });
@@ -1928,23 +2013,16 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!key) return;
 
         // 인식 중단(자기 음성 캡처 방지)
-        try {
-            if (SR && isListening) SR.stop();
-        } catch (_) { }
+        try { if (SR && isListening) SR.stop(); } catch (_) { }
 
         isSpeaking = true;
         setMicStatus('말하는 중');
-        try {
-            if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakStart === 'function') window.AnalyticsKit.Timeline.personaSpeakStart();
-        } catch (_) { }
+        try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakStart === 'function') window.AnalyticsKit.Timeline.personaSpeakStart(); } catch (_) { }
         // 좌측 아바타 이미지를 talk GIF로 전환
-        try {
-            syncChatingLeftImage(persona || selectedPersona, true);
-        } catch (_) { }
+        try { syncChatingLeftImage(persona || selectedPersona, true); } catch (_) { }
 
         // 성별에 따른 예시 보이스 매핑(필요시 수정)
-        let voice = 'coral';
-        // 기본
+        let voice = 'coral';  // 기본
         const g = String(persona?.gender || '').trim();
         if (/(여자|여성|female|woman)/i.test(g)) voice = 'alloy';
         if (/(남자|남성|male|man)/i.test(g)) voice = 'echo';
@@ -1985,41 +2063,25 @@ document.addEventListener("DOMContentLoaded", () => {
             audioElement.preload = 'auto';
             audioElement.src = audioUrl;
 
-            audioElement.onended = () => {
-                cleanup();
-            };
-            audioElement.onerror = () => {
-                cleanup();
-            };
+            audioElement.onended = () => { cleanup(); };
+            audioElement.onerror = () => { cleanup(); };
 
-            try {
-                await audioElement.play();
-            }
-            catch (e) {
-                cleanup(/*silent=*/true);
-            }
+            try { await audioElement.play(); }
+            catch (e) { cleanup(/*silent=*/true); }
 
             function cleanup(silent = false) {
                 isSpeaking = false;
                 setMicStatus('듣는 중');
-                try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(text); } catch (_) { }
+                try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(); } catch (_) { }
                 // 말하기 종료 시 정적 이미지로 복귀
-                try {
-                    syncChatingLeftImage(persona || selectedPersona, false);
-                } catch (_) { }
-                try {
-                    URL.revokeObjectURL(audioUrl);
-                } catch (_) { }
-                if (!silent && !isListening && !isPending) {
-                    try {
-                        safeStart();
-                    } catch (_) { }
-                }
+                try { syncChatingLeftImage(persona || selectedPersona, false); } catch (_) { }
+                try { URL.revokeObjectURL(audioUrl); } catch (_) { }
+                if (!silent && !isListening && !isPending) { try { safeStart(); } catch (_) { } }
             }
         } catch (e) {
             isSpeaking = false;
             setMicStatus('듣는 중');
-            try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(text); } catch (_) { }
+            try { if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.personaSpeakEnd === 'function') window.AnalyticsKit.Timeline.personaSpeakEnd(); } catch (_) { }
             try { syncChatingLeftImage(persona || selectedPersona, false); } catch (_) { }
             if (!isListening && !isPending) { try { safeStart(); } catch (_) { } }
         }
@@ -2027,14 +2089,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // function extractCurlyBracesContent(text) {
     //     const match = text.match(/\{.*?\}/);
-    //     return match ? match[0] : null;
-    // 괄호 포함된 부분 반환, 없으면 null
+    //     return match ? match[0] : null;  // 괄호 포함된 부분 반환, 없으면 null
     // }
     // const exampleText = "퍼소나 json 답변의 변수명을 여기로 넣으씨오";
     // const extracted = extractCurlyBracesContent(exampleText);
 
-    // console.log(extracted);
-    // "{내용:내용}"
+    // console.log(extracted); // "{내용:내용}"
 
 
     let messages = [
@@ -2047,8 +2107,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
 
     // ===== WS/Python server: disabled =====
-    let socket = null;
-    // legacy guard
+    let socket = null; // legacy guard
     function connectWebSocket() {
         // intentionally disabled – no external WS server
         return;
@@ -2117,9 +2176,7 @@ document.addEventListener("DOMContentLoaded", () => {
             wrapper.appendChild(messageElement);
             chatbox.appendChild(wrapper);
             // 트리거
-            setTimeout(() => {
-                wrapper.style.opacity = '1';
-            }, 10);
+            setTimeout(() => { wrapper.style.opacity = '1'; }, 10);
         } else {
             const messageElement = document.createElement('div');
             messageElement.className = `message ${sender}`;
@@ -2128,9 +2185,7 @@ document.addEventListener("DOMContentLoaded", () => {
             messageElement.style.opacity = '0';
             messageElement.style.transition = 'opacity 0.5s cubic-bezier(0.4,0,0.2,1)';
             chatbox.appendChild(messageElement);
-            setTimeout(() => {
-                messageElement.style.opacity = '1';
-            }, 10);
+            setTimeout(() => { messageElement.style.opacity = '1'; }, 10);
         }
         __scheduleChatAutoScroll();
     }
@@ -2147,8 +2202,7 @@ document.addEventListener("DOMContentLoaded", () => {
         __scheduleChatAutoScroll();
     }
 
-    let interviewLog = [];
-    // 인터뷰 Q&A 기록용
+    let interviewLog = []; // 인터뷰 Q&A 기록용
     // 외부 가드/호출을 위해 전역에 노출 (초기 자동 렌더 차단용 등)
     window.interviewLog = interviewLog;
     let sendStartTime = null;
@@ -2157,8 +2211,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 최종 질문지 편집 상태
     let finalQuestions = [];
     window.finalQuestions = finalQuestions;
-    let currentEditContext = 'base';
-    // 'base' | 'final'
+    let currentEditContext = 'base'; // 'base' | 'final'
     function getInterviewPurpose() {
         const v = (document.getElementById('interviewFor')?.value || '').trim();
         return v || '인터뷰 목적 미입력';
@@ -2171,7 +2224,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const set = document.getElementById('set-time')?.textContent?.trim();
             if (set) return set;
-        } catch (_) { }
+        } catch (_) {}
         const m = (window.interviewDuration || 20);
         return `${m}분`;
     }
@@ -2216,7 +2269,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const logs = (window.interviewLog || []);
             const newQs = [];
-            const seen = new Set(base.map(s => s.trim()));
+            const seen = new Set(base.map(s=>s.trim()));
             logs.forEach(r => {
                 const u = (r.userMessage || '').trim();
                 if (!u || !/[?？]$/.test(u)) return;
@@ -2230,7 +2283,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
             if (newQs.length) merged.push(...newQs);
-        } catch (_) { }
+        } catch (_) {}
         return merged;
     }
     function deriveNotesFromDashboard() {
@@ -2240,7 +2293,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const S = window.AnalyticsKit?.Store;
             const talkRatio = S?.counters?.talkRatio || 0;
             if (talkRatio && talkRatio > 0.65) notes.push('인터뷰어 발화가 많은 편입니다. 개방형 질문과 경청 비중을 높이세요.');
-        } catch (_) { }
+        } catch (_) {}
         try {
             const el = document.querySelector('#emotionList');
             const src = el?.dataset?.emotionSource || '';
@@ -2249,13 +2302,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 const text = el.textContent || '';
                 if (/부정|불편|거부|불쾌/.test(text)) notes.push('부정적 반응 신호가 있었습니다. 공감/인정 표현을 우선하세요.');
             }
-        } catch (_) { }
+        } catch (_) {}
         try {
             const S = window.AnalyticsKit?.Store;
             const f = S?.followupsByQuestion || {};
             const dense = Object.values(f).some(n => n >= 2);
             if (dense) notes.push('특정 질문에서 꼬리질문이 집중되었습니다. 시간 배분을 조정하세요.');
-        } catch (_) { }
+        } catch (_) {}
         if (!notes.length) notes.push('별도의 주의사항은 없습니다. 계획한 흐름대로 진행하세요.');
         return notes;
     }
@@ -2300,15 +2353,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         return { ...item, text: String(sv ?? '') };
                     });
                     if (restored.length > mergedBase.length) {
-                        for (let i = mergedBase.length;
-                            i < restored.length;
-                            i++) {
+                        for (let i = mergedBase.length; i < restored.length; i++) {
                             merged.push(String(restored[i] ?? ''));
                         }
                     }
                 }
             }
-        } catch (err) { /* ignore */ }
+        } catch(err) { /* ignore */ }
         renderFinalQuestionsEditable(merged);
     }
 
@@ -2323,19 +2374,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const text = (typeof item === 'string') ? item : (item.text || '');
             const fBadge = (item && item.followups && item.followups.length) ? `<span class=\"badge\">팔로업 ${item.followups.length}</span>` : '';
             const nBadge = (item && item.type === 'new') ? `<span class=\"badge\" style=\"background:#EAF5E6;color:#2F8A4C;border-color:#D2EDDC;\">신규</span>` : '';
-            return `
-                <li>
-                    <div class="question-edit-wrapper" data-context="final">
-                        <input type="text" class="question-edit-input" data-index="${i}" value="${text.replace(/"/g, '&quot;')}" placeholder="${text ? '' : '내용을 입력하세요.'}" />
-                        <button class="question-delete-btn" type="button" data-index="${i}" title="삭제">
-                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                                <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2"/>
-                                <rect x="10" y="15.25" width="12" height="1.5" rx="0.75" fill="#8F949B"/>
-                            </svg>
-                        </button>
-                        ${fBadge}${nBadge}
-                    </div>
-                </li>`;
+                        return `
+                                <li>
+                                    <div class="question-edit-wrapper" data-context="final">
+                                        <input type="text" class="question-edit-input" data-index="${i}" value="${text.replace(/"/g, '&quot;')}" placeholder="${text ? '' : '내용을 입력하세요.'}" />
+                                        <button class="question-delete-btn" type="button" data-index="${i}" title="삭제">
+                                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                                                <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2"/>
+                                                <rect x="10" y="15.25" width="12" height="1.5" rx="0.75" fill="#8F949B"/>
+                                            </svg>
+                                        </button>
+                                        ${fBadge}${nBadge}
+                                    </div>
+                                </li>`;
         }).join('');
         bindFinalQuestionsEvents();
     }
@@ -2354,23 +2405,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 tempDiv.style.font = window.getComputedStyle(input).font;
                 tempDiv.textContent = input.value || input.placeholder || '';
                 document.body.appendChild(tempDiv);
-                const textWidth = tempDiv.offsetWidth;
-                document.body.removeChild(tempDiv);
-                const extraPx = 120;
-                const minWidthPx = Math.max(100, textWidth + extraPx);
+                const textWidth = tempDiv.offsetWidth; document.body.removeChild(tempDiv);
+                const extraPx = 120; const minWidthPx = Math.max(100, textWidth + extraPx);
                 const clampWidth = `clamp(7vw, ${(minWidthPx / 16)}rem, 35vw)`;
                 input.style.width = clampWidth;
-                const wrapper = input.closest('.question-edit-wrapper');
-                if (wrapper) wrapper.style.width = clampWidth;
+                const wrapper = input.closest('.question-edit-wrapper'); if (wrapper) wrapper.style.width = clampWidth;
             };
             const persist = () => {
-                try {
-                    localStorage.setItem('finalQuestions', JSON.stringify(finalQuestions));
-                } catch (err) { /* ignore */ }
+                try { localStorage.setItem('finalQuestions', JSON.stringify(finalQuestions)); } catch(err) { /* ignore */ }
             };
-            input.addEventListener('input', (e) => {
-                const idx = parseInt(input.dataset.index);
-                if (!Number.isNaN(idx)) finalQuestions[idx] = input.value.trim();
+            input.addEventListener('input', (e)=>{
+                const idx = parseInt(input.dataset.index); if (!Number.isNaN(idx)) finalQuestions[idx] = input.value.trim();
                 adjustWidth();
                 persist();
             });
@@ -2379,14 +2424,12 @@ document.addEventListener("DOMContentLoaded", () => {
         // 삭제 버튼
         const deleteBtns = container.querySelectorAll('.question-delete-btn');
         deleteBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', (e)=>{
                 e.preventDefault();
                 const idx = parseInt(btn.getAttribute('data-index'));
                 if (Number.isNaN(idx)) return;
                 finalQuestions.splice(idx, 1);
-                try {
-                    localStorage.setItem('finalQuestions', JSON.stringify(finalQuestions));
-                } catch (err) { /* ignore */ }
+                try { localStorage.setItem('finalQuestions', JSON.stringify(finalQuestions)); } catch(err) { /* ignore */ }
                 // 재렌더: 기본 병합 + 저장본 오버레이 적용
                 renderFinalGuide();
             });
@@ -2403,8 +2446,15 @@ document.addEventListener("DOMContentLoaded", () => {
             a: r.botAnswer || ''
         }));
         const prompt = (
-            `당신은 인터뷰 보조 AI입니다. 아래의 기존 질문들과 최근 모의 인터뷰 대화 로그를 참고하여, 기존 질문을 반복하지 않으면서 유용한 팔로업 또는 보완 질문 ${topN}개를 한국어로 제안하세요. 각 항목은 한 문장 질문형이어야 하며 번호 없이 배열로만 반환하세요.기존 질문:${baseQs.map((q, i) => `${i + 1}. ${q}`).join('\n')}최근 대화 로그(최대 40턴, Q/U/A):
-${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
+`당신은 인터뷰 보조 AI입니다. 아래의 기존 질문들과 최근 모의 인터뷰 대화 로그를 참고하여, 기존 질문을 반복하지 않으면서 유용한 팔로업 또는 보완 질문 ${topN}개를 한국어로 제안하세요.
+각 항목은 한 문장 질문형이어야 하며 번호 없이 배열로만 반환하세요.
+
+기존 질문:
+${baseQs.map((q,i)=>`${i+1}. ${q}`).join('\n')}
+
+최근 대화 로그(최대 40턴, Q/U/A):
+${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
+`);
         if (!key) {
             // 키가 없으면 간단한 휴리스틱 제안
             const heur = [
@@ -2435,11 +2485,9 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
             const data = await res.json();
             const text = data?.choices?.[0]?.message?.content || '[]';
             let arr = [];
-            try {
-                arr = JSON.parse(text);
-            } catch (_) {
+            try { arr = JSON.parse(text); } catch (_) {
                 // 간단 파서: 줄바꿈 기반
-                arr = text.split(/\n+/).map(s => s.replace(/^[-*\d\.\s]+/, '').trim()).filter(Boolean);
+                arr = text.split(/\n+/).map(s=>s.replace(/^[-*\d\.\s]+/, '').trim()).filter(Boolean);
             }
             return arr.slice(0, topN);
         } catch (e) {
@@ -2455,27 +2503,23 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
             list.innerHTML = '<li><div class="suggestion-pill">제안을 생성할 수 없습니다. 대화 로그를 더 쌓은 뒤 다시 시도해주세요.</div></li>';
             return;
         }
-        list.innerHTML = qs.map(q => `<li><div class="suggestion-pill">${q}</div></li>`).join('');
+    list.innerHTML = qs.map(q=>`<li><div class="suggestion-pill">${q}</div></li>`).join('');
     }
 
     // Buttons
-    (function wireFinalGuideButtons() {
+    (function wireFinalGuideButtons(){
         const printBtn = document.getElementById('printFinalGuideBtn');
-        if (printBtn) printBtn.addEventListener('click', () => window.print());
+        if (printBtn) printBtn.addEventListener('click', ()=> window.print());
         const regenBtn = document.getElementById('regenSuggestionsBtn');
-        if (regenBtn) regenBtn.addEventListener('click', () => renderSuggestionWidget());
+        if (regenBtn) regenBtn.addEventListener('click', ()=> renderSuggestionWidget());
     })();
 
     // Nav wiring: when switching to Final Guide (revision), render
-    (function wireNavForFinalGuide() {
+    (function wireNavForFinalGuide(){
         const navItems = Array.from(document.querySelectorAll('#nav-bar .btn-revision'));
-        navItems.forEach(el => {
-            el.addEventListener('click', () => {
-                setTimeout(() => {
-                    currentEditContext = 'final';
-                    renderFinalGuide();
-                    renderSuggestionWidget();
-                }, 50);
+        navItems.forEach(el=>{
+            el.addEventListener('click', ()=>{
+                setTimeout(()=>{ currentEditContext = 'final'; renderFinalGuide(); renderSuggestionWidget(); }, 50);
             });
         });
     })();
@@ -2489,50 +2533,44 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
         return `${m}m ${String(s % 60).padStart(2, '0')}s`;
     };
     const byCountDesc = (a, b) => b.count - a.count;
-    function simpleTokenizeKorean(text) {
-        return (text || "").replace(/[^\p{Script=Hangul}\w\s]/gu, " ").toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS.has(t));
-
-    }
-    function extractTopKeywords(logs, topN = 12) {
-        if (!Array.isArray(logs) || !logs.length) return [];
-        const txt = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' ');
-        const tokens = simpleTokenizeKorean(txt);
-        const map = new Map();
-        for (const t of tokens) map.set(t, (map.get(t) || 0) + 1);
-        return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count }));
-    }
+    function simpleTokenizeKorean(text) { return (text || "").replace(/[^\p{Script=Hangul}\w\s]/gu, " ").toLowerCase().split(/\s+/).filter(t => t && t.length > 1 && !KO_STOPWORDS.has(t)); }
+    function extractTopKeywords(logs, topN = 12) { if (!Array.isArray(logs) || !logs.length) return []; const txt = logs.map(r => `${r.userMessage || ''} ${r.botAnswer || ''}`).join(' '); const tokens = simpleTokenizeKorean(txt); const map = new Map(); for (const t of tokens) map.set(t, (map.get(t) || 0) + 1); return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, topN).map(([text, count]) => ({ text, weight: count })); }
 
     let _qEmbeddings = null;
-    async function embedText(key, text) {
-        const r = await fetch("https://api.openai.com/v1/embeddings", { 
-            method: "POST", 
-            headers: { 
-                'Content-Type': 'application/json', 
-                'Authorization': `Bearer ${key}` 
-            }, body: JSON.stringify({ model: "text-embedding-3-small", input: text }) 
-        });
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error?.message || 'Embeddings API error');
-        return d.data[0].embedding;
-    }
-    function cosineSim(a, b) {
-        let dot = 0, na = 0, nb = 0;
-        for (let i = 0;
-            i < a.length;
-            i++) {
-            dot += a[i] * b[i];
-            na += a[i] * a[i];
-            nb += b[i] * b[i];
-        } return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-9);
-    }
-    async function ensureQuestionEmbeddings(key, qs) {
-        if (!Array.isArray(qs) || !qs.length) {
-            _qEmbeddings = null;
-            return;
-        } _qEmbeddings = await Promise.all(qs.map(q => embedText(key, q)));
-    }
-    async function classifyQuestionIndex(userText, lastIdx, qs, key) {
+    async function embedText(key, text) { const r = await fetch("https://api.openai.com/v1/embeddings", { method: "POST", headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: "text-embedding-3-small", input: text }) }); const d = await r.json(); if (!r.ok) throw new Error(d.error?.message || 'Embeddings API error'); return d.data[0].embedding; }
+    function cosineSim(a, b) { let dot = 0, na = 0, nb = 0; for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[b]; } return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-9); }
+    async function ensureQuestionEmbeddings(key, qs) { if (!Array.isArray(qs) || !qs.length) { _qEmbeddings = null; return; } _qEmbeddings = await Promise.all(qs.map(q => embedText(key, q))); }
+    async function classifyQuestionIndex(userText, lastIdx, qs, key, turnCount = 0) {
+        // quick guards: short/acknowledgement
         if (!userText || userText.trim().length < 2 || ACK_REGEX.test(userText.trim())) return { index: Math.max(0, lastIdx), score: 0, reason: 'ack/short' };
+
+        // local greeting regex
+        const GREET_LOCAL = /(안녕|안녕하세요|처음|반갑|만나서)/i;
+        if ((typeof turnCount === 'number' && turnCount <= 2) || GREET_LOCAL.test(userText)) {
+            return { index: 0, score: 1, reason: 'greet/intro' };
+        }
+
+        // explicit numeric reference like "3번" or "질문 2"
+        const numMatch = String(userText || '').match(/(?:질문|q|Q)?\s*([0-9]{1,3})(?:번|번째)?/);
+        if (numMatch) {
+            const n = Number(numMatch[1]);
+            if (!Number.isNaN(n) && n >= 0) {
+                const bounded = qs && qs.length ? Math.min(n, qs.length) : n;
+                return { index: bounded, score: 1, reason: 'explicit-number' };
+            }
+        }
+
+        // exact-match fast path
+        const normalize = s => (s || '').toString().replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase();
+        const uNorm = normalize(userText);
+        if (uNorm && Array.isArray(qs) && qs.length) {
+            for (let i = 0; i < qs.length; i++) {
+                if (uNorm === normalize(qs[i])) {
+                    return { index: i + 1, score: 1, reason: 'exact-match' };
+                }
+            }
+        }
+
         if (!_qEmbeddings) await ensureQuestionEmbeddings(key, qs);
         if (!_qEmbeddings) return { index: Math.max(0, lastIdx), score: 0, reason: 'no-emb' };
         const uEmb = await embedText(key, userText);
@@ -2549,158 +2587,46 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
     }
 
 
-    const GREET_REGEX = /(안녕|안녕하세요|처음|반갑|만나서)/i;
-    const SMALLTALK_REGEX = /(날씨|주말|요즘|점심|커피|출근|취미|취향|근황)/i;
-    function detectPhase({ lastIndex, turnCount, userText }) {
-        if (turnCount <= 2 || GREET_REGEX.test(userText)) return 0;
-        if (lastIndex === 0 || SMALLTALK_REGEX.test(userText)) return 1;
-        return 2;
-    }
+    const GREET_REGEX = /(안녕|안녕하세요|처음|반갑|만나서)/i; const SMALLTALK_REGEX = /(날씨|주말|요즘|점심|커피|출근|취미|취향|근황)/i;
+    function detectPhase({ lastIndex, turnCount, userText }) { if (turnCount <= 2 || GREET_REGEX.test(userText)) return 0; if (lastIndex === 0 || SMALLTALK_REGEX.test(userText)) return 1; return 2; }
 
-    function safeParseJSON(s) {
-        try {
-            return JSON.parse(s);
-        } catch (e) { } const m = s && s.match(/\{[\s\S]*\}/);
-        if (m) {
-            try {
-                return JSON.parse(m[0]);
-            } catch (e) { }
-        } return null;
-    }
+    function safeParseJSON(s) { try { return JSON.parse(s); } catch (e) { } const m = s && s.match(/\{[\s\S]*\}/); if (m) { try { return JSON.parse(m[0]); } catch (e) { } } return null; }
     async function getStyleHintsLLM(key, { personaState, userMessage, phase, predictedIndex, questions }) {
         const base = { tone: 'neutral', allow_micro_openers: [], use_short_episode: false, sentence_target: '2-3', followup: { should_ask: false, template: '' } };
         const prompt = `당신은 인터뷰 톤 코치입니다. 아래 정보를 보고 스타일 힌트를 JSON으로만 반환하세요.\n[퍼소나] ${selectedPersona?.name || '-'} / ${selectedPersona?.age || '-'} / ${selectedPersona?.gender || '-'} / ${selectedPersona?.occupation || '-'}\n성격:${selectedPersona?.personality || '-'}\n[단계] ${phase}\n[현재 질문 후보] ${predictedIndex}\n[사용자 발화]\n"""${(userMessage || '').slice(0, 500)}"""`;
         try {
             const r = await fetch("https://api.openai.com/v1/chat/completions", { method: "POST", headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: "gpt-4o-mini", messages: [{ role: 'user', content: prompt }], temperature: 0.6, max_tokens: 300 }) });
-            const d = await r.json();
-            const p = safeParseJSON(d?.choices?.[0]?.message?.content || "");
-            if (!p) return base;
+            const d = await r.json(); const p = safeParseJSON(d?.choices?.[0]?.message?.content || ""); if (!p) return base;
             return { tone: p.tone || base.tone, allow_micro_openers: Array.isArray(p.allow_micro_openers) ? p.allow_micro_openers.slice(0, 3) : [], use_short_episode: !!p.use_short_episode, sentence_target: p.sentence_target || base.sentence_target, followup: { should_ask: !!(p.followup && p.followup.should_ask), template: (p.followup && p.followup.template) || '' } };
-        } catch (e) {
-            return base;
-        }
+        } catch (e) { return base; }
     }
     function buildSystemPrompt(interviewTitle, questions, predictedIndex, phase, personaState, styleHints) {
-        const qref = Array.isArray(questions) ? questions.join(', ') : '';
-        const openers = (styleHints?.allow_micro_openers || []).join(' / ');
+        const qref = Array.isArray(questions) ? questions.join(', ') : ''; const openers = (styleHints?.allow_micro_openers || []).join(' / ');
         return `당신은 인터뷰 대상 퍼소나입니다. 자연스러운 구어체로 답변하세요.\n[역할] ${personaState.name} (${personaState.age}세, ${personaState.gender}, ${personaState.occupation})\n[성격] ${personaState.personality || '평범'}\n[언어습관] ${personaState.speech || '자연스러운 구어체'}\n[대화 단계] ${phase} (0=아이스브레이킹, 1=잡담, 2=본론)\n[현재 질문 번호 후보] ${predictedIndex}\n[인터뷰 주제] ${interviewTitle}\n[질문 목록(참고)] ${qref}\n[스타일 힌트] tone=${styleHints.tone}, 문장수=${styleHints.sentence_target}, micro-openers=${openers || '(없음)'}\n원칙: 이모지·표 금지, 메타발화 금지, 과도한 형식화 금지.`;
     }
     async function generateCoreAnswer(key, systemPrompt, userMessage, { phase }) {
         const payload = { model: modelId, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMessage }], temperature: (phase <= 1 ? 0.7 : 0.9), max_tokens: (phase <= 1 ? 220 : 420), top_p: 1, frequency_penalty: 0.15, presence_penalty: 0.1 };
-        const r = await fetch("https://api.openai.com/v1/chat/completions", { method: "POST", headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify(payload) });
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error?.message || 'gen error');
-        return (d.choices?.[0]?.message?.content || '').trim();
+        const r = await fetch("https://api.openai.com/v1/chat/completions", { method: "POST", headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify(payload) }); const d = await r.json(); if (!r.ok) throw new Error(d.error?.message || 'gen error'); return (d.choices?.[0]?.message?.content || '').trim();
     }
-    function approxTokenCount(t) {
-        return t ? Math.ceil(t.length / 3) : 0;
-    }
+    function approxTokenCount(t) { return t ? Math.ceil(t.length / 3) : 0; }
     const FILLER_REGEX = /(\b|\s)(음+|어+|그+|그러니까|그런데|뭐랄까)(?=\b|\s)/g;
-    function countFillers(t) {
-        const m = t?.match(FILLER_REGEX);
-        return m ? m.length : 0;
-    }
-    function extractTopicHint(t) {
-        return null;
-    }
+    function countFillers(t) { const m = t?.match(FILLER_REGEX); return m ? m.length : 0; }
+    function extractTopicHint(t) { return null; }
 
     // 음성 인식 자동 루프
     const SR = (window.SpeechRecognition || window.webkitSpeechRecognition) ? new (window.SpeechRecognition || window.webkitSpeechRecognition)() : null;
     let isListening = false, isSpeaking = false, isPending = false;
-    // 마이크는 인터뷰 진행 중에만 활성화해야 함
-    let interviewActive = false;
-
-    function stopMic() {
-        try {
-            if (SR && isListening) SR.stop();
-        } catch (_) { }
-        isListening = false;
-        setMicStatus('대기');
-    }
-    function setMicStatus(t) {
-        const s = document.getElementById('micStatus');
-        const b = document.getElementById('micButton');
-        if (s) s.textContent = t;
-        if (b) {
-            if (t === '듣는 중') b.classList.add('active');
-            else b.classList.remove('active');
-        }
-    }
-    function safeStart() {
-        try {
-            // 인터뷰가 활성화되어 있을 때만 마이크를 자동/수동으로 시작
-            if (!interviewActive) return;
-            SR && SR.start();
-        } catch (e) { }
-    }
-    if (SR) {
-        SR.lang = 'ko-KR';
-        SR.interimResults = false;
-        SR.continuous = false;
-        SR.onstart = () => {
-            try {
-                audioElement.pause();
-            } catch (_) { } isListening = true;
-            setMicStatus('듣는 중');
-            try {
-                syncChatingLeftImage(selectedPersona, false);
-            } catch (_) { }
-        };
-        SR.onend = () => {
-            isListening = false;
-            setMicStatus('대기');
-            // 인터뷰 진행 중일 때만 자동 재시작 시도
-            if (interviewActive && !isSpeaking && !isPending) setTimeout(safeStart, 250);
-        };
-        SR.onerror = (e) => {
-            isListening = false;
-            setMicStatus('에러');
-            const nonFatal = ['no-speech', 'audio-capture', 'not-allowed', 'aborted'];
-            // 인터뷰 중일 때만 재시작 로직 실행
-            if (interviewActive && !isSpeaking && !isPending && !nonFatal.includes(e.error)) setTimeout(safeStart, 600);
-        };
-        SR.onresult = (ev) => {
-            let txt = '';
-            for (let i = ev.resultIndex;
-                i < ev.results.length;
-                i++) {
-                const r = ev.results[i];
-                if (r.isFinal) txt += r[0].transcript;
-            } if (txt) sendMessage(txt, true);
-        };
-        // 초기 로드 시 자동 시작 금지 — 인터뷰 시작 시에만 시작하도록 함
-        // setTimeout(safeStart, 500);
-    }
-    const micBtnEl = document.getElementById('micButton');
-    if (micBtnEl) {
-        micBtnEl.addEventListener('click', () => {
-            // 마이크는 인터뷰 중에만 수동으로 켤 수 있게 제한
-            if (!interviewActive) {
-                alert('인터뷰 진행 중에만 마이크를 사용할 수 있습니다.');
-                return;
-            }
-            if (!isListening) safeStart();
-        });
-    }
+    function setMicStatus(t) { const s = document.getElementById('micStatus'); const b = document.getElementById('micButton'); if (s) s.textContent = t; if (b) { if (t === '듣는 중') b.classList.add('active'); else b.classList.remove('active'); } }
+    function safeStart() { try { SR && SR.start(); } catch (e) { } }
+    if (SR) { SR.lang = 'ko-KR'; SR.interimResults = false; SR.continuous = false; SR.onstart = () => { try { audioElement.pause(); } catch (_) { } isListening = true; setMicStatus('듣는 중'); try { syncChatingLeftImage(selectedPersona, false); } catch (_) { } }; SR.onend = () => { isListening = false; setMicStatus('대기'); if (!isSpeaking && !isPending) setTimeout(safeStart, 250); }; SR.onerror = (e) => { isListening = false; setMicStatus('에러'); const nonFatal = ['no-speech', 'audio-capture', 'not-allowed', 'aborted']; if (!isSpeaking && !isPending && !nonFatal.includes(e.error)) setTimeout(safeStart, 600); }; SR.onresult = (ev) => { let txt = ''; for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) txt += r[0].transcript; } if (txt) sendMessage(txt, true); }; setTimeout(safeStart, 500); }
+    const micBtnEl = document.getElementById('micButton'); if (micBtnEl) { micBtnEl.addEventListener('click', () => { if (!isListening) safeStart(); }); }
 
     async function sendMessage(voiceInput, isVoice) {
-        const key = apiKey;
-        // 전역 apiKey만 신뢰
-        const inputEl = document.getElementById('userInput');
-        const userText = (typeof voiceInput === 'string') ? voiceInput : (inputEl?.value || '').trim();
-        if (!key) {
-            alert('API 키가 필요합니다.');
-            return;
-        }
-        if (!userText) {
-            alert('메시지를 입력해주세요.');
-            return;
-        }
-        if (!selectedPersona) {
-            alert('퍼소나를 먼저 선택해주세요.');
-            console.log('2274줄')
-            return;
-        }
+        const key = apiKey; // 전역 apiKey만 신뢰
+        const inputEl = document.getElementById('userInput'); const userText = (typeof voiceInput === 'string') ? voiceInput : (inputEl?.value || '').trim();
+        if (!key) { alert('API 키가 필요합니다.'); return; }
+        if (!userText) { alert('메시지를 입력해주세요.'); return; }
+        if (!selectedPersona) { alert('퍼소나를 먼저 선택해주세요.'); return; }
 
         // Analytics hooks: mark user turn start and run counters (async, non-blocking)
         let userTurn = null;
@@ -2709,30 +2635,24 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
                 userTurn = window.AnalyticsKit.Timeline.markStart('user');
             }
             if (window.AnalyticsKit && window.AnalyticsKit.Counters && typeof window.AnalyticsKit.Counters.onUserUtter === 'function') {
-                // fire-and-forget to avoid blocking UI. it will update counters / timeline internally
+                // fire-and-forget to avoid blocking UI; it will update counters/timeline internally
                 window.AnalyticsKit.Counters.onUserUtter(userText).catch(e => console.warn('Counters.onUserUtter failed', e));
             }
-        } catch (e) {
-            console.warn('AnalyticsKit pre-send hooks error', e);
-        }
+        } catch (e) { console.warn('AnalyticsKit pre-send hooks error', e); }
 
         // 보강: 임베딩 보장 (최후 방어)
         if (!_qEmbeddings && Array.isArray(questions) && questions.length) {
-            try {
-                await ensureQuestionEmbeddings(key, questions);
-            }
-            catch (e) {
-                console.error('embeddings init fail in send:', e);
-            }
+            try { await ensureQuestionEmbeddings(key, questions); }
+            catch (e) { console.error('embeddings init fail in send:', e); }
         }
 
-        // 질문 인덱스 추정
-        let predicted = { index: Math.max(1, lastIndex || 1), score: 0, reason: 'default' };
-        const prevIndex = lastIndex || 0;
-        // 직전 인덱스 보관
-        try {
-            predicted = await classifyQuestionIndex(userText, lastIndex || 0, questions || [], key);
-        } catch (e) { }
+    // turn count (used for phase / icebreaking detection)
+    const turnCount = (interviewLog || []).length + 1;
+
+    // 질문 인덱스 추정
+    let predicted = { index: Math.max(1, lastIndex || 1), score: 0, reason: 'default' };
+    const prevIndex = lastIndex || 0; // 직전 인덱스 보관
+    try { predicted = await classifyQuestionIndex(userText, lastIndex || 0, questions || [], key, turnCount); } catch (e) { }
         // 팔로업 카운팅: 같은 질문에서 사용자가 '질문'을 이어가면 팔로업으로 간주
         try {
             const S = window.AnalyticsKit && window.AnalyticsKit.Store;
@@ -2743,42 +2663,30 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
                 // UI 배지 즉시 갱신
                 updateFollowupBadges();
             }
-        } catch (_) { }
+        } catch (_) {}
 
         highlightCurrentQuestion(predicted.index);
-        if (lastIndex === 0 && predicted.index === 1 && !document.querySelector('.stage-message')) {
-            appendStageMessage('인터뷰를 시작합니다');
-        }
+        if (lastIndex === 0 && predicted.index === 1 && !document.querySelector('.stage-message')) { appendStageMessage('인터뷰를 시작합니다'); }
         lastIndex = predicted.index;
 
         // 진행 중 질문 인덱스 Store 반영
-        try {
-            if (window.AnalyticsKit?.Store) window.AnalyticsKit.Store.currentQuestionIndex = lastIndex;
-        } catch (_) { }
+        try { if (window.AnalyticsKit?.Store) window.AnalyticsKit.Store.currentQuestionIndex = lastIndex; } catch (_) {}
 
-        // 사용자 메시지 반영
-        showUserMessage(userText);
-        if (!isVoice && inputEl) inputEl.value = '';
+    // 사용자 메시지 반영
+    showUserMessage(userText);
+    showBotLoading();
+    if (!isVoice && inputEl) inputEl.value = '';
 
-        // 페이즈 결정
-        const interviewTitle = interviewTitleInput.value.trim();
-        const turnCount = (interviewLog || []).length + 1;
-        const phase = detectPhase({ lastIndex, turnCount, userText });
+    // 페이즈 결정
+    const interviewTitle = interviewTitleInput.value.trim();
+    const phase = detectPhase({ lastIndex, turnCount, userText });
 
         // 스타일 힌트→시스템 프롬프트→코어 응답
-        const t0 = Date.now();
-        isPending = true;
-        setMicStatus('GPT 응답 대기');
+        const t0 = Date.now(); isPending = true; setMicStatus('GPT 응답 대기');
         try {
             const styleHints = await getStyleHintsLLM(key, { personaState: { name: selectedPersona?.name, age: selectedPersona?.age, gender: selectedPersona?.gender, occupation: selectedPersona?.occupation, personality: selectedPersona?.personality, speech: selectedPersona?.speech }, userMessage: userText, phase, predictedIndex: lastIndex, questions });
             const systemPrompt = buildSystemPrompt(interviewTitle, questions, lastIndex, phase, { name: selectedPersona?.name, age: selectedPersona?.age, gender: selectedPersona?.gender, occupation: selectedPersona?.occupation, personality: selectedPersona?.personality, speech: selectedPersona?.speech }, styleHints);
             const answer = await generateCoreAnswer(key, systemPrompt, userText, { phase });
-
-            showBotMessage(answer);
-            // OpenAI TTS로 바로 읽어주기
-            try {
-                await speakTextPersona(answer, selectedPersona);
-            } catch (_) { }
 
             const t1 = Date.now();
             interviewLog.push({
@@ -2796,41 +2704,56 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
                 userEmotion: null,
                 botAcknowledged: null
             });
-            // Analytics: mark user turn end
+            // Analytics: mark user turn end and start persona turn
             try {
                 if (userTurn && window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.markEnd === 'function') {
                     window.AnalyticsKit.Timeline.markEnd(userTurn, userText);
                 }
-            } catch (e) {
-                console.warn('AnalyticsKit markEnd error', e);
-            }
+            } catch (e) { console.warn('AnalyticsKit markEnd error', e); }
+
+            let personaTurn = null;
+            try {
+                if (window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.markStart === 'function') {
+                    personaTurn = window.AnalyticsKit.Timeline.markStart('persona');
+                }
+            } catch (e) { console.warn('AnalyticsKit markStart persona failed', e); }
+
+            // show bot message and read aloud
+            showBotMessage(answer);
+            try { await speakTextPersona(answer, selectedPersona); } catch (_) { }
+
+            // mark persona turn end
+            try {
+                if (personaTurn && window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.markEnd === 'function') {
+                    window.AnalyticsKit.Timeline.markEnd(personaTurn, answer);
+                }
+            } catch (e) { console.warn('AnalyticsKit markEnd persona error', e); }
+
             // WS/Python server: disabled, but legacy send is no-op
             __legacySocketSendSilently__({ gptResponse: answer });
-            isPending = false;
-            setMicStatus('듣는 중');
+            isPending = false; setMicStatus('듣는 중');
             // 응답 후 자동 재시작
             if (typeof SR !== 'undefined' && SR && !isListening && !isSpeaking) {
-                try {
-                    safeStart();
-                } catch (_) { }
+                try { safeStart(); } catch (_) { }
             }
         } catch (e) {
+            // 1. 임시 로딩 박스 비우기 (오류 시 로딩이 멈추는 현상 방지)
+            const leftBox = document.getElementById('chating-left-box');
+            if (leftBox) leftBox.innerHTML = ''; 
+
+            // 2. 실제 채팅창에 에러 메시지 표시
             appendMessage(`Error: ${e.message}`, 'bot');
+
             // ensure analytics marks turn end on error as well
             try {
                 if (userTurn && window.AnalyticsKit && window.AnalyticsKit.Timeline && typeof window.AnalyticsKit.Timeline.markEnd === 'function') {
                     window.AnalyticsKit.Timeline.markEnd(userTurn, userText);
                 }
-            } catch (err) {
-                console.warn('AnalyticsKit markEnd on error failed', err);
-            }
-            isPending = false;
-            setMicStatus('대기');
+            } catch (err) { console.warn('AnalyticsKit markEnd on error failed', err); }
+            isPending = false; setMicStatus('대기');
             // 에러 시에도 자동 재시작 시도
             if (typeof SR !== 'undefined' && SR && !isListening && !isSpeaking) {
-                try {
-                    safeStart();
-                } catch (_) { }
+                try { safeStart(); } catch (_) { }
             }
         }
     }
@@ -2862,9 +2785,7 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
             // === added: 팔로업/현재 질문 상태 ===
             followupsByQuestion: {},    // { [questionIndex:number]: count }
             currentQuestionIndex: 0,    // 진행중인 질문 인덱스(1-base, 0=아이스브레이킹)
-            apiKey() {
-                return localStorage.getItem("openai_api_key") || "";
-            }
+            apiKey() { return localStorage.getItem("openai_api_key") || ""; }
         };
         NS.Store = Store;
     })(window.AnalyticsKit);
@@ -2885,20 +2806,8 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
                 speaker: turn.speaker
             });
         }
-        let personaTurn = null;
-        function personaSpeakStart() {
-            if (personaTurn) return personaTurn;
-            personaTurn = markStart('persona');
-            S.isPersonaSpeaking = true;
-            return personaTurn;
-        }
-        function personaSpeakEnd(text = '') {
-            if (personaTurn) {
-                markEnd(personaTurn, text);
-                personaTurn = null;
-            }
-            S.isPersonaSpeaking = false;
-        }
+        function personaSpeakStart() { S.isPersonaSpeaking = true; }
+        function personaSpeakEnd() { S.isPersonaSpeaking = false; }
         NS.Timeline = { markStart, markEnd, personaSpeakStart, personaSpeakEnd };
     })(window.AnalyticsKit);
 
@@ -2907,12 +2816,8 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
         const S = NS.Store;
         function cosineSim(a, b) {
             let dot = 0, na = 0, nb = 0;
-            for (let i = 0;
-                i < Math.min(a.length, b.length);
-                i++) {
-                dot += a[i] * b[i];
-                na += a[i] * a[i];
-                nb += b[i] * b[i];
+            for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[b];
             }
             return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-9);
         }
@@ -2985,10 +2890,7 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
                 }
                 if (isFollowup) {
                     S.followupDepth++;
-                    if (S.followupDepth >= 3) {
-                        S.counters.followupChains++;
-                        S.followupDepth = 0;
-                    }
+                    if (S.followupDepth >= 3) { S.counters.followupChains++; S.followupDepth = 0; }
                 } else {
                     S.followupDepth = 0;
                     const simPrep = await maxSimToPrepared(text);
@@ -3003,62 +2905,68 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
     // 5) KPI/타임라인 렌더 모듈 (render)
     (function (NS) {
         const S = NS.Store;
-        function computeTalkSplit() {
-            const segments = Array.isArray(S.timeline) ? S.timeline : [];
-            let personaValue = 0;
-            let userValue = 0;
-            segments.forEach(seg => {
-                const duration = Math.max(0, (seg?.end ?? 0) - (seg?.start ?? 0));
-                if (seg.speaker === 'persona') personaValue += duration;
-                else if (seg.speaker === 'user') userValue += duration;
-            });
-            if (personaValue + userValue === 0) {
-                const logs = Array.isArray(window.interviewLog) ? window.interviewLog : [];
-                if (logs.length) {
-                    personaValue = logs.reduce((sum, row) => sum + (row.botAnswer || '').length, 0);
-                    userValue = logs.reduce((sum, row) => sum + (row.userMessage || '').length, 0);
-                }
-            }
-            const total = personaValue + userValue;
-            const personaPct = total ? Math.round((personaValue / total) * 100) : 0;
-            const userPct = total ? Math.max(0, 100 - personaPct) : 0;
-            return { personaPct, userPct, personaValue, userValue, total };
-        }
-        function computeTailCount() {
-            const followups = S.followupsByQuestion || {};
-            return Object.values(followups).reduce((acc, num) => acc + Number(num || 0), 0);
-        }
         function computeKPIs() {
-            return {
-                talkSplit: computeTalkSplit(),
-                tailCount: computeTailCount()
-            };
+            const userTurns = S.turns.filter(t => t.speaker === "user");
+            const qCount = userTurns.filter(t => NS.NLP.isQuestion(t.text)).length;
+            const talkCount = userTurns.length;
+            const listenAck = S.counters.backchannelsByUser;
+            const talkPercent = Math.round((talkCount / Math.max(1, talkCount + listenAck)) * 100);
+            const adHocPercent = Math.round((S.counters.adHocQuestions / Math.max(1, qCount)) * 100);
+            const followupCount = S.counters.followupChains;
+            return { talkPercent, adHocPercent, followupCount };
+        }
+        function talkMsg(p) {
+            if (p >= 65) return "발화를 많이 했어요!";
+            if (p >= 40) return "균형 잡힌 대화였어요.";
+            return "경청이 돋보였어요.";
         }
         function renderKPIs() {
-            const { talkSplit, tailCount } = computeKPIs();
-            const elTalkSplit = document.querySelector('#kpiTalkSplit');
-            const elTail = document.querySelector('#kpiTailCount');
-            if (elTalkSplit) {
-                elTalkSplit.textContent = `[응답자 ${talkSplit.personaPct}% | 진행자 ${talkSplit.userPct}%]`;
-            }
-            if (elTail) {
-                elTail.textContent = `${tailCount}회`;
-            }
+            const { talkPercent, adHocPercent, followupCount } = computeKPIs();
+            const elTalk = document.querySelector("#kpiTalkPercent");
+            const elTalkMsg = document.querySelector("#kpiTalkMsg");
+            const elAdhoc = document.querySelector("#kpiAdHocPercent");
+            const elFollow = document.querySelector("#kpiFollowupCount");
+            if (elTalk) elTalk.textContent = `${talkPercent}%`;
+            if (elTalkMsg) elTalkMsg.textContent = talkMsg(talkPercent);
+            if (elAdhoc) elAdhoc.textContent = `${adHocPercent}%`;
+            if (elFollow) elFollow.textContent = `${followupCount}회`;
         }
         function renderTimeline() {
-            const wrap = document.getElementById('utteranceTimeline');
+            const wrap = document.getElementById("utteranceTimeline");
             if (!wrap) return;
-            wrap.innerHTML = '';
+            // ensure basic styles for legend and bars exist (inject once)
+            if (!document.getElementById('utt-styles')) {
+                const s = document.createElement('style');
+                s.id = 'utt-styles';
+                s.textContent = `
+                    #utteranceTimeline { font-family: inherit; }
+                    .utt-legend{ display:flex; gap:12px; align-items:center; margin-bottom:8px; color:#666; font-size:13px }
+                    .legend-item{ display:inline-flex; align-items:center; gap:8px }
+                    .legend-dot{ display:inline-block; width:12px; height:12px; border-radius:3px }
+                    .legend-dot--persona{ background: #DCE9FF } /* 인터뷰이: 밝은 블루 */
+                    .legend-dot--user{ background: #3B6BFF }    /* 인터뷰어: 진한 블루 */
+                    .utt-track{ display:flex; height:20px; border-radius:8px; overflow:hidden; background:#F6F8FB }
+                    .utt-bar{ height:100%; display:inline-block }
+                `;
+                document.head.appendChild(s);
+            }
+
             const segments = Array.isArray(S.timeline) ? S.timeline : [];
-            const totalDuration = segments.reduce((sum, seg) => sum + Math.max(0, (seg?.end ?? 0) - (seg?.start ?? 0)), 0);
-            const { personaPct, userPct } = computeTalkSplit();
+            const totalMs = segments.reduce((sum, seg) => sum + Math.max(0, (seg.end || 0) - (seg.start || 0)), 0) || 1;
+            wrap.innerHTML = '';
+
+            // legend with simple split summary
+            const personaMs = segments.filter(s => s.speaker !== 'user').reduce((a, b) => a + Math.max(0, (b.end || 0) - (b.start || 0)), 0);
+            const userMs = segments.filter(s => s.speaker === 'user').reduce((a, b) => a + Math.max(0, (b.end || 0) - (b.start || 0)), 0);
+            const personaPct = Math.round((personaMs / totalMs) * 100);
+            const userPct = Math.round((userMs / totalMs) * 100);
 
             const legend = document.createElement('div');
             legend.className = 'utt-legend';
             legend.innerHTML = `
-                <span class="legend-item"><span class="legend-dot legend-dot--persona"></span>응답자</span>
-                <span class="legend-item"><span class="legend-dot legend-dot--user"></span>진행자</span>
-                <span class="utt-split">[응답자 ${personaPct}% | 진행자 ${userPct}%]</span>
+                <span class="legend-item"><span class="legend-dot legend-dot--persona"></span>인터뷰이</span>
+                <span class="legend-item"><span class="legend-dot legend-dot--user"></span>인터뷰어</span>
+                <span class="utt-split" style="margin-left:auto;color:#999;font-size:12px">[인터뷰이 ${personaPct}% | 인터뷰어 ${userPct}%]</span>
             `;
             wrap.appendChild(legend);
 
@@ -3066,45 +2974,21 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
             track.className = 'utt-track';
             wrap.appendChild(track);
 
-            if (!totalDuration) {
-                const logs = Array.isArray(window.interviewLog) ? window.interviewLog : [];
-                const totalChars = logs.reduce((sum, row) => sum + (row.userMessage || '').length + (row.botAnswer || '').length, 0);
-                if (!totalChars) {
-                    const empty = document.createElement('div');
-                    empty.className = 'utt-empty';
-                    empty.textContent = '대화 기록이 없습니다.';
-                    track.appendChild(empty);
-                    return;
-                }
-                logs.forEach(row => {
-                    const userLen = (row.userMessage || '').length;
-                    const personaLen = (row.botAnswer || '').length;
-                    if (userLen > 0) {
-                        const bar = document.createElement('div');
-                        bar.className = 'utt-bar bar--user';
-                        bar.style.width = `${Math.max(0.5, (userLen / totalChars) * 100)}%`;
-                        track.appendChild(bar);
-                    }
-                    if (personaLen > 0) {
-                        const bar = document.createElement('div');
-                        bar.className = 'utt-bar bar--persona';
-                        bar.style.width = `${Math.max(0.5, (personaLen / totalChars) * 100)}%`;
-                        track.appendChild(bar);
-                    }
-                });
-                return;
-            }
-
+            // append bars inside track
             segments.forEach(seg => {
-                const duration = Math.max(0, (seg?.end ?? 0) - (seg?.start ?? 0));
-                const widthPct = Math.max(0.5, (duration / totalDuration) * 100);
+                const segMs = Math.max(0, (seg.end || 0) - (seg.start || 0));
+                const w = (segMs / totalMs) * 100;
                 const bar = document.createElement('div');
-                bar.className = `utt-bar ${seg.speaker === 'user' ? 'bar--user' : 'bar--persona'}`;
-                bar.style.width = `${widthPct}%`;
+                bar.className = `utt-bar ${seg.speaker === "user" ? "bar--user" : "bar--persona"}`;
+                bar.style.width = `${Math.max(0.5, w)}%`;
                 track.appendChild(bar);
             });
         }
-        NS.Render = { renderKPIs, renderTimeline, computeKPIs, computeTalkSplit };
+        function setRapportStage(stage) {
+            const steps = document.querySelectorAll(".affinity-step");
+            steps.forEach((s, i) => s.classList.toggle("active", i === stage - 1));
+        }
+        NS.Render = { renderKPIs, renderTimeline, setRapportStage };
     })(window.AnalyticsKit);
 
     // 6) 정서적 대응 3건 생성 모듈 (emotions)
@@ -3206,10 +3090,15 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
                 return;
             }
 
-            const { buckets, totalUserUtterances } = result;
-            const supportiveTotal = buckets.empathy.count + buckets.support.count + buckets.nonjudgment.count + buckets.rapport.count;
+            const { buckets, score, totalUserUtterances } = result;
 
-            const detailItems = [
+            const items = [
+                {
+                    key: 'score',
+                    title: '정서적 응대 점수',
+                    note: `인터뷰어 발화 ${totalUserUtterances}건 중 정서적 응대 ${buckets.empathy.count + buckets.support.count + buckets.nonjudgment.count + buckets.rapport.count}건`,
+                    extra: `${score}%`
+                },
                 {
                     key: 'empathy',
                     title: '공감·인정 표현',
@@ -3234,42 +3123,29 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
                     count: buckets.rapport.count,
                     samples: buckets.rapport.samples
                 }
-            ].filter(it => it.count > 0);
-
-            const summaryCard = supportiveTotal
-                ? `
-                    <li class="emotion-card">
-                        <div class="emotion-title">정서적 응대 발화 <span style="color:#8F949B">(${supportiveTotal}회)</span></div>
-                        <div class="emotion-note" style="color:#666">인터뷰어 발화 ${totalUserUtterances}건 중 정서적 응대 문장 ${supportiveTotal}건을 찾았어요.</div>
-                    </li>
-                `
-                : `
-                    <li class="emotion-card">
-                        <div class="emotion-title">정서적 응대 발화</div>
-                        <div class="emotion-note" style="color:#666">아직 정서적 응대 표현을 찾지 못했어요. 공감이나 지지 문장을 추가로 시도해 보세요.</div>
-                    </li>
-                `;
-
-            const detailHtml = detailItems.length
-                ? detailItems.map(it => {
-                    const sampleHtml = (it.samples && it.samples.length)
-                        ? `<div class="emotion-note" style="color:#666">예: “${it.samples[0]}”${it.samples[1] ? ` / “${it.samples[1]}”` : ''}</div>`
-                        : '';
-                    return `
-                        <li class="emotion-card">
-                            <div class="emotion-title">${it.title} <span style="color:#8F949B">(${it.count})</span></div>
-                            ${sampleHtml}
-                        </li>
-                    `;
-                }).join("")
-                : `
-                    <li class="emotion-card">
-                        <div class="emotion-note" style="color:#666">되짚어볼 만한 정서적 응대 문장이 아직 없습니다.</div>
-                    </li>
-                `;
+            ];
 
             box.dataset.emotionSource = 'local-heuristic';
-            box.innerHTML = summaryCard + detailHtml;
+            box.innerHTML = items.map(it => {
+                if (it.key === 'score') {
+                    return `
+                        <li class="emotion-card">
+                            <div class="emotion-title">${it.title}</div>
+                            <div class="emotion-note"><strong style="font-size:1.25rem;color:#5872FF">${it.extra}</strong></div>
+                            <div class="emotion-note" style="color:#666">${it.note}</div>
+                        </li>
+                    `;
+                }
+                const sampleHtml = (it.samples && it.samples.length)
+                    ? `<div class="emotion-note" style="color:#666">예: “${it.samples[0]}”${it.samples[1] ? ` / “${it.samples[1]}”` : ''}</div>`
+                    : '';
+                return `
+                    <li class="emotion-card">
+                        <div class="emotion-title">${it.title} <span style="color:#8F949B">(${it.count})</span></div>
+                        ${sampleHtml}
+                    </li>
+                `;
+            }).join("");
         }
 
         // 노출 API
@@ -3288,6 +3164,13 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
                     NS.Render.renderKPIs();
                     NS.Render.renderTimeline();
                     NS.Emotions.renderEmotionalCards("#feedbackList");
+                    // ensure persona box on analysis tab is populated when user opens Analysis
+                    try {
+                        const personaToUse = window.selectedPersonaGlobal || window.selectedPersona || null;
+                        if (personaToUse && typeof renderChatboxPersona === 'function') {
+                            renderChatboxPersona(personaToUse, window.interviewDuration || null);
+                        }
+                    } catch (err) { console.warn('renderChatboxPersona (analysis click) failed', err); }
                 });
             }
         }
@@ -3300,25 +3183,17 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
     // wire send button and Enter key for user input
     const sendBtn = document.getElementById('sendButton');
     const userInputEl = document.getElementById('userInput');
-    if (sendBtn) sendBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        sendMessage(null, false);
-    });
-    if (userInputEl) userInputEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            sendMessage(null, false);
-        }
-    });
+    if (sendBtn) sendBtn.addEventListener('click', (e) => { e.preventDefault(); sendMessage(null, false); });
+    if (userInputEl) userInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(null, false); } });
 
-    // #logo img 클릭 시 메인화면(첫 번째 탭)으로 이동
-    const logoImg = document.querySelector('#logo img');
-    if (logoImg) {
-        logoImg.style.cursor = 'pointer';
-        logoImg.addEventListener('click', function () {
-            location.reload();
-        });
-    }
+        // #logo img 클릭 시 메인화면(첫 번째 탭)으로 이동
+        const logoImg = document.querySelector('#logo img');
+        if (logoImg) {
+            logoImg.style.cursor = 'pointer';
+            logoImg.addEventListener('click', function() {
+                location.reload();
+            });
+        }
     // ===== 질문 추가 플러스(+) 버튼 복원 =====
     const globalAddBtn = document.getElementById("global-question-add-btn");
     let currentHoverIndex = null;
@@ -3378,19 +3253,14 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
                     }
                 });
                 finalQuestions.splice(hoverIdx + 1, 0, "");
-                try {
-                    localStorage.setItem('finalQuestions', JSON.stringify(finalQuestions));
-                } catch (err) { /* ignore */ }
+                try { localStorage.setItem('finalQuestions', JSON.stringify(finalQuestions)); } catch(err) { /* ignore */ }
                 renderFinalGuide();
                 setTimeout(() => {
                     const wraps = document.querySelectorAll('#finalQuestionsList .question-edit-wrapper');
                     const newWrapper = wraps[hoverIdx + 1];
                     if (newWrapper) {
                         const input = newWrapper.querySelector('input.question-edit-input');
-                        if (input) {
-                            input.focus();
-                            input.select();
-                        }
+                        if (input) { input.focus(); input.select(); }
                     }
                 }, 0);
                 return;
@@ -3415,10 +3285,7 @@ ${conv.map(r => `Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}`);
                 const newWrapper = wraps[hoverIdx + 1];
                 if (newWrapper) {
                     const input = newWrapper.querySelector('input.question-edit-input');
-                    if (input) {
-                        input.focus();
-                        input.select();
-                    }
+                    if (input) { input.focus(); input.select(); }
                 }
             }, 0);
         });
@@ -3431,8 +3298,7 @@ function updateFollowupBadges() {
     const counts = S.followupsByQuestion || {};
     const lis = document.querySelectorAll('#questionList li');
     lis.forEach((li, i) => {
-        const idx = i + 1;
-        // Q index(1-base)
+        const idx = i + 1; // Q index(1-base)
         let badge = li.querySelector('.followup-badge');
         const n = counts[idx] || 0;
         if (n > 0) {
@@ -3468,10 +3334,8 @@ document.getElementById("goToPersonaBtn").addEventListener("click", () => {
     // 유효성 검사 통과 시 페이지 전환
     document.getElementById("question-page").style.display = "none";
     document.getElementById("persona-page").style.display = "block";
-    document.querySelector(".btn-persona").click();
-    // 탭 전환 효과 동일하게
+    document.querySelector(".btn-persona").click();  // 탭 전환 효과 동일하게
 });
 
 // 전역 노출(필요 시 재호출)
 window.updateFollowupBadges = updateFollowupBadges;
-
