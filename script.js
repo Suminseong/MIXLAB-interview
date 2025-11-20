@@ -2327,20 +2327,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const convText = log.map(r => `Q: ${r.question}\nU: ${r.userMessage}\nA: ${r.botAnswer}`).join('\n\n');
         const prompt = `
-        Analyze the following interview transcript.
-        For 'Interaction Dynamics' (e.g. speaking ratio, follow-up frequency) and 'Emotional Responsiveness' (e.g. empathy, active listening), provide specific advice or warnings for the interviewer to improve in the next session.
+        Analyze the following interview transcript and provide a summary in JSON format.
         
         Transcript:
         ${convText.slice(-4000)} 
         
         Required JSON Structure:
         {
-            "interaction_advice": ["Advice point 1", "Advice point 2"],
-            "emotional_advice": ["Advice point 1", "Advice point 2"]
+            "interaction": {
+                "ratio": "User speaking ratio (e.g. 40%)",
+                "followup": "Summary of follow-up question frequency (e.g. High/Low)"
+            },
+            "emotional": {
+                "icebreaking": "Observation on ice breaking",
+                "empathy": "Observation on empathy",
+                "listening": "Observation on active listening"
+            }
         }
         
         Respond ONLY with valid JSON. Korean language for values.
-        Each advice should be a complete sentence starting with a verb or noun phrase, e.g. "답변을 끊지 말고 끝까지 경청하는 태도가 필요합니다." or "꼬리 질문을 더 적극적으로 활용해보세요."
         `;
 
         try {
@@ -2356,10 +2361,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({
                     model: 'gpt-4o-mini',
                     messages: [
-                        { role: 'system', content: 'You are an expert interview coach. Return only JSON.' },
+                        { role: 'system', content: 'You are an expert interview analyst. Return only JSON.' },
                         { role: 'user', content: prompt }
                     ],
-                    temperature: 0.7
+                    temperature: 0.5
                 })
             });
 
@@ -2367,29 +2372,33 @@ document.addEventListener("DOMContentLoaded", () => {
             const content = data.choices[0].message.content;
             const result = JSON.parse(content.replace(/```json|```/g, '').trim());
 
-            // Render Interaction Advice
-            if (result.interaction_advice && result.interaction_advice.length > 0) {
-                interactionEl.innerHTML = result.interaction_advice.map(text => `
-                    <div class="summary-item" style="display:flex; gap:8px; align-items:start;">
-                        <span style="color:#357AFF; font-weight:bold;">•</span>
-                        <div class="summary-value" style="font-size:0.9rem; color:#555; font-weight:400;">${text}</div>
-                    </div>
-                `).join('');
-            } else {
-                interactionEl.innerHTML = '<div class="summary-item">특이사항이 없습니다.</div>';
-            }
+            // Render Interaction
+            interactionEl.innerHTML = `
+                <div class="summary-item">
+                    <div class="summary-label">발화 비중</div>
+                    <div class="summary-value">${result.interaction.ratio}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">꼬리질문 빈도</div>
+                    <div class="summary-value">${result.interaction.followup}</div>
+                </div>
+            `;
 
-            // Render Emotional Advice
-            if (result.emotional_advice && result.emotional_advice.length > 0) {
-                emotionalEl.innerHTML = result.emotional_advice.map(text => `
-                    <div class="summary-item" style="display:flex; gap:8px; align-items:start;">
-                        <span style="color:#357AFF; font-weight:bold;">•</span>
-                        <div class="summary-value" style="font-size:0.9rem; color:#555; font-weight:400;">${text}</div>
-                    </div>
-                `).join('');
-            } else {
-                emotionalEl.innerHTML = '<div class="summary-item">특이사항이 없습니다.</div>';
-            }
+            // Render Emotional
+            emotionalEl.innerHTML = `
+                <div class="summary-item">
+                    <div class="summary-label">아이스브레이킹</div>
+                    <div class="summary-value">${result.emotional.icebreaking}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">공감적 태도</div>
+                    <div class="summary-value">${result.emotional.empathy}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">경청 태도</div>
+                    <div class="summary-value">${result.emotional.listening}</div>
+                </div>
+            `;
 
         } catch (e) {
             console.error(e);
@@ -2401,17 +2410,6 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderFinalGuide() {
         const briefEl = document.getElementById('briefCards');
         if (!briefEl) return;
-
-        // Activate sub-revision container
-        document.querySelectorAll('.container-children').forEach(el => {
-            el.classList.remove('sub-activate');
-            el.classList.add('sub-inactive');
-        });
-        const subRev = document.querySelector('.sub-revision');
-        if (subRev) {
-            subRev.classList.remove('sub-inactive');
-            subRev.classList.add('sub-activate');
-        }
 
         const subject = getInterviewSubject();
         const purpose = getInterviewPurpose();
@@ -2467,6 +2465,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch(err) { /* ignore */ }
         
         renderFinalQuestionsEditable(merged);
+        renderSuggestionWidget();
         generateAndRenderSidebarSummaries();
     }
 
@@ -2485,7 +2484,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return `
                 <li>
                     <div class="question-edit-wrapper" data-context="final">
-                        <input type="text" class="question-edit-input" data-index="${i}" value="${text.replace(/"/g, '&quot;')}" placeholder="${text ? '' : '내용을 입력하세요.'}" />
+                        <textarea class="question-edit-input" data-index="${i}" placeholder="${text ? '' : '내용을 입력하세요.'}" rows="1" style="overflow:hidden; resize:none;">${text.replace(/"/g, '&quot;')}</textarea>
                         <button class="question-delete-btn" type="button" data-index="${i}" title="삭제">
                             <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
                                 <circle cx="16" cy="16" r="15" fill="#F8F9FB" stroke="#E7F0FF" stroke-width="2"/>
@@ -2506,13 +2505,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const inputs = container.querySelectorAll('.question-edit-input');
         inputs.forEach(input => {
+            const resize = () => {
+                input.style.height = 'auto';
+                input.style.height = input.scrollHeight + 'px';
+            };
             input.addEventListener('input', () => {
+                resize();
                 const idx = parseInt(input.dataset.index);
                 if (!isNaN(idx) && window.finalQuestions) {
                     window.finalQuestions[idx] = input.value;
                     localStorage.setItem('finalQuestions', JSON.stringify(window.finalQuestions));
                 }
             });
+            resize();
         });
 
         container.querySelectorAll('.question-delete-btn').forEach(btn => {
