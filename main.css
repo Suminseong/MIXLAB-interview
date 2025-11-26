@@ -4855,3 +4855,46 @@ textarea.question-edit-input {
     display: flex;
 }
 
+
+/* Final Guide Sidebar in Sub-Container */
+.final-sidebar-content {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 4px;
+}
+
+.final-sidebar-content .sidebar-card {
+    padding: 16px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.final-sidebar-content .sidebar-title {
+    font-size: 13px !important;
+    margin-bottom: 8px !important;
+}
+
+.final-sidebar-content .summary-item {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+}
+
+.final-sidebar-content .summary-label {
+    font-size: 12px;
+}
+
+.final-sidebar-content .summary-value {
+    font-size: 14px;
+}
+
+.final-sidebar-content .final-actions {
+    flex-direction: column;
+    gap: 8px;
+}
+
+.final-sidebar-content .final-actions button {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+}
+

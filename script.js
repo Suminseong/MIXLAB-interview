@@ -2465,7 +2465,6 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch(err) { /* ignore */ }
         
         renderFinalQuestionsEditable(merged);
-        renderSuggestionWidget();
         generateAndRenderSidebarSummaries();
     }
 
@@ -2645,7 +2644,7 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
         const navItems = Array.from(document.querySelectorAll('#nav-bar .btn-revision'));
         navItems.forEach(el=>{
             el.addEventListener('click', ()=>{
-                setTimeout(()=>{ currentEditContext = 'final'; renderFinalGuide(); renderSuggestionWidget(); }, 50);
+                setTimeout(()=>{ currentEditContext = 'final'; renderFinalGuide(); }, 50);
             });
         });
     })();
