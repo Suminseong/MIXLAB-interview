@@ -211,28 +211,20 @@
                                             </div>
 
                                             <div class="analyze-kpi-cards" style="display:flex; gap:16px;">
-                                                <!-- 인터뷰이 발화 비율 -->
-                                                <div class="kpi-card new-style">
-                                                    <div class="kpi-icon-circle persona-img-circle">
-                                                        <img id="kpiPersonaImg" src="img/man-1.png" alt="persona" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
-                                                    </div>
-                                                    <div class="kpi-texts">
-                                                        <div id="kpiPersonaPercent" class="kpi-value">0%</div>
-                                                        <div class="kpi-desc">인터뷰이</div>
-                                                    </div>
+                                                <!-- Combined Speech Ratio Bar -->
+                                                <div class="speech-ratio-group" style="flex:2; display:flex; border-radius:16px; overflow:hidden; border:1px solid #eee; background:#fff; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                                                     <div id="ratioBarInterviewee" style="background:#5872FF; width:50%; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#fff; transition: width 0.6s ease; min-width: 80px;">
+                                                         <div id="kpiPersonaPercent" style="font-size:2.2rem; font-weight:700; line-height:1.2;">0%</div>
+                                                         <div style="font-size:0.95rem; opacity:0.9;">인터뷰이</div>
+                                                     </div>
+                                                     <div id="ratioBarInterviewer" style="background:#fff; width:50%; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#363A3D; transition: width 0.6s ease; min-width: 80px;">
+                                                         <div id="kpiUserPercent" style="font-size:2.2rem; font-weight:700; line-height:1.2;">0%</div>
+                                                         <div style="font-size:0.95rem; color:#8F949B;">인터뷰어</div>
+                                                     </div>
                                                 </div>
-                                                <!-- 인터뷰어 발화 비율 -->
-                                                <div class="kpi-card new-style">
-                                                    <div class="kpi-icon-circle user-icon-circle">
-                                                        <img src="img/ico_mic.png" alt="interviewer">
-                                                    </div>
-                                                    <div class="kpi-texts">
-                                                        <div id="kpiUserPercent" class="kpi-value">0%</div>
-                                                        <div class="kpi-desc">인터뷰어</div>
-                                                    </div>
-                                                </div>
+                                                
                                                 <!-- 심층 추가 질문 -->
-                                                <div class="kpi-card new-style">
+                                                <div class="kpi-card new-style" style="flex:1;">
                                                     <div class="kpi-icon-circle followup-icon-circle">
                                                         <img src="img/ico_talk.png" alt="followup">
                                                     </div>

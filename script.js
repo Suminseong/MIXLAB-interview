@@ -3166,20 +3166,28 @@ Return JSON: { "type": "PREPARED_MATCH"|"FOLLOW_UP"|"ICE_BREAKING"|"TRIVIAL"|"NE
         }
         function renderKPIs() {
             const { talkPercent, adHocPercent, followupCount } = computeKPIs();
+            const personaPercent = 100 - talkPercent;
             
             // Update Persona Ratio (100 - User Ratio)
             const elPersona = document.querySelector("#kpiPersonaPercent");
-            if (elPersona) elPersona.textContent = `${100 - talkPercent}%`;
+            if (elPersona) elPersona.textContent = `${personaPercent}%`;
             
             // Update User Ratio
             const elUser = document.querySelector("#kpiUserPercent");
             if (elUser) elUser.textContent = `${talkPercent}%`;
+
+            // [NEW] Update Bar Widths
+            const barPersona = document.getElementById("ratioBarInterviewee");
+            if (barPersona) barPersona.style.width = `${Math.max(15, personaPercent)}%`;
+
+            const barUser = document.getElementById("ratioBarInterviewer");
+            if (barUser) barUser.style.width = `${Math.max(15, talkPercent)}%`;
             
             // Update Followup Count
             const elFollow = document.querySelector("#kpiFollowupCount");
             if (elFollow) elFollow.textContent = `${followupCount}회`;
 
-            // Update Persona Image if available
+            // Update Persona Image if available (legacy check)
             const elImg = document.querySelector("#kpiPersonaImg");
             if (elImg && window.selectedPersona) {
                  const p = window.selectedPersona;
@@ -3202,7 +3210,7 @@ Return JSON: { "type": "PREPARED_MATCH"|"FOLLOW_UP"|"ICE_BREAKING"|"TRIVIAL"|"NE
                     .utt-bar{ height:100%; display:inline-block; }
                     .bar--user { background-color: #DDE2EB; } /* Interviewer */
                     .bar--persona { background-color: #5872FF; } /* Interviewee */
-                    .utt-legend-simple { display:flex; gap:12px; margin-bottom:8px; font-size:12px; color:#888; justify-content: flex-end; }
+                    .utt-legend-simple { display:flex; gap:8px; margin-bottom:8px; font-size:12px; color:#888;  justify-content: flex-end; }
                     .legend-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px; }
                 `;
                 document.head.appendChild(s);

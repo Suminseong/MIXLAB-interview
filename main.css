@@ -4310,9 +4310,13 @@ input:-webkit-autofill {
   width: 100%;
   flex-direction: column;
   height: 14px;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #F2F3F5;
-  padding: 3px;
+  padding: 3px 8px;
+}
+
+.utt-legend-simple {
+  margin-right: 14px;
 }
 
 .utt-bar {
@@ -4595,6 +4599,8 @@ input:-webkit-autofill {
   height: clamp(50px, 14vw, 180px);
 }
 
+/* #printFinalGuideBtn style removed to fix layout */
+/*
 #printFinalGuideBtn{
   display: flex;
   justify-content: center;
@@ -4619,6 +4625,7 @@ input:-webkit-autofill {
   right: clamp(24px, 2.5vw, 40px);
   bottom: clamp(24px, 2.5vw, 40px);
 }
+*/
 
 #regenSuggestionsBtn{
   display: flex;
