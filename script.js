@@ -2652,8 +2652,16 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
 
     // Buttons
     (function wireFinalGuideButtons(){
-        const printBtn = document.getElementById('printFinalGuideBtn');
-        if (printBtn) printBtn.addEventListener('click', ()=> window.print());
+        const printBtns = document.querySelectorAll('#printFinalGuideBtn');
+        printBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (typeof exportExperimentLog === 'function') {
+                    exportExperimentLog();
+                } else {
+                    console.warn('exportExperimentLog function is missing.');
+                }
+            });
+        });
         const regenBtn = document.getElementById('regenSuggestionsBtn');
         if (regenBtn) regenBtn.addEventListener('click', ()=> renderSuggestionWidget());
     })();
@@ -3623,6 +3631,88 @@ document.getElementById("goToPersonaBtn").addEventListener("click", () => {
     document.getElementById("persona-page").style.display = "block";
     document.querySelector(".btn-persona").click();  // 탭 전환 효과 동일하게
 });
+
+// [New Feature] Export Experiment Log
+window.exportExperimentLog = function() {
+    const now = new Date();
+    const dateStr = now.toLocaleString();
+    
+    let content = `[PRETALK Interview Experiment Log]\n`;
+    content += `Date: ${dateStr}\n`;
+    const dTime = document.getElementById('donutTime');
+    content += `Total Duration: ${dTime ? dTime.textContent : 'N/A'}\n`;
+    
+    content += `\n========================================\n`;
+    content += `[Conversation History]\n`;
+
+    // 1. Try AnalyticsKit.Store.turns (Chronological)
+    if (window.AnalyticsKit && window.AnalyticsKit.Store && Array.isArray(window.AnalyticsKit.Store.turns) && window.AnalyticsKit.Store.turns.length > 0) {
+        const start = window.AnalyticsKit.Store.sessionStart;
+        window.AnalyticsKit.Store.turns.forEach(turn => {
+            const sec = Math.round((turn.msStart - start) / 1000);
+            const speakerName = turn.speaker === 'user' ? 'Interviewer' : 'Interviewee';
+            content += `[${sec}s] ${speakerName}: ${turn.text}\n`;
+        });
+    } 
+    // 2. Fallback to window.interviewLog
+    else if (window.interviewLog && window.interviewLog.length > 0) {
+         window.interviewLog.forEach((log, i) => {
+             content += `Q${i+1}: ${log.userMessage || '(No spoken text)'}\n`;
+             content += `A${i+1}: ${log.botAnswer || '(No response)'}\n\n`;
+         });
+    } else {
+        content += "(No conversation recorded)\n";
+    }
+
+    content += `\n========================================\n`;
+    content += `[Analysis Summary]\n`;
+    
+    // Stats
+    if (window.AnalyticsKit && window.AnalyticsKit.Store && window.AnalyticsKit.Store.counters) {
+        const c = window.AnalyticsKit.Store.counters;
+        content += `Interruption Count: ${c.interruptions}\n`;
+        content += `Backchannels: ${c.backchannelsByUser}\n`;
+        content += `Follow-up Chains: ${c.followupChains}\n`;
+        content += `Ad-hoc Questions: ${c.adHocQuestions}\n`;
+    }
+
+    // Keywords
+    const keywords = [];
+    document.querySelectorAll('#keywordCloud text').forEach(el => keywords.push(el.textContent));
+    if (keywords.length) {
+        content += `\nCore Keywords: ${keywords.join(', ')}\n`;
+    }
+
+    // Emotions (Scraped from UI)
+    const emotionCards = document.querySelectorAll('#emotionList .emotion-card, #feedbackList .emotion-card');
+    if (emotionCards.length > 0) {
+        content += `\n[Emotional Responsiveness]\n`;
+        emotionCards.forEach(card => {
+            const title = card.querySelector('.emotion-title')?.textContent.trim();
+            const desc = card.querySelector('.emotion-note, .emotion-desc')?.textContent.trim(); 
+            // fallback
+            const strong = card.querySelector('strong')?.textContent.trim();
+            const div = card.querySelector('div')?.textContent.trim();
+            
+            if (title) {
+                content += `- ${title} : ${desc || ''}\n`;
+            } else if (strong) { // Local fallback style
+                 content += `- ${strong} : ${(div || '').replace(strong, '').trim()}\n`;
+            }
+        });
+    }
+
+    // Create File
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pretalk_log_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
 
 // 전역 노출(필요 시 재호출)
 window.updateFollowupBadges = updateFollowupBadges;
