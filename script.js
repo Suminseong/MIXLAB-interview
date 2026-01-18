@@ -212,14 +212,14 @@ async function buildKeywordCloud(el, logs, maxWords = 11) {
                         let color = "#A1B0C6"; // Default Grayish
 
                         if (k.rank <= 3) {
-                            size = 32; // Top 3: Large (Reduced from 42)
-                            color = "#5872FF"; // Primary Blue
+                            size = 32; // Top 3: Large
+                            color = "#4B4F55"; // Dark Gray for top importance
                         } else if (k.rank <= 7) {
-                            size = 20; // Mid: Medium (Reduced from 26)
-                            color = "#8194FF"; // Lighter Blue
+                            size = 20; // Mid: Medium
+                            color = "#8F949B"; // Medium Gray
                         } else {
-                            size = 14; // Low: Small (Reduced from 16)
-                            color = "#A1B0C6"; // Gray
+                            size = 14; // Low: Small
+                            color = "#C5C8CE"; // Light Gray
                         }
                         
                         return { text: k.text, size: size, color: color };
@@ -245,9 +245,9 @@ async function buildKeywordCloud(el, logs, maxWords = 11) {
             return entries.slice(0, topN).map(([text, count], i) => {
                 const rank = i + 1;
                 let size = 14;
-                let color = "#A1B0C6";
-                if (rank <= 3) { size = 32; color = "#5872FF"; }
-                else if (rank <= 7) { size = 20; color = "#8194FF"; }
+                let color = "#C5C8CE";
+                if (rank <= 3) { size = 32; color = "#4B4F55"; }
+                else if (rank <= 7) { size = 20; color = "#8F949B"; }
                 return { text, size, color };
             }); 
         };
@@ -349,11 +349,30 @@ async function renderAnalysisDashboard(opts = {}) {
                     datasets: [{
                         label: '응답 시간(초)',
                         data: avgSecs,
-                        backgroundColor: avgSecs.map((v, i) => i === (highlightQuestionIndex ? highlightQuestionIndex - 1 : 1) ? '#5872FF' : '#DDE2EB'),
+                        backgroundColor: '#B0B4BC',
                         borderRadius: 12,
                         barPercentage: 0.6
                     }]
                 },
+                plugins: [{
+                    id: 'customDataLabels',
+                    afterDatasetsDraw(chart) {
+                        const { ctx } = chart;
+                        chart.data.datasets.forEach((dataset, i) => {
+                            const meta = chart.getDatasetMeta(i);
+                            meta.data.forEach((bar, index) => {
+                                const value = dataset.data[index];
+                                if (value !== null && value !== undefined) {
+                                    ctx.fillStyle = '#8F949B';
+                                    ctx.font = '12px Pretendard, sans-serif';
+                                    ctx.textAlign = 'center';
+                                    ctx.textBaseline = 'bottom';
+                                    ctx.fillText(value, bar.x, bar.y - 4);
+                                }
+                            });
+                        });
+                    }
+                }],
                 options: {
                     plugins: { legend: { display: false } },
                     scales: {
@@ -3173,8 +3192,8 @@ Return JSON: { "type": "PREPARED_MATCH"|"FOLLOW_UP"|"ICE_BREAKING"|"TRIVIAL"|"NE
                     #utteranceTimeline { font-family: inherit; position: relative; }
                     .utt-track{ display:flex; height:40px; border-radius:12px; overflow:hidden; background:#F6F8FB; width: 100%; }
                     .utt-bar{ height:100%; display:inline-block; }
-                    .bar--user { background-color: #5872FF; } /* Interviewer */
-                    .bar--persona { background-color: #DCE9FF; } /* Interviewee */
+                    .bar--user { background-color: #DDE2EB; } /* Interviewer */
+                    .bar--persona { background-color: #5872FF; } /* Interviewee */
                     .utt-legend-simple { display:flex; gap:12px; margin-bottom:8px; font-size:12px; color:#888; justify-content: flex-end; }
                     .legend-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px; }
                 `;
@@ -3189,8 +3208,8 @@ Return JSON: { "type": "PREPARED_MATCH"|"FOLLOW_UP"|"ICE_BREAKING"|"TRIVIAL"|"NE
             const legend = document.createElement('div');
             legend.className = 'utt-legend-simple';
             legend.innerHTML = `
-                <span><span class="legend-dot" style="background:#DCE9FF"></span>인터뷰이</span>
-                <span><span class="legend-dot" style="background:#5872FF"></span>인터뷰어</span>
+                <span><span class="legend-dot" style="background:#5872FF"></span>인터뷰이</span>
+                <span><span class="legend-dot" style="background:#DDE2EB"></span>인터뷰어</span>
             `;
             wrap.appendChild(legend);
 
