@@ -4323,11 +4323,11 @@ input:-webkit-autofill {
   height: 100%;
 }
 
-.bar--user {
+.bar--persona {
   background: #3B6BFF;
 }
 
-.bar--persona {
+.bar--user {
   background: #DCE9FF;
 }
 

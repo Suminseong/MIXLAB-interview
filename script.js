@@ -367,7 +367,7 @@ async function renderAnalysisDashboard(opts = {}) {
                                     ctx.font = '12px Pretendard, sans-serif';
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'bottom';
-                                    ctx.fillText(value, bar.x, bar.y - 4);
+                                    ctx.fillText(`${value}초`, bar.x, bar.y - 4);
                                 }
                             });
                         });
