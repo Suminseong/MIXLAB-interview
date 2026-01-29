@@ -1943,7 +1943,7 @@ document.addEventListener("DOMContentLoaded", () => {
     //아래는 음성처리부분/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     const apiUrl = "https://api.openai.com/v1/chat/completions";
-    const modelId = "ft:gpt-4o-2024-08-06:chamkkae:chamkkae-v3a:AmwkrRHc";
+    const modelId = "ft:gpt-4o-2024-08-06:chamkkae:chamkkae-v3b-1:D3OZ3V1Y"; //api 키와 연결된 모델 삭제되어 새로 생성 필요
 
     const chatbox = document.getElementById('chatbox');
 
