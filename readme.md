@@ -3,7 +3,7 @@
 
 ---
 
-![인트로 이미지](https://i.ibb.co/Jmjr2fD/Frame-83.png)  
+![인트로 이미지](https://2025.tudesign.org/projects/39/gallery/0.jpg)  
 
 ---
 
