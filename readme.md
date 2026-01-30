@@ -80,5 +80,4 @@ Analysis 단계는 인터뷰 종료 후의 데이터가 시각화되어 제시�
 ### 팀원 및 기여자
 특정 기여자에게 문의가 필요한 경우, 해당 기여자의 GitHub 프로필을 참고해주세요:
 - [@suminseong](https://github.com/suminseong) - AI & 기능구현 파트너
-![suminseong's GitHub stats](https://github-readme-stats.vercel.app/api?username=suminseong)
 - [@sanha0108](https://github.com/sanha0108) - UI/UX 파트너
