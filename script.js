@@ -1944,6 +1944,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const apiUrl = "https://api.openai.com/v1/chat/completions";
     const modelId = "ft:gpt-4o-2024-08-06:chamkkae:chamkkae-v3b-1:D3OZ3V1Y"; //api 키와 연결된 모델 삭제되어 새로 생성 필요
+    // 교체 완료
 
     const chatbox = document.getElementById('chatbox');
 
@@ -2768,9 +2769,69 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
     // 음성 인식 자동 루프
     const SR = (window.SpeechRecognition || window.webkitSpeechRecognition) ? new (window.SpeechRecognition || window.webkitSpeechRecognition)() : null;
     let isListening = false, isSpeaking = false, isPending = false;
+    let voiceAnimInterval = null;
+
+    function startListeningAnimation() {
+        const rightBox = document.getElementById('chating-right-box');
+        if (!rightBox || voiceAnimInterval) return;
+        let dotCount = 0;
+        rightBox.textContent = '녹음중';
+        voiceAnimInterval = setInterval(() => {
+            dotCount = (dotCount % 3) + 1;
+            rightBox.textContent = '녹음중' + '.'.repeat(dotCount);
+        }, 500);
+    }
+
+    function stopListeningAnimation() {
+        if (voiceAnimInterval) {
+            clearInterval(voiceAnimInterval);
+            voiceAnimInterval = null;
+            const rightBox = document.getElementById('chating-right-box');
+            if (rightBox) rightBox.textContent = '';
+        }
+    }
+
     function setMicStatus(t) { const s = document.getElementById('micStatus'); const b = document.getElementById('micButton'); if (s) s.textContent = t; if (b) { if (t === '듣는 중') b.classList.add('active'); else b.classList.remove('active'); } }
     function safeStart() { try { SR && SR.start(); } catch (e) { } }
-    if (SR) { SR.lang = 'ko-KR'; SR.interimResults = false; SR.continuous = false; SR.onstart = () => { try { audioElement.pause(); } catch (_) { } isListening = true; setMicStatus('듣는 중'); try { syncChatingLeftImage(selectedPersona, false); } catch (_) { } }; SR.onend = () => { isListening = false; setMicStatus('대기'); if (!isSpeaking && !isPending) setTimeout(safeStart, 250); }; SR.onerror = (e) => { isListening = false; setMicStatus('에러'); const nonFatal = ['no-speech', 'audio-capture', 'not-allowed', 'aborted']; if (!isSpeaking && !isPending && !nonFatal.includes(e.error)) setTimeout(safeStart, 600); }; SR.onresult = (ev) => { let txt = ''; for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) txt += r[0].transcript; } if (txt) sendMessage(txt, true); }; setTimeout(safeStart, 500); }
+    if (SR) { 
+        SR.lang = 'ko-KR'; 
+        SR.interimResults = false; 
+        SR.continuous = false; 
+        SR.onstart = () => { 
+            try { audioElement.pause(); } catch (_) { } 
+            isListening = true; 
+            setMicStatus('듣는 중'); 
+            try { syncChatingLeftImage(selectedPersona, false); } catch (_) { } 
+        }; 
+        SR.onspeechstart = () => {
+            startListeningAnimation(); // 말하기 시작할 때 애니메이션 시작
+        };
+        SR.onend = () => { 
+            isListening = false; 
+            setMicStatus('대기'); 
+            stopListeningAnimation(); // 애니메이션 종료
+            if (!isSpeaking && !isPending) setTimeout(safeStart, 250); 
+        }; 
+        SR.onerror = (e) => { 
+            isListening = false; 
+            setMicStatus('에러'); 
+            stopListeningAnimation(); // 애니메이션 종료
+            const nonFatal = ['no-speech', 'audio-capture', 'not-allowed', 'aborted']; 
+            if (!isSpeaking && !isPending && !nonFatal.includes(e.error)) setTimeout(safeStart, 600); 
+        }; 
+        SR.onresult = (ev) => { 
+            let txt = ''; 
+            for (let i = ev.resultIndex; i < ev.results.length; i++) { 
+                const r = ev.results[i]; 
+                if (r.isFinal) txt += r[0].transcript; 
+            } 
+            if (txt) {
+                stopListeningAnimation(); // 텍스트 인식되면 애니메이션 즉시 중단
+                sendMessage(txt, true);
+            }
+        }; 
+        setTimeout(safeStart, 500); 
+    }
     const micBtnEl = document.getElementById('micButton'); if (micBtnEl) { micBtnEl.addEventListener('click', () => { if (!isListening) safeStart(); }); }
 
     async function sendMessage(voiceInput, isVoice) {
@@ -3208,8 +3269,8 @@ Return JSON: { "type": "PREPARED_MATCH"|"FOLLOW_UP"|"ICE_BREAKING"|"TRIVIAL"|"NE
                     #utteranceTimeline { font-family: inherit; position: relative; }
                     .utt-track{ display:flex; height:40px; border-radius:12px; overflow:hidden; background:#F6F8FB; width: 100%; }
                     .utt-bar{ height:100%; display:inline-block; }
-                    .bar--user { background-color: #DDE2EB; } /* Interviewer */
-                    .bar--persona { background-color: #5872FF; } /* Interviewee */
+                    .bar--persona { background-color: #DDE2EB; } /* Interviewer */
+                    .bar--user { background-color: #5872FF; } /* Interviewee */
                     .utt-legend-simple { display:flex; gap:8px; margin-bottom:8px; font-size:12px; color:#888;  justify-content: flex-end; }
                     .legend-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px; }
                 `;
@@ -3224,8 +3285,8 @@ Return JSON: { "type": "PREPARED_MATCH"|"FOLLOW_UP"|"ICE_BREAKING"|"TRIVIAL"|"NE
             const legend = document.createElement('div');
             legend.className = 'utt-legend-simple';
             legend.innerHTML = `
-                <span><span class="legend-dot" style="background:#5872FF"></span>인터뷰이</span>
-                <span><span class="legend-dot" style="background:#DDE2EB"></span>인터뷰어</span>
+                <span><span class="legend-dot" style="background:#5872FF"></span>인터뷰어</span>
+                <span><span class="legend-dot" style="background:#DDE2EB"></span>인터뷰이</span>
             `;
             wrap.appendChild(legend);
 
@@ -3640,20 +3701,29 @@ document.getElementById("goToPersonaBtn").addEventListener("click", () => {
     document.querySelector(".btn-persona").click();  // 탭 전환 효과 동일하게
 });
 
-// [New Feature] Export Experiment Log
+// 실험 로그 뽑기
 window.exportExperimentLog = function() {
     const now = new Date();
     const dateStr = now.toLocaleString();
     
-    let content = `[PRETALK Interview Experiment Log]\n`;
+    let content = `[PRETALK 인터뷰 실험 데이터 로그]\n`;
     content += `Date: ${dateStr}\n`;
     const dTime = document.getElementById('donutTime');
     content += `Total Duration: ${dTime ? dTime.textContent : 'N/A'}\n`;
+
+    // 인터뷰 이전 생성했던 예상 질문(questionListEl)
+    content += `\n[Prepared Questions]\n`;
+    const qList = (window.finalQuestions && window.finalQuestions.length > 0) 
+        ? window.finalQuestions 
+        : (window.questions || []);
+
+    qList.forEach((q, i) => {
+        content += `${i + 1}. ${q}\n`;
+    });
     
     content += `\n========================================\n`;
-    content += `[Conversation History]\n`;
+    content += `[실험 결과 로그]\n`;
 
-    // 1. Try AnalyticsKit.Store.turns (Chronological)
     if (window.AnalyticsKit && window.AnalyticsKit.Store && Array.isArray(window.AnalyticsKit.Store.turns) && window.AnalyticsKit.Store.turns.length > 0) {
         const start = window.AnalyticsKit.Store.sessionStart;
         window.AnalyticsKit.Store.turns.forEach(turn => {
@@ -3662,7 +3732,6 @@ window.exportExperimentLog = function() {
             content += `[${sec}s] ${speakerName}: ${turn.text}\n`;
         });
     } 
-    // 2. Fallback to window.interviewLog
     else if (window.interviewLog && window.interviewLog.length > 0) {
          window.interviewLog.forEach((log, i) => {
              content += `Q${i+1}: ${log.userMessage || '(No spoken text)'}\n`;
@@ -3672,16 +3741,17 @@ window.exportExperimentLog = function() {
         content += "(No conversation recorded)\n";
     }
 
+
     content += `\n========================================\n`;
     content += `[Analysis Summary]\n`;
     
     // Stats
     if (window.AnalyticsKit && window.AnalyticsKit.Store && window.AnalyticsKit.Store.counters) {
         const c = window.AnalyticsKit.Store.counters;
-        content += `Interruption Count: ${c.interruptions}\n`;
-        content += `Backchannels: ${c.backchannelsByUser}\n`;
-        content += `Follow-up Chains: ${c.followupChains}\n`;
-        content += `Ad-hoc Questions: ${c.adHocQuestions}\n`;
+        content += `Interruption Count: ${c.interruptions} ///// 대화 말 끊김\n`;
+        content += `Backchannels: ${c.backchannelsByUser} ///// 동의 및 맞장구 상호작용 횟수\n`;
+        content += `Follow-up Chains: ${c.followupChains} ///// 팔로업 연결 횟수\n`;
+        content += `Ad-hoc Questions: ${c.adHocQuestions} ///// 예상 외 질문 시도 횟수\n`;
     }
 
     // Keywords
