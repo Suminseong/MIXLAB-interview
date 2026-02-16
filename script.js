@@ -2773,7 +2773,23 @@ ${conv.map(r=>`Q: ${r.q}\nU: ${r.u}\nA: ${r.a}`).join('\n\n')}
 
     function startListeningAnimation() {
         const rightBox = document.getElementById('chating-right-box');
+        const leftBox = document.getElementById('chating-left-box');
         if (!rightBox || voiceAnimInterval) return;
+        
+        const rText = rightBox.textContent.trim();
+        const lText = leftBox ? leftBox.textContent.trim() : '';
+
+        const isStatusMsg = (t) => t === '녹음중' || t.startsWith('녹음중.') || t === '대기' || t === '에러';
+
+        if ((rText && !isStatusMsg(rText)) || lText) {
+             if (rText && !isStatusMsg(rText)) appendMessage(rText, 'user');
+             if (lText) appendMessage(lText, 'bot');
+             
+             // 박스 비우기
+             rightBox.textContent = '';
+             if (leftBox) leftBox.textContent = '';
+        }
+
         let dotCount = 0;
         rightBox.textContent = '녹음중';
         voiceAnimInterval = setInterval(() => {
