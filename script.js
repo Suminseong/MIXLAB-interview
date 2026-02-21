@@ -3230,11 +3230,11 @@ Return JSON: { "type": "PREPARED_MATCH"|"FOLLOW_UP"|"ICE_BREAKING"|"TRIVIAL"|"NE
             const segments = S.timeline || [];
             const totalMs = segments.reduce((sum, seg) => sum + Math.max(0, (seg.end || 0) - (seg.start || 0)), 0) || 1;
             const userMs = segments.filter(s => s.speaker === 'user').reduce((a, b) => a + Math.max(0, (b.end || 0) - (b.start || 0)), 0);
-            const talkPercent = Math.round((userMs / totalMs) * 100);
+            const userPercent = Math.round((userMs / totalMs) * 100);
 
             const adHocPercent = Math.round((S.counters.adHocQuestions / Math.max(1, qCount)) * 100);
             const followupCount = S.counters.followupChains;
-            return { talkPercent, adHocPercent, followupCount };
+            return { userPercent, adHocPercent, followupCount };
         }
         function talkMsg(p) {
             if (p >= 65) return "발화를 많이 했어요!";
@@ -3242,23 +3242,23 @@ Return JSON: { "type": "PREPARED_MATCH"|"FOLLOW_UP"|"ICE_BREAKING"|"TRIVIAL"|"NE
             return "경청이 돋보였어요.";
         }
         function renderKPIs() {
-            const { talkPercent, adHocPercent, followupCount } = computeKPIs();
-            const personaPercent = 100 - talkPercent;
+            const { userPercent, adHocPercent, followupCount } = computeKPIs();
+            const personaPercent = 100 - userPercent;
             
-            // Update Persona Ratio (100 - User Ratio)
+            // Update Interviewer Ratio (User)
             const elPersona = document.querySelector("#kpiPersonaPercent");
-            if (elPersona) elPersona.textContent = `${personaPercent}%`;
+            if (elPersona) elPersona.textContent = `${userPercent}%`;
             
-            // Update User Ratio
+            // Update Interviewee Ratio (Persona)
             const elUser = document.querySelector("#kpiUserPercent");
-            if (elUser) elUser.textContent = `${talkPercent}%`;
+            if (elUser) elUser.textContent = `${personaPercent}%`;
 
             // [NEW] Update Bar Widths
-            const barPersona = document.getElementById("ratioBarInterviewee");
-            if (barPersona) barPersona.style.width = `${Math.max(15, personaPercent)}%`;
+            const barPersona = document.getElementById("ratioBarInterviewee"); // Interviewer (Blue)
+            if (barPersona) barPersona.style.width = `${Math.max(15, userPercent)}%`;
 
-            const barUser = document.getElementById("ratioBarInterviewer");
-            if (barUser) barUser.style.width = `${Math.max(15, talkPercent)}%`;
+            const barUser = document.getElementById("ratioBarInterviewer"); // Interviewee (White)
+            if (barUser) barUser.style.width = `${Math.max(15, personaPercent)}%`;
             
             // Update Followup Count
             const elFollow = document.querySelector("#kpiFollowupCount");
@@ -3285,8 +3285,8 @@ Return JSON: { "type": "PREPARED_MATCH"|"FOLLOW_UP"|"ICE_BREAKING"|"TRIVIAL"|"NE
                     #utteranceTimeline { font-family: inherit; position: relative; }
                     .utt-track{ display:flex; height:40px; border-radius:12px; overflow:hidden; background:#F6F8FB; width: 100%; }
                     .utt-bar{ height:100%; display:inline-block; }
-                    .bar--persona { background-color: #DDE2EB; } /* Interviewer */
-                    .bar--user { background-color: #5872FF; } /* Interviewee */
+                    .bar--user { background-color: #5872FF; } /* Interviewer (Blue/User) */
+                    .bar--persona { background-color: #DDE2EB; } /* Interviewee (Grey/Persona) */
                     .utt-legend-simple { display:flex; gap:8px; margin-bottom:8px; font-size:12px; color:#888;  justify-content: flex-end; }
                     .legend-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px; }
                 `;
